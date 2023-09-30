@@ -8,10 +8,13 @@ impl Model {
     }
 
     fn shift_items(&mut self) {
-        let available: HashSet<_> = (0..self.grid.size.x)
+        let mut available: HashSet<_> = (0..self.grid.size.x)
             .flat_map(|x| (0..self.grid.size.y).map(move |y| vec2(x, y)))
             .filter(|pos| !self.visible_tiles.contains(pos))
             .collect();
+        for entity in &self.entities {
+            available.remove(&entity.position);
+        }
         if available.is_empty() {
             // Cannot shift items
             return;
