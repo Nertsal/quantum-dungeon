@@ -16,6 +16,7 @@ pub struct Model {
     pub turn: Turn,
     pub grid: Grid,
     pub player: Player,
+    pub visible_tiles: HashSet<vec2<Coord>>,
     pub items: Vec<Item>,
     pub entities: Vec<Entity>,
 }
@@ -31,15 +32,18 @@ impl Model {
             turn: 0,
             grid: Grid { size: vec2(10, 10) },
             player: Player::new(),
+            visible_tiles: HashSet::new(),
             items: Vec::new(),
             entities: vec![Entity {
                 position: vec2(0, 0),
                 fraction: Fraction::Player,
                 health: Health::new_max(100),
+                look_dir: vec2(0, 1),
                 kind: EntityKind::Player,
             }],
         };
-        model.generate();
+        model.night_phase();
+        model.update_vision();
         model
     }
 }

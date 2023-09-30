@@ -1,7 +1,9 @@
 use super::*;
 
 #[derive(Debug)]
-pub struct Player {}
+pub struct Player {
+    pub moves_left: usize,
+}
 
 #[derive(Debug)]
 pub struct PlayerInput {
@@ -10,6 +12,6 @@ pub struct PlayerInput {
 
 impl Player {
     pub fn new() -> Self {
-        Self {}
+        Self { moves_left: 5 }
     }
 }

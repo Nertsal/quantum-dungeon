@@ -8,6 +8,7 @@ pub struct Entity {
     pub position: vec2<Coord>,
     pub fraction: Fraction,
     pub health: Health,
+    pub look_dir: vec2<Coord>,
     pub kind: EntityKind,
 }
 

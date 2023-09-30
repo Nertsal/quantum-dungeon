@@ -6,6 +6,11 @@ impl Model {
     pub fn update(&mut self, _delta_time: Time) {}
 
     pub fn player_move(&mut self, player_input: PlayerInput) {
+        if self.player.moves_left == 0 {
+            // Cannot move yet (probably)
+            return;
+        }
+
         let mut moves = Vec::new();
         for (i, entity) in self.entities.iter_mut().enumerate() {
             if let EntityKind::Player = entity.kind {
@@ -22,14 +27,59 @@ impl Model {
                 let fraction = entity.fraction;
                 self.move_entity_swap(i, target);
                 self.collect_item_at(fraction, target);
+                self.update_vision();
                 moved = true;
             }
         }
 
         if moved {
             self.check_deaths();
-            self.turn += 1;
+            self.player.moves_left -= 1;
+            if self.player.moves_left == 0 {
+                self.select_phase();
+            }
         }
+    }
+
+    fn select_phase(&mut self) {
+        // TODO
+        self.turn += 1;
+        self.night_phase();
+        self.player.moves_left = 5;
+    }
+
+    fn calculate_empty_space(&self) -> HashSet<vec2<Coord>> {
+        let mut available: HashSet<_> = (0..self.grid.size.x)
+            .flat_map(|x| (0..self.grid.size.y).map(move |y| vec2(x, y)))
+            .collect();
+
+        for entity in &self.entities {
+            available.remove(&entity.position);
+        }
+        for item in &self.items {
+            available.remove(&item.position);
+        }
+
+        available
+    }
+
+    pub fn update_vision(&mut self) {
+        let mut visible = HashSet::new();
+        for entity in &self.entities {
+            if let EntityKind::Player = entity.kind {
+                let mut pos = entity.position;
+                visible.insert(pos);
+                loop {
+                    let target = self.grid.clamp_pos(pos + entity.look_dir);
+                    if target == pos {
+                        break;
+                    }
+                    visible.insert(target);
+                    pos = target;
+                }
+            }
+        }
+        self.visible_tiles = visible;
     }
 
     fn check_deaths(&mut self) {

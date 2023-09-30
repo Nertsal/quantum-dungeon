@@ -30,11 +30,28 @@ impl GameRender {
             }
         }
 
+        for item in &model.items {
+            self.draw_item(item, framebuffer);
+        }
         for entity in &model.entities {
             self.draw_entity(entity, framebuffer);
         }
-        for item in &model.items {
-            self.draw_item(item, framebuffer);
+
+        // Vision
+        for x in 0..model.grid.size.x {
+            for y in 0..model.grid.size.y {
+                if !model.visible_tiles.contains(&vec2(x, y)) {
+                    self.geng.draw2d().draw2d(
+                        framebuffer,
+                        &self.camera,
+                        &draw2d::Quad::new(
+                            Aabb2::point(vec2(x, y).as_f32() * self.cell_size)
+                                .extend_symmetric(self.cell_size / 2.0),
+                            Color::new(0.0, 0.0, 0.0, 0.5),
+                        ),
+                    );
+                }
+            }
         }
     }
 
