@@ -63,13 +63,13 @@ impl geng::State for Game {
             vec2(0, 0)
         };
         if move_dir != vec2::ZERO {
-            self.model.player_move(PlayerInput::Dir(move_dir));
+            self.model.player_action(PlayerInput::Dir(move_dir));
             return;
         }
 
         if geng_utils::key::is_event_press(&event, [MouseButton::Left]) {
             let target = self.cursor_cell_pos();
-            self.model.player_move(PlayerInput::Tile(target));
+            self.model.player_action(PlayerInput::Tile(target));
             // return;
         }
     }

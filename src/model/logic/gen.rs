@@ -2,9 +2,13 @@ use super::*;
 
 impl Model {
     pub fn night_phase(&mut self) {
+        self.phase = Phase::Night;
         self.shift_items();
         self.spawn_enemies();
         self.spawn_items();
+        self.phase = Phase::Items;
+        // TODO
+        self.phase = Phase::Player;
     }
 
     fn shift_items(&mut self) {

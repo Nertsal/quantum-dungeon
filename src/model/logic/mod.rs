@@ -5,10 +5,19 @@ use super::*;
 impl Model {
     pub fn update(&mut self, _delta_time: Time) {}
 
-    pub fn player_move(&mut self, player_input: PlayerInput) {
+    pub fn player_action(&mut self, player_input: PlayerInput) {
+        match self.phase {
+            Phase::Player => self.player_move(player_input),
+            Phase::Vision => self.player_vision(player_input),
+            _ => {}
+        }
+    }
+
+    fn player_move(&mut self, player_input: PlayerInput) {
         if self.player.moves_left == 0 {
-            // Cannot move yet (probably)
-            return;
+            // Should be unreachable
+            log::error!("tried to move, but no moves are left");
+            self.vision_phase();
         }
 
         let mut moves = Vec::new();
@@ -42,13 +51,31 @@ impl Model {
             self.check_deaths();
             self.player.moves_left -= 1;
             if self.player.moves_left == 0 {
-                self.select_phase();
+                self.vision_phase();
             }
         }
     }
 
+    fn player_vision(&mut self, player_input: PlayerInput) {
+        for entity in &mut self.entities {
+            if let EntityKind::Player = entity.kind {
+                let dir = match player_input {
+                    PlayerInput::Dir(dir) => dir,
+                    PlayerInput::Tile(pos) => pos - entity.position,
+                };
+                entity.look_dir = dir.map(|x| x.clamp_abs(1));
+            }
+        }
+        self.select_phase();
+    }
+
+    fn vision_phase(&mut self) {
+        self.phase = Phase::Vision;
+    }
+
     fn select_phase(&mut self) {
         // TODO
+        self.phase = Phase::Select;
         self.turn += 1;
         self.night_phase();
         self.player.moves_left = 5;

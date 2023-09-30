@@ -14,6 +14,7 @@ pub type Coord = i64;
 pub struct Model {
     pub config: Config,
     pub turn: Turn,
+    pub phase: Phase,
     pub grid: Grid,
     pub player: Player,
     pub visible_tiles: HashSet<vec2<Coord>>,
@@ -25,11 +26,26 @@ pub struct Grid {
     pub size: vec2<Coord>,
 }
 
+#[derive(Debug, Clone, Copy)]
+pub enum Phase {
+    /// Shift and spawn items and enemies.
+    Night,
+    /// Resolve item effects.
+    Items,
+    /// Player movement.
+    Player,
+    /// Player sets their look direction.
+    Vision,
+    /// Select a new item.
+    Select,
+}
+
 impl Model {
     pub fn new(config: Config) -> Self {
         let mut model = Self {
             config,
             turn: 0,
+            phase: Phase::Night,
             grid: Grid {
                 size: vec2::splat(3),
             },

@@ -26,7 +26,11 @@ impl GameRender {
 
         for x in 0..model.grid.size.x {
             for y in 0..model.grid.size.y {
-                let light = model.visible_tiles.contains(&vec2(x, y));
+                let light = if let Phase::Vision | Phase::Night = model.phase {
+                    model.visible_tiles.contains(&vec2(x, y))
+                } else {
+                    true
+                };
                 self.draw_cell(vec2(x, y), light, framebuffer);
             }
         }
@@ -50,6 +54,18 @@ impl GameRender {
             &self.camera,
             &draw2d::TexturedQuad::colored(overlay, overlay_texture, color),
         );
+
+        if let Phase::Vision = model.phase {
+            self.geng.default_font().draw(
+                framebuffer,
+                &self.camera,
+                "Select a direction to look at",
+                vec2(geng::TextAlign::CENTER, geng::TextAlign::TOP),
+                mat3::translate(self.camera.center + vec2(0.0, 0.8 * self.camera.fov / 2.0))
+                    * mat3::scale_uniform(0.7),
+                Color::BLACK,
+            );
+        }
     }
 
     fn draw_item(&self, item: &Item, framebuffer: &mut ugli::Framebuffer) {
