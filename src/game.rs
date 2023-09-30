@@ -1,3 +1,5 @@
+use geng::Key;
+
 use crate::{prelude::*, render::GameRender};
 
 #[allow(dead_code)]
@@ -5,6 +7,8 @@ pub struct Game {
     geng: Geng,
     render: GameRender,
     model: Model,
+    // TODO
+    // controls: Controls,
 }
 
 impl Game {
@@ -23,7 +27,22 @@ impl geng::State for Game {
         self.render.draw(&self.model, framebuffer);
     }
 
-    fn handle_event(&mut self, _event: geng::Event) {}
+    fn handle_event(&mut self, event: geng::Event) {
+        let move_dir = if geng_utils::key::is_event_press(&event, [Key::ArrowLeft, Key::A]) {
+            vec2(-1, 0)
+        } else if geng_utils::key::is_event_press(&event, [Key::ArrowRight, Key::D]) {
+            vec2(1, 0)
+        } else if geng_utils::key::is_event_press(&event, [Key::ArrowDown, Key::S]) {
+            vec2(0, -1)
+        } else if geng_utils::key::is_event_press(&event, [Key::ArrowUp, Key::W]) {
+            vec2(0, 1)
+        } else {
+            vec2(0, 0)
+        };
+        if move_dir != vec2::ZERO {
+            self.model.next_turn(PlayerInput { move_dir })
+        }
+    }
 
     fn update(&mut self, delta_time: f64) {
         let delta_time = Time::new(delta_time as _);
