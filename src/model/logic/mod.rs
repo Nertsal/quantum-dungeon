@@ -90,6 +90,7 @@ impl Model {
 
     fn select_phase(&mut self) {
         // TODO
+        self.update_vision();
         self.phase = Phase::Select;
         self.turn += 1;
         self.night_phase();
