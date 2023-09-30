@@ -51,9 +51,30 @@ impl GameRender {
             &draw2d::TexturedQuad::colored(overlay, overlay_texture, color),
         );
 
-        let text = match model.phase {
+        let text = match &model.phase {
             Phase::Vision => "Select a direction to look at",
             Phase::Map => "Select a position to place a new tile",
+            Phase::Select { options } => {
+                let mut color = Color::BLACK;
+                color.a = 0.5;
+                self.geng.draw2d().draw2d(
+                    framebuffer,
+                    &self.camera,
+                    &draw2d::Quad::new(overlay, color),
+                );
+
+                let size = 2.0;
+                let offset = size * (options.len() as f32 - 1.0) / 2.0;
+                for (i, &item) in options.iter().enumerate() {
+                    let pos = vec2(i as f32 * size - offset, 0.0);
+                    let target = Aabb2::point(pos).extend_symmetric(vec2::splat(size) / 2.0 * 0.9);
+                    let texture = self.assets.sprites.item_texture(item);
+                    self.draw_at(target, &self.assets.sprites.cell, framebuffer);
+                    self.draw_at(target, texture, framebuffer);
+                }
+
+                "Select an item"
+            }
             _ => "",
         };
 
@@ -69,27 +90,35 @@ impl GameRender {
     }
 
     fn draw_item(&self, item: &Item, framebuffer: &mut ugli::Framebuffer) {
-        let texture = match item.kind {
-            ItemKind::Sword => &self.assets.sprites.sword,
-            ItemKind::Forge => &self.assets.sprites.item_shadow,
-            ItemKind::Boots => &self.assets.sprites.boot,
-            ItemKind::Map => &self.assets.sprites.item_shadow,
-        };
+        let texture = self.assets.sprites.item_texture(item.kind);
         // TODO: place the shadow
         // self.draw_at(item.position, &self.assets.sprites.item_shadow, framebuffer);
-        self.draw_at(item.position, texture, framebuffer);
+        self.draw_at_grid(item.position, texture, framebuffer);
     }
 
-    fn draw_at(
+    fn draw_at_grid(
         &self,
         position: vec2<Coord>,
         texture: &ugli::Texture,
         framebuffer: &mut ugli::Framebuffer,
     ) {
         let position = position.as_f32() * self.cell_size;
+        self.draw_at(
+            Aabb2::point(position).extend_symmetric(self.cell_size / 2.0),
+            texture,
+            framebuffer,
+        )
+    }
+
+    fn draw_at(
+        &self,
+        target: Aabb2<f32>,
+        texture: &ugli::Texture,
+        framebuffer: &mut ugli::Framebuffer,
+    ) {
         let size =
-            texture.size().as_f32() * self.cell_size / self.assets.sprites.cell.size().as_f32();
-        let target = Aabb2::point(position).extend_symmetric(size / 2.0);
+            texture.size().as_f32() * target.size() / self.assets.sprites.cell.size().as_f32();
+        let target = Aabb2::point(target.center()).extend_symmetric(size / 2.0);
         self.geng.draw2d().draw2d(
             framebuffer,
             &self.camera,
@@ -103,7 +132,7 @@ impl GameRender {
             Fraction::Enemy => &self.assets.sprites.enemy,
         };
 
-        self.draw_at(entity.position, texture, framebuffer)
+        self.draw_at_grid(entity.position, texture, framebuffer)
     }
 
     fn draw_cell(&self, position: vec2<Coord>, light: bool, framebuffer: &mut ugli::Framebuffer) {
@@ -112,6 +141,6 @@ impl GameRender {
         } else {
             &self.assets.sprites.cell_dark
         };
-        self.draw_at(position, texture, framebuffer)
+        self.draw_at_grid(position, texture, framebuffer)
     }
 }

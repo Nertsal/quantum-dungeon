@@ -6,12 +6,25 @@ impl Model {
     pub fn update(&mut self, _delta_time: Time) {}
 
     pub fn player_action(&mut self, player_input: PlayerInput) {
-        match self.phase {
+        match &self.phase {
             Phase::Player => self.player_move(player_input),
             Phase::Vision => self.player_vision(player_input),
             Phase::Map => self.map_action(player_input),
+            Phase::Select { options } => {
+                if let PlayerInput::SelectItem(i) = player_input {
+                    self.select_item(options[i]);
+                } else {
+                    log::error!("invalid input during phase Select, expected an item selection");
+                }
+            }
             _ => {}
         }
+    }
+
+    fn select_item(&mut self, item: ItemKind) {
+        self.player.items.push(item);
+        self.turn += 1;
+        self.night_phase();
     }
 
     /// Uncover a tile.
@@ -25,7 +38,12 @@ impl Model {
             return;
         }
         self.grid.expand(pos);
-        self.phase = Phase::Player;
+
+        if self.player.moves_left == 0 {
+            self.vision_phase();
+        } else {
+            self.phase = Phase::Player;
+        }
     }
 
     fn player_move(&mut self, player_input: PlayerInput) {
@@ -33,6 +51,7 @@ impl Model {
             // Should be unreachable
             log::error!("tried to move, but no moves are left");
             self.vision_phase();
+            return;
         }
 
         let mut moves = Vec::new();
@@ -43,6 +62,10 @@ impl Model {
                 move_dir = match player_input {
                     PlayerInput::Dir(dir) => dir,
                     PlayerInput::Tile(pos) => pos - entity.position,
+                    _ => {
+                        log::error!("invalid input during phase Player, expected tile or dir");
+                        return;
+                    }
                 };
                 moves.push(i);
             }
@@ -64,9 +87,12 @@ impl Model {
 
         if moved {
             self.check_deaths();
-            self.player.moves_left -= 1;
-            if self.player.moves_left == 0 {
-                self.vision_phase();
+            self.player.moves_left = self.player.moves_left.saturating_sub(1);
+            // Phase could have changed when collecting an item
+            if let Phase::Player = self.phase {
+                if self.player.moves_left == 0 {
+                    self.vision_phase();
+                }
             }
         }
     }
@@ -77,6 +103,10 @@ impl Model {
                 let dir = match player_input {
                     PlayerInput::Dir(dir) => dir,
                     PlayerInput::Tile(pos) => pos - entity.position,
+                    _ => {
+                        log::error!("invalid input during phase Vision, expected tile or dir");
+                        return;
+                    }
                 };
                 entity.look_dir = dir.map(|x| x.clamp_abs(1));
             }
@@ -91,10 +121,16 @@ impl Model {
     fn select_phase(&mut self) {
         // TODO
         self.update_vision();
-        self.phase = Phase::Select;
-        self.turn += 1;
-        self.night_phase();
-        self.player.moves_left = 5;
+
+        let options = [
+            ItemKind::Sword,
+            ItemKind::Forge,
+            ItemKind::Boots,
+            ItemKind::Map,
+        ];
+        let mut rng = thread_rng();
+        let options = (0..3).map(|_| *options.choose(&mut rng).unwrap()).collect();
+        self.phase = Phase::Select { options };
     }
 
     fn calculate_empty_space(&self) -> HashSet<vec2<Coord>> {

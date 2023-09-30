@@ -23,7 +23,7 @@ pub struct Model {
     pub entities: Vec<Entity>,
 }
 
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone)]
 pub enum Phase {
     /// Shift and spawn items and enemies.
     Night,
@@ -36,7 +36,7 @@ pub enum Phase {
     /// Player sets their look direction.
     Vision,
     /// Select a new item.
-    Select,
+    Select { options: Vec<ItemKind> },
 }
 
 impl Model {

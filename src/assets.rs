@@ -1,4 +1,4 @@
-use geng::prelude::*;
+use crate::prelude::*;
 
 #[derive(geng::asset::Load)]
 pub struct Assets {
@@ -24,5 +24,16 @@ impl Assets {
         geng::asset::Load::load(manager, &run_dir().join("assets"), &())
             .await
             .context("failed to load assets")
+    }
+}
+
+impl Sprites {
+    pub fn item_texture(&self, item: ItemKind) -> &ugli::Texture {
+        match item {
+            ItemKind::Sword => &self.sword,
+            ItemKind::Forge => &self.item_shadow,
+            ItemKind::Boots => &self.boot,
+            ItemKind::Map => &self.item_shadow,
+        }
     }
 }

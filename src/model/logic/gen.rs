@@ -9,6 +9,7 @@ impl Model {
         self.phase = Phase::Items;
         // TODO
         self.phase = Phase::Player;
+        self.player.moves_left = 5;
     }
 
     fn shift_items(&mut self) {

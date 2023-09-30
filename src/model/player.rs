@@ -10,6 +10,7 @@ pub struct Player {
 pub enum PlayerInput {
     Dir(vec2<Coord>),
     Tile(vec2<Coord>),
+    SelectItem(usize),
 }
 
 impl Player {

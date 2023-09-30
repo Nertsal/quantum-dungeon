@@ -67,9 +67,21 @@ impl geng::State for Game {
             return;
         }
 
+        if geng_utils::key::is_event_press(&event, [Key::Digit1]) {
+            self.model.player_action(PlayerInput::SelectItem(0));
+        } else if geng_utils::key::is_event_press(&event, [Key::Digit2]) {
+            self.model.player_action(PlayerInput::SelectItem(1));
+        } else if geng_utils::key::is_event_press(&event, [Key::Digit3]) {
+            self.model.player_action(PlayerInput::SelectItem(2));
+        }
+
         if geng_utils::key::is_event_press(&event, [MouseButton::Left]) {
-            let target = self.cursor_cell_pos();
-            self.model.player_action(PlayerInput::Tile(target));
+            if let Phase::Select { .. } = self.model.phase {
+                // TODO
+            } else {
+                let target = self.cursor_cell_pos();
+                self.model.player_action(PlayerInput::Tile(target));
+            }
             // return;
         }
     }
