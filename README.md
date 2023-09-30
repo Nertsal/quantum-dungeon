@@ -1,2 +1,2 @@
-# geng_template
-A template for projects using [geng](https://github.com/kuviman/geng) engine
+# Quantum Dungeon
+A game for LudumDare 54 
