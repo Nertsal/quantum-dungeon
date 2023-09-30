@@ -1,9 +1,10 @@
 mod entity;
+mod grid;
 mod item;
 mod logic;
 mod player;
 
-pub use self::{entity::*, item::*, player::*};
+pub use self::{entity::*, grid::*, item::*, player::*};
 
 use crate::prelude::*;
 
@@ -20,10 +21,6 @@ pub struct Model {
     pub visible_tiles: HashSet<vec2<Coord>>,
     pub items: Vec<Item>,
     pub entities: Vec<Entity>,
-}
-
-pub struct Grid {
-    pub size: vec2<Coord>,
 }
 
 #[derive(Debug, Clone, Copy)]
@@ -46,9 +43,7 @@ impl Model {
             config,
             turn: 0,
             phase: Phase::Night,
-            grid: Grid {
-                size: vec2::splat(3),
-            },
+            grid: Grid::new(3),
             player: Player::new(),
             visible_tiles: HashSet::new(),
             items: Vec::new(),
@@ -63,14 +58,5 @@ impl Model {
         model.night_phase();
         model.update_vision();
         model
-    }
-}
-
-impl Grid {
-    pub fn clamp_pos(&self, pos: vec2<Coord>) -> vec2<Coord> {
-        vec2(
-            pos.x.clamp(0, self.size.x - 1),
-            pos.y.clamp(0, self.size.y - 1),
-        )
     }
 }

@@ -12,10 +12,7 @@ impl Model {
     }
 
     fn shift_items(&mut self) {
-        let mut available: HashSet<_> = (0..self.grid.size.x)
-            .flat_map(|x| (0..self.grid.size.y).map(move |y| vec2(x, y)))
-            .filter(|pos| !self.visible_tiles.contains(pos))
-            .collect();
+        let mut available: HashSet<_> = self.grid.tiles.sub(&self.visible_tiles);
         for entity in &self.entities {
             available.remove(&entity.position);
         }

@@ -37,8 +37,8 @@ impl Model {
         let mut moved = false;
         for i in moves {
             let entity = self.entities.get_mut(i).unwrap();
-            let target = self.grid.clamp_pos(entity.position + move_dir);
-            if target != entity.position {
+            let target = entity.position + move_dir;
+            if self.grid.check_pos(target) {
                 let fraction = entity.fraction;
                 self.move_entity_swap(i, target);
                 self.collect_item_at(fraction, target);
@@ -82,9 +82,7 @@ impl Model {
     }
 
     fn calculate_empty_space(&self) -> HashSet<vec2<Coord>> {
-        let mut available: HashSet<_> = (0..self.grid.size.x)
-            .flat_map(|x| (0..self.grid.size.y).map(move |y| vec2(x, y)))
-            .collect();
+        let mut available: HashSet<_> = self.grid.tiles.clone();
 
         for entity in &self.entities {
             available.remove(&entity.position);
@@ -103,8 +101,8 @@ impl Model {
                 let mut pos = entity.position;
                 visible.insert(pos);
                 loop {
-                    let target = self.grid.clamp_pos(pos + entity.look_dir);
-                    if target == pos {
+                    let target = pos + entity.look_dir;
+                    if !self.grid.check_pos(target) {
                         break;
                     }
                     visible.insert(target);
@@ -127,7 +125,12 @@ impl Model {
         };
 
         let from_pos = entity.position;
-        let target_pos = self.grid.clamp_pos(target_pos);
+        let target_pos = if self.grid.check_pos(target_pos) {
+            target_pos
+        } else {
+            log::error!("tried to move to an invalid position: {}", target_pos);
+            return;
+        };
         if let Some(target) = self.entities.iter_mut().find(|e| e.position == target_pos) {
             target.position = from_pos;
         }

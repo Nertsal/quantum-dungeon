@@ -22,17 +22,13 @@ impl GameRender {
     }
 
     pub fn draw(&mut self, model: &Model, framebuffer: &mut ugli::Framebuffer) {
-        self.camera.center = (model.grid.size.as_f32() / 2.0 - vec2::splat(0.5)) * self.cell_size;
-
-        for x in 0..model.grid.size.x {
-            for y in 0..model.grid.size.y {
-                let light = if let Phase::Vision | Phase::Night = model.phase {
-                    model.visible_tiles.contains(&vec2(x, y))
-                } else {
-                    true
-                };
-                self.draw_cell(vec2(x, y), light, framebuffer);
-            }
+        for &pos in &model.grid.tiles {
+            let light = if let Phase::Vision | Phase::Night = model.phase {
+                model.visible_tiles.contains(&pos)
+            } else {
+                true
+            };
+            self.draw_cell(pos, light, framebuffer);
         }
 
         for item in &model.items {
