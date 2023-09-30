@@ -26,7 +26,8 @@ impl GameRender {
 
         for x in 0..model.grid.size.x {
             for y in 0..model.grid.size.y {
-                self.draw_cell(vec2(x, y), framebuffer);
+                let light = model.visible_tiles.contains(&vec2(x, y));
+                self.draw_cell(vec2(x, y), light, framebuffer);
             }
         }
 
@@ -37,58 +38,61 @@ impl GameRender {
             self.draw_entity(entity, framebuffer);
         }
 
-        // Vision
-        for x in 0..model.grid.size.x {
-            for y in 0..model.grid.size.y {
-                if !model.visible_tiles.contains(&vec2(x, y)) {
-                    self.geng.draw2d().draw2d(
-                        framebuffer,
-                        &self.camera,
-                        &draw2d::Quad::new(
-                            Aabb2::point(vec2(x, y).as_f32() * self.cell_size)
-                                .extend_symmetric(self.cell_size / 2.0),
-                            Color::new(0.0, 0.0, 0.0, 0.5),
-                        ),
-                    );
-                }
-            }
-        }
-    }
+        let overlay_texture = &self.assets.sprites.overlay;
+        let size = overlay_texture.size().as_f32();
+        let size = size * self.camera.fov / size.y;
+        let overlay = Aabb2::point(self.camera.center).extend_symmetric(size / 2.0);
 
-    fn draw_item(&self, item: &Item, framebuffer: &mut ugli::Framebuffer) {
-        let position = item.position.as_f32() * self.cell_size;
-        let color = Color::GREEN;
-
+        let mut color = Color::WHITE;
+        color.a = 0.5;
         self.geng.draw2d().draw2d(
             framebuffer,
             &self.camera,
-            &draw2d::Ellipse::circle(position, 0.3, color),
+            &draw2d::TexturedQuad::colored(overlay, overlay_texture, color),
+        );
+    }
+
+    fn draw_item(&self, item: &Item, framebuffer: &mut ugli::Framebuffer) {
+        let texture = match item.kind {
+            ItemKind::Sword => &self.assets.sprites.sword,
+        };
+        // TODO: place the shadow
+        // self.draw_at(item.position, &self.assets.sprites.item_shadow, framebuffer);
+        self.draw_at(item.position, texture, framebuffer);
+    }
+
+    fn draw_at(
+        &self,
+        position: vec2<Coord>,
+        texture: &ugli::Texture,
+        framebuffer: &mut ugli::Framebuffer,
+    ) {
+        let position = position.as_f32() * self.cell_size;
+        let size =
+            texture.size().as_f32() * self.cell_size / self.assets.sprites.cell.size().as_f32();
+        let target = Aabb2::point(position).extend_symmetric(size / 2.0);
+        self.geng.draw2d().draw2d(
+            framebuffer,
+            &self.camera,
+            &draw2d::TexturedQuad::new(target, texture),
         );
     }
 
     fn draw_entity(&self, entity: &Entity, framebuffer: &mut ugli::Framebuffer) {
-        let position = entity.position.as_f32() * self.cell_size;
-        let color = match entity.fraction {
-            Fraction::Player => Color::BLUE,
-            Fraction::Enemy => Color::RED,
+        let texture = match entity.fraction {
+            Fraction::Player => &self.assets.sprites.player,
+            Fraction::Enemy => &self.assets.sprites.enemy,
         };
 
-        self.geng.draw2d().draw2d(
-            framebuffer,
-            &self.camera,
-            &draw2d::Ellipse::circle(position, 0.3, color),
-        );
+        self.draw_at(entity.position, texture, framebuffer)
     }
 
-    fn draw_cell(&self, position: vec2<Coord>, framebuffer: &mut ugli::Framebuffer) {
-        let position = position.as_f32() * self.cell_size;
-        self.geng.draw2d().draw2d(
-            framebuffer,
-            &self.camera,
-            &draw2d::TexturedQuad::new(
-                Aabb2::point(position).extend_symmetric(self.cell_size / 2.0),
-                &self.assets.sprites.cell,
-            ),
-        );
+    fn draw_cell(&self, position: vec2<Coord>, light: bool, framebuffer: &mut ugli::Framebuffer) {
+        let texture = if light {
+            &self.assets.sprites.cell
+        } else {
+            &self.assets.sprites.cell_dark
+        };
+        self.draw_at(position, texture, framebuffer)
     }
 }
