@@ -1,6 +1,4 @@
-use crate::{assets::Assets, model::*, render::GameRender};
-
-use geng::prelude::*;
+use crate::{prelude::*, render::GameRender};
 
 #[allow(dead_code)]
 pub struct Game {
@@ -10,11 +8,11 @@ pub struct Game {
 }
 
 impl Game {
-    pub fn new(geng: &Geng, assets: &Rc<Assets>) -> Self {
+    pub fn new(geng: &Geng, assets: &Rc<Assets>, config: Config) -> Self {
         Self {
             geng: geng.clone(),
             render: GameRender::new(geng, assets),
-            model: Model::new(),
+            model: Model::new(config),
         }
     }
 }

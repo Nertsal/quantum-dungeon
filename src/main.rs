@@ -1,12 +1,16 @@
 mod assets;
+mod config;
 mod game;
 mod model;
+mod prelude;
 mod render;
 
 use geng::prelude::*;
 
 #[derive(clap::Parser)]
 struct Opts {
+    #[clap(long)]
+    config: Option<std::path::PathBuf>,
     #[clap(flatten)]
     geng: geng::CliArgs,
 }
@@ -24,7 +28,9 @@ fn main() {
     Geng::run_with(&geng_options, |geng| async move {
         let manager = geng.asset_manager();
         let assets = assets::Assets::load(manager).await.unwrap();
-        let state = game::Game::new(&geng, &Rc::new(assets));
+        let config_path = opts.config.unwrap_or_else(|| "assets/config.ron".into());
+        let config = config::Config::load(config_path).await.unwrap();
+        let state = game::Game::new(&geng, &Rc::new(assets), config);
         geng.run_state(state).await;
     });
 }
