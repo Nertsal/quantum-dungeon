@@ -24,8 +24,10 @@ impl GameRender {
     }
 
     pub fn draw(&mut self, model: &Model, framebuffer: &mut ugli::Framebuffer) {
-        for x in 0..model.grid_size.x {
-            for y in 0..model.grid_size.y {
+        self.camera.center = (model.grid.size.as_f32() / 2.0 - vec2::splat(0.5)) * self.grid_size;
+
+        for x in 0..model.grid.size.x {
+            for y in 0..model.grid.size.y {
                 self.draw_cell(vec2(x, y), framebuffer);
             }
         }
