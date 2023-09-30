@@ -11,4 +11,5 @@ pub enum ItemKind {
     // Boots,
     // Forge,
     Sword,
+    Map,
 }

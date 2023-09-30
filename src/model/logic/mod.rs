@@ -9,8 +9,23 @@ impl Model {
         match self.phase {
             Phase::Player => self.player_move(player_input),
             Phase::Vision => self.player_vision(player_input),
+            Phase::Map => self.map_action(player_input),
             _ => {}
         }
+    }
+
+    /// Uncover a tile.
+    fn map_action(&mut self, player_input: PlayerInput) {
+        let PlayerInput::Tile(pos) = player_input else {
+            log::error!("invalid input during phase Map, expected a tile");
+            return;
+        };
+        if self.grid.check_pos(pos) {
+            log::error!("position {} is already valid, select an empty one", pos);
+            return;
+        }
+        self.grid.expand(pos);
+        self.phase = Phase::Player;
     }
 
     fn player_move(&mut self, player_input: PlayerInput) {
@@ -162,6 +177,7 @@ impl Model {
                 let range = 1;
                 self.deal_damage_around(item.position, fraction, damage, range);
             }
+            ItemKind::Map => self.phase = Phase::Map,
         }
     }
 

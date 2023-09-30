@@ -31,6 +31,8 @@ pub enum Phase {
     Items,
     /// Player movement.
     Player,
+    /// Place a tile on the map.
+    Map,
     /// Player sets their look direction.
     Vision,
     /// Select a new item.

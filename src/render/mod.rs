@@ -51,22 +51,27 @@ impl GameRender {
             &draw2d::TexturedQuad::colored(overlay, overlay_texture, color),
         );
 
-        if let Phase::Vision = model.phase {
-            self.geng.default_font().draw(
-                framebuffer,
-                &self.camera,
-                "Select a direction to look at",
-                vec2(geng::TextAlign::CENTER, geng::TextAlign::TOP),
-                mat3::translate(self.camera.center + vec2(0.0, 0.8 * self.camera.fov / 2.0))
-                    * mat3::scale_uniform(0.7),
-                Color::BLACK,
-            );
-        }
+        let text = match model.phase {
+            Phase::Vision => "Select a direction to look at",
+            Phase::Map => "Select a position to place a new tile",
+            _ => "",
+        };
+
+        self.geng.default_font().draw(
+            framebuffer,
+            &self.camera,
+            text,
+            vec2(geng::TextAlign::CENTER, geng::TextAlign::TOP),
+            mat3::translate(self.camera.center + vec2(0.0, 0.8 * self.camera.fov / 2.0))
+                * mat3::scale_uniform(0.7),
+            Color::BLACK,
+        );
     }
 
     fn draw_item(&self, item: &Item, framebuffer: &mut ugli::Framebuffer) {
         let texture = match item.kind {
             ItemKind::Sword => &self.assets.sprites.sword,
+            ItemKind::Map => &self.assets.sprites.item_shadow,
         };
         // TODO: place the shadow
         // self.draw_at(item.position, &self.assets.sprites.item_shadow, framebuffer);
