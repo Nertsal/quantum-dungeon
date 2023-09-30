@@ -9,7 +9,7 @@ pub struct Item {
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum ItemKind {
-    // Boots,
+    Boots,
     // Forge,
     Sword,
     Map,
@@ -18,6 +18,7 @@ pub enum ItemKind {
 impl ItemKind {
     pub fn instantiate(self, position: vec2<Coord>) -> Item {
         let use_time = match self {
+            ItemKind::Boots => 1,
             ItemKind::Sword => 1,
             ItemKind::Map => 3,
         };

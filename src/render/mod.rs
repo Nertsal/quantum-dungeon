@@ -72,6 +72,7 @@ impl GameRender {
         let texture = match item.kind {
             ItemKind::Sword => &self.assets.sprites.sword,
             ItemKind::Map => &self.assets.sprites.item_shadow,
+            ItemKind::Boots => &self.assets.sprites.boot,
         };
         // TODO: place the shadow
         // self.draw_at(item.position, &self.assets.sprites.item_shadow, framebuffer);

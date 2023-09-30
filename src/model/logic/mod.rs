@@ -185,6 +185,7 @@ impl Model {
                 self.deal_damage_around(item.position, fraction, damage, range);
             }
             ItemKind::Map => self.phase = Phase::Map,
+            ItemKind::Boots => self.player.moves_left += 3,
         }
     }
 
