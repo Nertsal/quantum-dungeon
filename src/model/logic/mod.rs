@@ -58,6 +58,7 @@ impl Model {
         let mut items = Vec::new();
         for i in (0..self.items.len()).rev() {
             if self.items[i].position == position {
+                // TODO: use time
                 items.push(self.items.swap_remove(i));
             }
         }

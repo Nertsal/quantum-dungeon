@@ -23,7 +23,12 @@ impl Game {
 
 impl geng::State for Game {
     fn draw(&mut self, framebuffer: &mut ugli::Framebuffer) {
-        ugli::clear(framebuffer, Some(Rgba::BLACK), None, None);
+        ugli::clear(
+            framebuffer,
+            Some(Rgba::try_from("#333333").unwrap()),
+            None,
+            None,
+        );
         self.render.draw(&self.model, framebuffer);
     }
 

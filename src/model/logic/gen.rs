@@ -1,6 +1,7 @@
 use super::*;
 
 impl Model {
+    /// Night phase.
     pub fn generate(&mut self) {
         // TODO
 
