@@ -26,7 +26,7 @@ pub struct Grid {
 
 impl Model {
     pub fn new(config: Config) -> Self {
-        Self {
+        let mut model = Self {
             config,
             turn: 0,
             grid: Grid { size: vec2(10, 10) },
@@ -38,7 +38,9 @@ impl Model {
                 health: Health::new_max(100),
                 kind: EntityKind::Player,
             }],
-        }
+        };
+        model.generate();
+        model
     }
 }
 
