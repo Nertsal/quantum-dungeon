@@ -7,8 +7,9 @@ pub struct Player {
 }
 
 #[derive(Debug)]
-pub struct PlayerInput {
-    pub move_dir: vec2<Coord>,
+pub enum PlayerInput {
+    Dir(vec2<Coord>),
+    Tile(vec2<Coord>),
 }
 
 impl Player {

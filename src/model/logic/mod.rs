@@ -12,17 +12,23 @@ impl Model {
         }
 
         let mut moves = Vec::new();
+        let mut move_dir = vec2::ZERO;
         for (i, entity) in self.entities.iter_mut().enumerate() {
             if let EntityKind::Player = entity.kind {
                 // TODO: if there are multiple players, resolve conflicting movement
+                move_dir = match player_input {
+                    PlayerInput::Dir(dir) => dir,
+                    PlayerInput::Tile(pos) => pos - entity.position,
+                };
                 moves.push(i);
             }
         }
+        move_dir = move_dir.map(|x| x.clamp_abs(1));
 
         let mut moved = false;
         for i in moves {
             let entity = self.entities.get_mut(i).unwrap();
-            let target = self.grid.clamp_pos(entity.position + player_input.move_dir);
+            let target = self.grid.clamp_pos(entity.position + move_dir);
             if target != entity.position {
                 let fraction = entity.fraction;
                 self.move_entity_swap(i, target);

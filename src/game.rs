@@ -1,4 +1,4 @@
-use geng::Key;
+use geng::{Key, MouseButton};
 
 use crate::{prelude::*, render::GameRender};
 
@@ -7,6 +7,8 @@ pub struct Game {
     geng: Geng,
     render: GameRender,
     model: Model,
+    framebuffer_size: vec2<usize>,
+    cursor_pos: vec2<f64>,
     // TODO
     // controls: Controls,
 }
@@ -17,12 +19,24 @@ impl Game {
             geng: geng.clone(),
             render: GameRender::new(geng, assets),
             model: Model::new(config),
+            framebuffer_size: vec2(1, 1),
+            cursor_pos: vec2::ZERO,
         }
+    }
+
+    fn cursor_cell_pos(&self) -> vec2<Coord> {
+        let world_pos = self
+            .render
+            .camera
+            .screen_to_world(self.framebuffer_size.as_f32(), self.cursor_pos.as_f32());
+        let cell_pos = world_pos / self.render.cell_size + vec2::splat(0.5);
+        cell_pos.map(|x| x.floor() as Coord)
     }
 }
 
 impl geng::State for Game {
     fn draw(&mut self, framebuffer: &mut ugli::Framebuffer) {
+        self.framebuffer_size = framebuffer.size();
         ugli::clear(
             framebuffer,
             Some(Rgba::try_from("#333333").unwrap()),
@@ -33,6 +47,10 @@ impl geng::State for Game {
     }
 
     fn handle_event(&mut self, event: geng::Event) {
+        if let geng::Event::CursorMove { position } = event {
+            self.cursor_pos = position;
+        }
+
         let move_dir = if geng_utils::key::is_event_press(&event, [Key::ArrowLeft, Key::A]) {
             vec2(-1, 0)
         } else if geng_utils::key::is_event_press(&event, [Key::ArrowRight, Key::D]) {
@@ -45,7 +63,14 @@ impl geng::State for Game {
             vec2(0, 0)
         };
         if move_dir != vec2::ZERO {
-            self.model.player_move(PlayerInput { move_dir })
+            self.model.player_move(PlayerInput::Dir(move_dir));
+            return;
+        }
+
+        if geng_utils::key::is_event_press(&event, [MouseButton::Left]) {
+            let target = self.cursor_cell_pos();
+            self.model.player_move(PlayerInput::Tile(target));
+            // return;
         }
     }
 

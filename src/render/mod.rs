@@ -3,8 +3,8 @@ use crate::prelude::*;
 pub struct GameRender {
     geng: Geng,
     assets: Rc<Assets>,
-    camera: Camera2d,
-    cell_size: vec2<f32>,
+    pub camera: Camera2d,
+    pub cell_size: vec2<f32>,
 }
 
 impl GameRender {
