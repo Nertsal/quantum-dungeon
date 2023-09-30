@@ -40,7 +40,7 @@ impl geng::State for Game {
             vec2(0, 0)
         };
         if move_dir != vec2::ZERO {
-            self.model.next_turn(PlayerInput { move_dir })
+            self.model.player_move(PlayerInput { move_dir })
         }
     }
 

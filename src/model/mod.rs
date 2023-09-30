@@ -1,7 +1,9 @@
+mod entity;
+mod item;
 mod logic;
 mod player;
 
-pub use self::player::*;
+pub use self::{entity::*, item::*, player::*};
 
 use crate::prelude::*;
 
@@ -14,6 +16,8 @@ pub struct Model {
     pub turn: Turn,
     pub grid: Grid,
     pub player: Player,
+    pub items: Vec<Item>,
+    pub entities: Vec<Entity>,
 }
 
 pub struct Grid {
@@ -26,13 +30,23 @@ impl Model {
             config,
             turn: 0,
             grid: Grid { size: vec2(10, 10) },
-            player: Player::new(vec2(0, 0)),
+            player: Player::new(),
+            items: Vec::new(),
+            entities: vec![Entity {
+                position: vec2(0, 0),
+                fraction: Fraction::Player,
+                health: Health::new_max(100),
+                kind: EntityKind::Player,
+            }],
         }
     }
 }
 
 impl Grid {
     pub fn clamp_pos(&self, pos: vec2<Coord>) -> vec2<Coord> {
-        vec2(pos.x.clamp(0, self.size.x), pos.y.clamp(0, self.size.y))
+        vec2(
+            pos.x.clamp(0, self.size.x - 1),
+            pos.y.clamp(0, self.size.y - 1),
+        )
     }
 }

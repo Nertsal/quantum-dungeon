@@ -32,16 +32,22 @@ impl GameRender {
             }
         }
 
-        self.draw_player(model.player.position, framebuffer);
+        for entity in &model.entities {
+            self.draw_entity(entity, framebuffer);
+        }
     }
 
-    fn draw_player(&self, position: vec2<Coord>, framebuffer: &mut ugli::Framebuffer) {
-        let position = position.as_f32() * self.grid_size;
+    fn draw_entity(&self, entity: &Entity, framebuffer: &mut ugli::Framebuffer) {
+        let position = entity.position.as_f32() * self.grid_size;
+        let color = match entity.fraction {
+            Fraction::Player => Color::BLUE,
+            Fraction::Enemy => Color::RED,
+        };
 
         self.geng.draw2d().draw2d(
             framebuffer,
             &self.camera,
-            &draw2d::Ellipse::circle(position, 0.3, Color::BLUE),
+            &draw2d::Ellipse::circle(position, 0.3, color),
         );
     }
 

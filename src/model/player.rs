@@ -1,9 +1,7 @@
 use super::*;
 
 #[derive(Debug)]
-pub struct Player {
-    pub position: vec2<Coord>,
-}
+pub struct Player {}
 
 #[derive(Debug)]
 pub struct PlayerInput {
@@ -11,7 +9,7 @@ pub struct PlayerInput {
 }
 
 impl Player {
-    pub fn new(position: vec2<Coord>) -> Self {
-        Self { position }
+    pub fn new() -> Self {
+        Self {}
     }
 }
