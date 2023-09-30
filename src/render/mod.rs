@@ -71,8 +71,9 @@ impl GameRender {
     fn draw_item(&self, item: &Item, framebuffer: &mut ugli::Framebuffer) {
         let texture = match item.kind {
             ItemKind::Sword => &self.assets.sprites.sword,
-            ItemKind::Map => &self.assets.sprites.item_shadow,
+            ItemKind::Forge => &self.assets.sprites.item_shadow,
             ItemKind::Boots => &self.assets.sprites.boot,
+            ItemKind::Map => &self.assets.sprites.item_shadow,
         };
         // TODO: place the shadow
         // self.draw_at(item.position, &self.assets.sprites.item_shadow, framebuffer);

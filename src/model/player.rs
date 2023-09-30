@@ -16,7 +16,7 @@ impl Player {
     pub fn new() -> Self {
         Self {
             moves_left: 5,
-            items: vec![ItemKind::Sword, ItemKind::Boots],
+            items: vec![ItemKind::Sword, ItemKind::Map],
         }
     }
 }

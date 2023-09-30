@@ -179,13 +179,25 @@ impl Model {
     fn use_item(&mut self, fraction: Fraction, item: Item) {
         match item.kind {
             ItemKind::Sword => {
-                let bonus = self.count_items_near(item.position, ItemKind::Sword);
-                let damage = 2 + bonus as Hp * 2;
+                let bonus = self.count_items_near(item.position, ItemKind::Sword) as i64;
+                let bonus = item.bonus + bonus;
+                let damage = 2 + bonus * 2;
                 let range = 1;
                 self.deal_damage_around(item.position, fraction, damage, range);
             }
+            ItemKind::Forge => {
+                self.bonus_near(item.position, 1, ItemRef::Category(ItemCategory::Weapon), 1)
+            }
             ItemKind::Map => self.phase = Phase::Map,
             ItemKind::Boots => self.player.moves_left += 3,
+        }
+    }
+
+    fn bonus_near(&mut self, position: vec2<Coord>, range: Coord, item_ref: ItemRef, bonus: i64) {
+        for item in &mut self.items {
+            if distance(item.position, position) <= range && item_ref.check(item.kind) {
+                item.bonus += bonus;
+            }
         }
     }
 
