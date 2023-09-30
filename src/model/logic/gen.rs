@@ -3,30 +3,8 @@ use super::*;
 impl Model {
     pub fn night_phase(&mut self) {
         self.shift_items();
+        self.spawn_enemies();
         self.spawn_items();
-
-        if self.items.is_empty() {
-            self.entities.push(Entity {
-                position: vec2(4, 5),
-                fraction: Fraction::Enemy,
-                health: Health::new_max(5),
-                look_dir: vec2(0, -1),
-                kind: EntityKind::Dummy,
-            });
-
-            self.items.push(Item {
-                position: vec2(3, 5),
-                kind: ItemKind::Sword,
-            });
-            self.items.push(Item {
-                position: vec2(3, 6),
-                kind: ItemKind::Sword,
-            });
-            self.items.push(Item {
-                position: vec2(2, 5),
-                kind: ItemKind::Sword,
-            });
-        }
     }
 
     fn shift_items(&mut self) {
@@ -64,5 +42,51 @@ impl Model {
         }
     }
 
-    fn spawn_items(&mut self) {}
+    fn spawn_enemies(&mut self) {
+        let mut available = self.calculate_empty_space().sub(&self.visible_tiles);
+        if available.is_empty() {
+            return;
+        }
+
+        let options = [EntityKind::Dummy];
+        let mut rng = thread_rng();
+        for _ in 0..1 {
+            let kind = options.choose(&mut rng).unwrap();
+            let position = *available.iter().choose(&mut rng).unwrap();
+
+            self.entities.push(Entity {
+                position,
+                fraction: Fraction::Enemy,
+                health: Health::new_max(5),
+                look_dir: vec2(0, -1),
+                kind: kind.clone(),
+            });
+
+            available.remove(&position);
+            if available.is_empty() {
+                break;
+            }
+        }
+    }
+
+    fn spawn_items(&mut self) {
+        let mut available = self.calculate_empty_space().sub(&self.visible_tiles);
+        if available.is_empty() {
+            return;
+        }
+
+        let mut rng = thread_rng();
+        for kind in &self.player.items {
+            let position = *available.iter().choose(&mut rng).unwrap();
+            self.items.push(Item {
+                position,
+                kind: kind.clone(),
+            });
+
+            available.remove(&position);
+            if available.is_empty() {
+                break;
+            }
+        }
+    }
 }

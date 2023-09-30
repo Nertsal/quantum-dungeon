@@ -30,7 +30,9 @@ impl Model {
         let mut model = Self {
             config,
             turn: 0,
-            grid: Grid { size: vec2(10, 10) },
+            grid: Grid {
+                size: vec2::splat(3),
+            },
             player: Player::new(),
             visible_tiles: HashSet::new(),
             items: Vec::new(),
