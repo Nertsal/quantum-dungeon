@@ -82,10 +82,7 @@ impl Model {
         let mut rng = thread_rng();
         for kind in &self.player.items {
             let position = *available.iter().choose(&mut rng).unwrap();
-            self.items.push(Item {
-                position,
-                kind: kind.clone(),
-            });
+            self.items.push(kind.instantiate(position));
 
             available.remove(&position);
             if available.is_empty() {

@@ -158,9 +158,15 @@ impl Model {
     fn collect_item_at(&mut self, fraction: Fraction, position: vec2<Coord>) {
         let mut items = Vec::new();
         for i in (0..self.items.len()).rev() {
-            if self.items[i].position == position {
-                // TODO: use time
-                items.push(self.items.swap_remove(i));
+            let item = &mut self.items[i];
+            if item.position == position {
+                item.use_time = item.use_time.saturating_sub(1);
+                let item = if item.use_time == 0 {
+                    self.items.swap_remove(i)
+                } else {
+                    item.clone()
+                };
+                items.push(item);
             }
         }
 
