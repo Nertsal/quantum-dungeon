@@ -6,9 +6,9 @@ pub struct Item {
     pub kind: ItemKind,
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub enum ItemKind {
     // Boots,
     // Forge,
-    // Sword,
+    Sword,
 }

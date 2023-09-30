@@ -35,6 +35,20 @@ impl GameRender {
         for entity in &model.entities {
             self.draw_entity(entity, framebuffer);
         }
+        for item in &model.items {
+            self.draw_item(item, framebuffer);
+        }
+    }
+
+    fn draw_item(&self, item: &Item, framebuffer: &mut ugli::Framebuffer) {
+        let position = item.position.as_f32() * self.grid_size;
+        let color = Color::GREEN;
+
+        self.geng.draw2d().draw2d(
+            framebuffer,
+            &self.camera,
+            &draw2d::Ellipse::circle(position, 0.3, color),
+        );
     }
 
     fn draw_entity(&self, entity: &Entity, framebuffer: &mut ugli::Framebuffer) {

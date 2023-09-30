@@ -1,6 +1,6 @@
 use super::*;
 
-pub type Hp = u64;
+pub type Hp = i64;
 pub type Health = geng_utils::bounded::Bounded<Hp>;
 
 #[derive(Debug, Clone)]
@@ -11,7 +11,7 @@ pub struct Entity {
     pub kind: EntityKind,
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum Fraction {
     Player,
     Enemy,
