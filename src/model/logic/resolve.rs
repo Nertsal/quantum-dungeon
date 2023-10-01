@@ -58,8 +58,15 @@ impl Model {
 
     pub fn resolution_phase(&mut self) {
         log::debug!("Resolution phase");
+        let ids: Vec<_> = self.items.iter().map(|(i, _)| i).collect();
+        let item_queue = ids
+            .into_iter()
+            .flat_map(|i| self.resolve_item_passive(i).map(|p| (i, p)))
+            .sorted_by_key(|(_, p)| *p) // Sort by priority - last one is processed first
+            .map(|(i, _)| i)
+            .collect();
         self.phase = Phase::Passive {
-            item_queue: self.items.iter().map(|(i, _)| i).collect(),
+            item_queue,
             start_delay: Lifetime::new_max(r32(0.2)),
             end_delay: Lifetime::new_max(r32(0.2)),
         };
@@ -78,33 +85,17 @@ impl Model {
     }
 
     fn resolve_current(&mut self) {
-        if let Phase::Passive { item_queue, .. } = &self.phase {
-            let Some(&current_item) = item_queue.last() else {
-                self.day_phase();
-                return;
-            };
-            if !self.resolve_item_passive(current_item) {
-                // No animation - skip
-                while let Phase::Passive { item_queue, .. } = &mut self.phase {
-                    item_queue.pop();
-                    let Some(&item) = item_queue.last() else {
-                        self.day_phase();
-                        return;
-                    };
-                    if self.resolve_item_passive(item) {
-                        // Yes animation
-                        break;
-                    }
-                }
-            }
-        }
-
         if let Phase::Passive {
+            item_queue,
             start_delay,
             end_delay,
             ..
         } = &mut self.phase
         {
+            if item_queue.last().is_none() {
+                self.day_phase();
+                return;
+            }
             start_delay.set_ratio(R32::ONE);
             end_delay.set_ratio(R32::ONE);
         }
@@ -132,19 +123,18 @@ impl Model {
     }
 
     /// Start item passive resolution animation.
-    /// If there is no animation required for the item, false is returned.
-    fn resolve_item_passive(&mut self, item_id: Id) -> bool {
+    /// If there is an animation required for the item, its priority is returned.
+    fn resolve_item_passive(&mut self, item_id: Id) -> Option<isize> {
         let Some(board_item) = self.items.get(item_id) else {
             self.day_phase();
-            return false;
+            return None;
         };
 
         let item = &self.player.items[board_item.item_id];
-        #[allow(clippy::match_like_matches_macro)]
         match item.kind {
-            ItemKind::Forge => true,
-            ItemKind::Ghost => true,
-            _ => false,
+            ItemKind::Forge => Some(10),
+            ItemKind::Ghost => Some(-10),
+            _ => None,
         }
     }
 
