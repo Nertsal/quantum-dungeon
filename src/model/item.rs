@@ -26,7 +26,11 @@ pub enum ItemRef {
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum ItemCategory {
+    Spooky,
+    Tech,
     Weapon,
+    Treasure,
+    Magic,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
@@ -40,19 +44,19 @@ pub enum ItemKind {
 impl ItemRef {
     pub fn check(&self, item: ItemKind) -> bool {
         match self {
-            ItemRef::Category(category) => item.category() == Some(*category),
+            ItemRef::Category(category) => item.categories().contains(category),
             ItemRef::Specific(_) => todo!(),
         }
     }
 }
 
 impl ItemKind {
-    pub fn category(&self) -> Option<ItemCategory> {
+    pub fn categories(&self) -> Vec<ItemCategory> {
         match self {
-            ItemKind::Boots => None,
-            ItemKind::Forge => None,
-            ItemKind::Sword => Some(ItemCategory::Weapon),
-            ItemKind::Map => None,
+            ItemKind::Boots => vec![ItemCategory::Tech],
+            ItemKind::Forge => vec![ItemCategory::Magic],
+            ItemKind::Sword => vec![ItemCategory::Weapon],
+            ItemKind::Map => vec![ItemCategory::Treasure],
         }
     }
 
