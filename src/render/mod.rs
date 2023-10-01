@@ -384,7 +384,7 @@ impl GameRender {
         // Damage value
         if let Some(damage) = item.temp_stats.damage {
             let pos = (item.position.as_f32() + vec2(0.3, 0.3)) * self.cell_size;
-            let target = Aabb2::point(pos).extend_uniform(0.08);
+            let target = Aabb2::point(pos).extend_uniform(0.06);
             self.geng.draw2d().draw2d(
                 framebuffer,
                 &self.world_camera,
@@ -452,7 +452,7 @@ impl GameRender {
             Fraction::Player => &self.assets.sprites.player,
             Fraction::Enemy => {
                 let pos = (entity.position.as_f32() + vec2(0.3, 0.3)) * self.cell_size;
-                let target = Aabb2::point(pos).extend_uniform(0.08);
+                let target = Aabb2::point(pos).extend_uniform(0.06);
                 self.geng.draw2d().draw2d(
                     framebuffer,
                     &self.world_camera,
