@@ -22,6 +22,8 @@ pub struct Sprites {
     pub turn_time: ugli::Texture,
     pub item_card: ugli::Texture,
     pub inventory: ugli::Texture,
+    pub enemy_health: ugli::Texture,
+    pub weapon_damage: ugli::Texture,
 }
 
 pub struct ItemAssets {

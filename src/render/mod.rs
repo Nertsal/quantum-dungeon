@@ -350,23 +350,22 @@ impl GameRender {
         // Damage value
         if let Some(damage) = item.temp_stats.damage {
             let pos = (item.position.as_f32() + vec2(0.3, 0.3)) * self.cell_size;
-            let radius = 0.1;
-            let target = Aabb2::point(pos).extend_uniform(radius);
-            // self.geng.draw2d().draw2d(
-            //     framebuffer,
-            //     &self.camera,
-            //     &draw2d::Quad::new(
-            //         Aabb2::point(pos).extend_uniform(radius * 1.2),
-            //         Color::try_from("#c9464b").unwrap(),
-            //     ),
-            // );
+            let target = Aabb2::point(pos).extend_uniform(0.08);
+            self.geng.draw2d().draw2d(
+                framebuffer,
+                &self.camera,
+                &draw2d::TexturedQuad::new(
+                    Aabb2::point(pos).extend_uniform(0.14),
+                    &self.assets.sprites.weapon_damage,
+                ),
+            );
             self.geng.draw2d().draw2d(
                 framebuffer,
                 &self.camera,
                 &draw2d::Text::unit(
                     self.geng.default_font().clone(),
                     format!("{}", damage),
-                    Color::try_from("#ffe7cd").unwrap(),
+                    Color::try_from("#424242").unwrap(),
                 )
                 .fit_into(target),
             );
@@ -408,23 +407,22 @@ impl GameRender {
             Fraction::Player => &self.assets.sprites.player,
             Fraction::Enemy => {
                 let pos = (entity.position.as_f32() + vec2(0.3, 0.3)) * self.cell_size;
-                let radius = 0.1;
-                let target = Aabb2::point(pos).extend_uniform(radius);
-                // self.geng.draw2d().draw2d(
-                //     framebuffer,
-                //     &self.camera,
-                //     &draw2d::Quad::new(
-                //         Aabb2::point(pos).extend_uniform(radius * 1.5),
-                //         Color::try_from("#c9464b").unwrap(),
-                //     ),
-                // );
+                let target = Aabb2::point(pos).extend_uniform(0.08);
+                self.geng.draw2d().draw2d(
+                    framebuffer,
+                    &self.camera,
+                    &draw2d::TexturedQuad::new(
+                        Aabb2::point(pos).extend_uniform(0.14),
+                        &self.assets.sprites.enemy_health,
+                    ),
+                );
                 self.geng.draw2d().draw2d(
                     framebuffer,
                     &self.camera,
                     &draw2d::Text::unit(
                         self.geng.default_font().clone(),
                         format!("{}", entity.health.value()),
-                        Color::try_from("#c9464b").unwrap(),
+                        Color::try_from("#424242").unwrap(),
                     )
                     .fit_into(target),
                 );
