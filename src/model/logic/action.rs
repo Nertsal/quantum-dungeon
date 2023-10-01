@@ -34,11 +34,7 @@ impl Model {
         }
         self.grid.expand(pos);
 
-        if self.player.moves_left == 0 {
-            self.vision_phase();
-        } else {
-            self.phase = Phase::Player;
-        }
+        self.player_phase();
     }
 
     fn player_move(&mut self, player_input: PlayerInput) {

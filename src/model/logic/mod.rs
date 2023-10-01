@@ -16,6 +16,14 @@ impl Model {
         self.player.moves_left = 5;
     }
 
+    fn player_phase(&mut self) {
+        if self.player.moves_left == 0 {
+            self.vision_phase();
+        } else {
+            self.phase = Phase::Player;
+        }
+    }
+
     fn vision_phase(&mut self) {
         log::debug!("Vision phase");
         self.phase = Phase::Vision;

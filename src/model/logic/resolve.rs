@@ -41,6 +41,7 @@ impl Model {
                             self.phase = Phase::Player;
                             self.active_effect(fraction, item_id);
                             self.check_deaths();
+                            self.player_phase();
                         }
                     }
                 }
