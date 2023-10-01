@@ -10,6 +10,7 @@ pub struct Assets {
 pub struct Sprites {
     pub cell: ugli::Texture,
     pub cell_dark: ugli::Texture,
+    pub cell_light: ugli::Texture,
     pub boot: ugli::Texture,
     pub enemy: ugli::Texture,
     pub heart: ugli::Texture,

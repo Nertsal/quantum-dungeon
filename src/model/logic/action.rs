@@ -65,13 +65,19 @@ impl Model {
                 moves.push(i);
             }
         }
-        move_dir = move_dir.map(|x| x.clamp_abs(1));
+        if move_dir.x.abs() + move_dir.y.abs() > 1 {
+            // Invalid move
+            log::error!("invalid move {}", move_dir);
+            return;
+        }
 
         let mut moved = false;
         for i in moves {
             let entity = self.entities.get_mut(i).unwrap();
             let target = entity.position + move_dir;
-            if self.grid.check_pos(target) {
+            // Fracture tiles as we walk
+            if self.grid.check_pos(target) && !self.grid.fractured.contains(&target) {
+                self.grid.fractured.insert(entity.position);
                 let fraction = entity.fraction;
                 self.move_entity_swap(i, target);
                 self.collect_item_at(fraction, target);

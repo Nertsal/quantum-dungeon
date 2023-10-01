@@ -10,6 +10,13 @@ pub struct GameRender {
     pub show_inventory: bool,
 }
 
+#[derive(Debug)]
+enum TileLight {
+    Normal,
+    Dark,
+    Light,
+}
+
 impl GameRender {
     pub fn new(geng: &Geng, assets: &Rc<Assets>) -> Self {
         Self {
@@ -36,9 +43,15 @@ impl GameRender {
         // Tiles
         for &pos in &model.grid.tiles {
             let light = if let Phase::Vision | Phase::Night = model.phase {
-                model.visible_tiles.contains(&pos)
+                if model.visible_tiles.contains(&pos) {
+                    TileLight::Normal
+                } else {
+                    TileLight::Dark
+                }
+            } else if model.grid.fractured.contains(&pos) {
+                TileLight::Dark
             } else {
-                true
+                TileLight::Normal
             };
             self.draw_cell(pos, light, framebuffer);
         }
@@ -397,11 +410,16 @@ impl GameRender {
         self.draw_at_grid(entity.position.as_f32(), texture, framebuffer)
     }
 
-    fn draw_cell(&self, position: vec2<Coord>, light: bool, framebuffer: &mut ugli::Framebuffer) {
-        let texture = if light {
-            &self.assets.sprites.cell
-        } else {
-            &self.assets.sprites.cell_dark
+    fn draw_cell(
+        &self,
+        position: vec2<Coord>,
+        tile_light: TileLight,
+        framebuffer: &mut ugli::Framebuffer,
+    ) {
+        let texture = match tile_light {
+            TileLight::Normal => &self.assets.sprites.cell,
+            TileLight::Dark => &self.assets.sprites.cell_dark,
+            TileLight::Light => &self.assets.sprites.cell_light,
         };
         self.draw_at_grid(position.as_f32(), texture, framebuffer)
     }

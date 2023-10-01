@@ -13,6 +13,7 @@ impl Model {
     pub fn day_phase(&mut self) {
         log::debug!("Day phase");
         self.phase = Phase::Player;
+        self.grid.fractured.clear();
         self.player.moves_left = 5;
     }
 

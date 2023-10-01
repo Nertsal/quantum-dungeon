@@ -2,6 +2,7 @@ use super::*;
 
 pub struct Grid {
     pub tiles: HashSet<vec2<Coord>>,
+    pub fractured: HashSet<vec2<Coord>>,
 }
 
 impl Grid {
@@ -11,6 +12,7 @@ impl Grid {
             tiles: (0..size)
                 .flat_map(|x| (0..size).map(move |y| vec2(x, y) + vec2::splat(offset)))
                 .collect(),
+            fractured: HashSet::new(),
         }
     }
 
@@ -31,5 +33,9 @@ impl Grid {
 
     pub fn expand(&mut self, pos: vec2<Coord>) {
         self.tiles.insert(pos);
+    }
+
+    pub fn fracture(&mut self, pos: vec2<Coord>) {
+        self.fractured.insert(pos);
     }
 }
