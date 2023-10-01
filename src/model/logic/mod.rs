@@ -231,7 +231,7 @@ impl Model {
                     damage: Some(bonus * 2),
                 };
                 item.temp_stats = item.temp_stats.combine(&bonus);
-                let damage = 2 + item.temp_stats.damage.unwrap_or_default();
+                let damage = item.temp_stats.damage.unwrap_or_default();
                 let range = 1;
                 self.deal_damage_around(item.position, fraction, damage, range);
             }

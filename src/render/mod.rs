@@ -116,6 +116,30 @@ impl GameRender {
         // TODO: place the shadow
         // self.draw_at(item.position, &self.assets.sprites.item_shadow, framebuffer);
         self.draw_at_grid(item.position, texture, framebuffer);
+
+        // Damage value
+        if let Some(damage) = item.temp_stats.damage {
+            let pos = (item.position.as_f32() + vec2::splat(0.3)) * self.cell_size;
+            let mut color = Color::BLACK;
+            color.a = 0.5;
+            let radius = 0.1;
+            let target = Aabb2::point(pos).extend_uniform(0.1);
+            self.geng.draw2d().draw2d(
+                framebuffer,
+                &self.camera,
+                &draw2d::Ellipse::circle(pos, radius * 1.5, color),
+            );
+            self.geng.draw2d().draw2d(
+                framebuffer,
+                &self.camera,
+                &draw2d::Text::unit(
+                    self.geng.default_font().clone(),
+                    format!("{}", damage),
+                    Color::WHITE,
+                )
+                .fit_into(target),
+            );
+        }
     }
 
     fn draw_at_grid(
