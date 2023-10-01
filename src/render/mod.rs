@@ -64,6 +64,11 @@ impl GameRender {
             self.draw_cell(pos, light, framebuffer);
         }
 
+        // Entities
+        for entity in &model.entities {
+            self.draw_entity(entity, framebuffer);
+        }
+
         // Items
         for (i, item) in &model.items {
             let resolving = if let Phase::Passive {
@@ -100,11 +105,6 @@ impl GameRender {
             };
 
             self.draw_item(item, resolution_t, model, framebuffer);
-        }
-
-        // Entities
-        for entity in &model.entities {
-            self.draw_entity(entity, framebuffer);
         }
 
         // Hearts
