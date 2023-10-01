@@ -97,16 +97,23 @@ impl Model {
     }
 
     pub(super) fn active_phase(&mut self, fraction: Fraction, item_id: Id) {
-        if self.resolve_item_active(item_id) {
-            self.phase = Phase::Active {
-                fraction,
-                item_id,
-                start_delay: Lifetime::new_max(r32(0.2)),
-                end_delay: Lifetime::new_max(r32(0.2)),
-            };
-        } else {
-            // Activate immediately
-            self.active_effect(fraction, item_id);
+        match self.resolve_item_active(item_id) {
+            Some(true) => {
+                // Animation
+                self.phase = Phase::Active {
+                    fraction,
+                    item_id,
+                    start_delay: Lifetime::new_max(r32(0.2)),
+                    end_delay: Lifetime::new_max(r32(0.2)),
+                };
+            }
+            Some(false) => {
+                // Activate immediately
+                self.active_effect(fraction, item_id);
+            }
+            None => {
+                // Do nothing
+            }
         }
     }
 
@@ -140,31 +147,51 @@ impl Model {
             }
             ItemKind::Boots => false,
             ItemKind::Map => false,
+            ItemKind::Camera => false,
         }
     }
 
     /// Start item active resolution animation.
     /// If there is no animation required for the item, false is returned.
-    fn resolve_item_active(&mut self, item_id: Id) -> bool {
+    /// If the item has no active effect, None is returned.
+    fn resolve_item_active(&mut self, item_id: Id) -> Option<bool> {
         let Some(board_item) = self.items.get(item_id) else {
             self.day_phase();
-            return false;
+            return None;
         };
 
         let item = &self.player.items[board_item.item_id];
         match item.kind {
             ItemKind::Sword => {
-                let bonus = self.count_items_near(board_item.position, ItemKind::Sword) as i64;
+                let bonus = self
+                    .count_items_near(board_item.position, ItemRef::Specific(ItemKind::Sword))
+                    .len() as i64;
                 let bonus = ItemStats {
                     damage: Some(bonus * 2),
                 };
                 let item = &mut self.player.items[board_item.item_id];
                 item.temp_stats = item.temp_stats.combine(&bonus);
-                true
+                Some(true)
             }
-            ItemKind::Forge => false,
-            ItemKind::Boots => false,
-            ItemKind::Map => false,
+            ItemKind::Forge => None,
+            ItemKind::Boots => Some(false),
+            ItemKind::Map => Some(false),
+            ItemKind::Camera => {
+                // TODO: animation
+                let spooky = self
+                    .count_items_near(board_item.position, ItemRef::Category(ItemCategory::Spooky));
+                let mut rng = thread_rng();
+                match spooky.choose(&mut rng) {
+                    None => None, // Do nothing
+                    Some(&item) => {
+                        self.animations.push(Animation {
+                            time: Lifetime::new_max(r32(0.5)),
+                            kind: AnimationKind::CameraDupe { item },
+                        });
+                        Some(true)
+                    }
+                }
+            }
         }
     }
 }

@@ -45,6 +45,7 @@ pub enum ItemKind {
     Forge,
     Boots,
     Map,
+    Camera,
 }
 
 impl ItemRef {
@@ -63,6 +64,7 @@ impl ItemKind {
             ItemKind::Forge => vec![ItemCategory::Magic],
             ItemKind::Sword => vec![ItemCategory::Weapon],
             ItemKind::Map => vec![ItemCategory::Treasure],
+            ItemKind::Camera => vec![ItemCategory::Tech],
         }
     }
 
@@ -72,6 +74,7 @@ impl ItemKind {
             ItemKind::Forge => None,
             ItemKind::Sword => Some(2),
             ItemKind::Map => None,
+            ItemKind::Camera => None,
         };
         InventoryItem {
             on_board: None,
@@ -107,6 +110,7 @@ impl Display for ItemKind {
             ItemKind::Forge => "Ancient forge",
             ItemKind::Boots => "Ultra speed boots",
             ItemKind::Map => "Grand map",
+            ItemKind::Camera => "Camera",
         };
         write!(f, "{}", name)
     }

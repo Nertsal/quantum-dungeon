@@ -10,5 +10,6 @@ pub struct Animation {
 
 #[derive(Debug, Clone)]
 pub enum AnimationKind {
-    BonusFly { from: vec2<Coord>, to: vec2<Coord> },
+    CameraDupe { item: Id },
+    // BonusFly { from: vec2<Coord>, to: vec2<Coord> },
 }

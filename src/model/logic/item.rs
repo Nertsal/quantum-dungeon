@@ -33,6 +33,9 @@ impl Model {
                 self.player.items.remove(board_item.item_id);
                 self.player.moves_left += 3;
             }
+            ItemKind::Camera => {
+                self.player.items.remove(board_item.item_id);
+            }
         }
     }
 
@@ -66,14 +69,15 @@ impl Model {
         }
     }
 
-    pub(super) fn count_items_near(&self, position: vec2<Coord>, kind: ItemKind) -> usize {
+    pub(super) fn count_items_near(&self, position: vec2<Coord>, item_ref: ItemRef) -> Vec<Id> {
         self.items
             .iter()
             .filter(|(_, board_item)| {
                 let d = distance(position, board_item.position);
                 let item = &self.player.items[board_item.item_id];
-                item.kind == kind && d > 0 && d <= 1
+                item_ref.check(item.kind) && d > 0 && d <= 1
             })
-            .count()
+            .map(|(i, _)| i)
+            .collect()
     }
 }

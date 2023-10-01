@@ -1,4 +1,5 @@
 mod action;
+mod animation;
 mod gen;
 mod item;
 mod resolve;
@@ -7,6 +8,7 @@ use super::*;
 
 impl Model {
     pub fn update(&mut self, delta_time: Time) {
+        self.update_animations(delta_time);
         self.resolve_animations(delta_time);
     }
 
@@ -45,6 +47,7 @@ impl Model {
             ItemKind::Forge,
             ItemKind::Boots,
             ItemKind::Map,
+            ItemKind::Camera,
         ];
         let mut rng = thread_rng();
         let options = (0..3).map(|_| *options.choose(&mut rng).unwrap()).collect();
