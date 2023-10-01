@@ -119,7 +119,7 @@ impl GameRender {
 
         // Damage value
         if let Some(damage) = item.temp_stats.damage {
-            let pos = (item.position.as_f32() + vec2::splat(0.3)) * self.cell_size;
+            let pos = (item.position.as_f32() + vec2(0.0, 0.3)) * self.cell_size;
             let mut color = Color::BLACK;
             color.a = 0.5;
             let radius = 0.1;

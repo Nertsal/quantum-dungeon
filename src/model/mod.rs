@@ -28,7 +28,7 @@ pub enum Phase {
     /// Shift and spawn items and enemies.
     Night,
     /// Resolve item effects.
-    Resolution,
+    Resolution { next_item: usize },
     /// Player movement.
     Player,
     /// Place a tile on the map.

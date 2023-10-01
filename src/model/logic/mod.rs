@@ -3,7 +3,48 @@ mod gen;
 use super::*;
 
 impl Model {
-    pub fn update(&mut self, _delta_time: Time) {}
+    pub fn update(&mut self, _delta_time: Time) {
+        if let Phase::Resolution { next_item } = self.phase {
+            self.phase = Phase::Resolution {
+                next_item: next_item + 1,
+            };
+            self.resolve_item(next_item);
+        }
+    }
+
+    pub fn resolution_phase(&mut self) {
+        log::debug!("Resolution phase");
+        self.phase = Phase::Resolution { next_item: 0 };
+        for item in &mut self.items {
+            item.temp_stats = item.perm_stats.clone();
+        }
+    }
+
+    pub fn player_phase(&mut self) {
+        log::debug!("Player phase");
+        self.phase = Phase::Player;
+        self.player.moves_left = 5;
+    }
+
+    pub fn resolve_item(&mut self, item_id: usize) {
+        let Some(item) = self.items.get(item_id) else {
+            self.player_phase();
+            return;
+        };
+
+        match item.kind {
+            ItemKind::Sword => {
+                let bonus = self.count_items_near(item.position, ItemKind::Sword) as i64;
+                let bonus = ItemStats {
+                    damage: Some(bonus * 2),
+                };
+                self.items[item_id].temp_stats = item.temp_stats.combine(&bonus);
+            }
+            ItemKind::Forge => {}
+            ItemKind::Boots => {}
+            ItemKind::Map => {}
+        }
+    }
 
     pub fn player_action(&mut self, player_input: PlayerInput) {
         log::debug!(
@@ -221,16 +262,10 @@ impl Model {
         }
     }
 
-    fn use_item(&mut self, fraction: Fraction, mut item: Item) {
+    fn use_item(&mut self, fraction: Fraction, item: Item) {
         log::debug!("Use item by fraction {:?}: {:?}", fraction, item);
         match item.kind {
             ItemKind::Sword => {
-                // TODO: move to resolution phase
-                let bonus = self.count_items_near(item.position, ItemKind::Sword) as i64;
-                let bonus = ItemStats {
-                    damage: Some(bonus * 2),
-                };
-                item.temp_stats = item.temp_stats.combine(&bonus);
                 let damage = item.temp_stats.damage.unwrap_or_default();
                 let range = 1;
                 self.deal_damage_around(item.position, fraction, damage, range);
@@ -278,12 +313,15 @@ impl Model {
     fn count_items_near(&self, position: vec2<Coord>, kind: ItemKind) -> usize {
         self.items
             .iter()
-            .filter(|item| item.kind == kind && distance(position, item.position) <= 1)
+            .filter(|item| {
+                let d = distance(position, item.position);
+                item.kind == kind && d > 0 && d <= 1
+            })
             .count()
     }
 }
 
 fn distance(a: vec2<Coord>, b: vec2<Coord>) -> Coord {
     let delta = b - a;
-    delta.x.abs() + delta.y.abs()
+    delta.x.abs().max(delta.y.abs())
 }
