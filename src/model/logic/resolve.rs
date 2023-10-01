@@ -57,7 +57,7 @@ impl Model {
             start_delay: Lifetime::new_max(r32(0.2)),
             end_delay: Lifetime::new_max(r32(0.2)),
         };
-        for item in &mut self.player.items {
+        for (_, item) in &mut self.player.items {
             item.temp_stats = item.perm_stats.clone();
         }
         self.resolve_current();

@@ -3,7 +3,7 @@ use super::*;
 #[derive(Debug, Clone)]
 pub struct BoardItem {
     pub position: vec2<Coord>,
-    pub item_id: usize,
+    pub item_id: Id,
 }
 
 #[derive(Debug, Clone)]

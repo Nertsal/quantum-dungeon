@@ -259,18 +259,20 @@ impl GameRender {
             &draw2d::Quad::new(overlay, color),
         );
 
-        // let mut items = Vec::new();
-        // for &item in &model.player.items {
-        //     if let Some((_, count)) = items.iter_mut().find(|(kind, _)| *kind == item) {
-        //         *count += 1;
-        //     } else {
-        //         items.push((item, 1));
-        //     }
-        // }
+        let mut items = Vec::new();
+        for (i, item) in &model.player.items {
+            // if let Some((_, count)) = items.iter_mut().find(|(kind, _)| *kind == item) {
+            //     *count += 1;
+            // } else {
+            //     items.push((item, 1));
+            // }
+            items.push((i, item));
+        }
+        items.sort_by_key(|&(i, _)| i); // TODO: sort by age
 
         let size = vec2(1.5, 1.5);
         let mut hint = None;
-        for (i, item) in model.player.items.iter().enumerate() {
+        for (i, (_, item)) in items.iter().enumerate() {
             let pos = vec2(-1.5, 2.0) + vec2(i, 0).as_f32() * size;
             let target = Aabb2::point(pos).extend_symmetric(size / 2.0);
 

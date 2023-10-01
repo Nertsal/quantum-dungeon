@@ -29,7 +29,10 @@ impl Model {
                 ItemStats { damage: Some(2) },
             ),
             ItemKind::Map => self.phase = Phase::Map { tiles_left: 2 },
-            ItemKind::Boots => self.player.moves_left += 3,
+            ItemKind::Boots => {
+                self.player.items.remove(board_item.item_id);
+                self.player.moves_left += 3;
+            }
         }
     }
 

@@ -95,7 +95,7 @@ impl Model {
         }
 
         let mut rng = thread_rng();
-        for (item_id, item) in self.player.items.iter_mut().enumerate() {
+        for (item_id, item) in &mut self.player.items {
             if let Some(id) = item.on_board {
                 if self.items.contains(id) {
                     // Already on the board

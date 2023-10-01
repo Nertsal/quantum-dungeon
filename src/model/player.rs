@@ -5,7 +5,7 @@ pub struct Player {
     pub moves_left: usize,
     pub turns_left: usize,
     pub hearts: usize,
-    pub items: Vec<InventoryItem>,
+    pub items: Arena<InventoryItem>,
 }
 
 #[derive(Debug)]
