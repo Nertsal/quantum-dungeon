@@ -18,6 +18,17 @@ impl Grid {
         self.tiles.contains(&pos)
     }
 
+    /// Whether the position is empty, but there is a tile right next to it.
+    pub fn check_pos_near(&self, pos: vec2<Coord>) -> bool {
+        for (dx, dy) in [(0, -1), (1, 0), (0, 1), (-1, 0)] {
+            let pos = pos + vec2(dx, dy);
+            if self.check_pos(pos) {
+                return true;
+            }
+        }
+        false
+    }
+
     pub fn expand(&mut self, pos: vec2<Coord>) {
         self.tiles.insert(pos);
     }

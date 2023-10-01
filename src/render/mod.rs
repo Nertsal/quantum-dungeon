@@ -6,6 +6,8 @@ pub struct GameRender {
     pub camera: Camera2d,
     pub cell_size: vec2<f32>,
     pub buttons: Vec<(ItemKind, Aabb2<f32>)>,
+    pub inventory_button: Aabb2<f32>,
+    pub show_inventory: bool,
 }
 
 impl GameRender {
@@ -20,6 +22,8 @@ impl GameRender {
             },
             cell_size: vec2(1.0, 1.0),
             buttons: Vec::new(),
+            inventory_button: Aabb2::point(vec2(0.0, -4.0)).extend_symmetric(vec2(1.5, 0.8) / 2.0),
+            show_inventory: false,
         }
     }
 
@@ -130,33 +134,131 @@ impl GameRender {
             _ => "",
         };
 
-        // Text
-        self.geng.default_font().draw(
+        if self.show_inventory {
+            self.draw_inventory(model, cursor_world_pos, framebuffer);
+        } else {
+            // Text
+            self.geng.default_font().draw(
+                framebuffer,
+                &self.camera,
+                text,
+                vec2(geng::TextAlign::CENTER, geng::TextAlign::TOP),
+                mat3::translate(self.camera.center + vec2(0.0, 0.8 * self.camera.fov / 2.0))
+                    * mat3::scale_uniform(0.7),
+                Color::BLACK,
+            );
+
+            // Item hint
+            let cell_pos =
+                (cursor_world_pos / self.cell_size + vec2::splat(0.5)).map(|x| x.floor() as Coord);
+            if let Some(item) = model.items.iter().find(|item| item.position == cell_pos) {
+                self.draw_item_hint(item.kind, cursor_world_pos, framebuffer);
+            }
+        }
+
+        // Inventory button
+        {
+            let target = self.inventory_button;
+            self.geng.draw2d().draw2d(
+                framebuffer,
+                &self.camera,
+                &draw2d::Quad::new(target, Color::try_from("#333").unwrap()),
+            );
+            self.geng.draw2d().draw2d(
+                framebuffer,
+                &self.camera,
+                &draw2d::Text::unit(
+                    self.geng.default_font().clone(),
+                    "Inventory",
+                    Color::try_from("#ffe7cd").unwrap(),
+                )
+                .align_bounding_box(vec2(0.5, 0.5))
+                .fit_into(target.extend_uniform(-0.1)),
+            );
+        }
+    }
+
+    fn draw_inventory(
+        &self,
+        model: &Model,
+        cursor_world_pos: vec2<f32>,
+        framebuffer: &mut ugli::Framebuffer,
+    ) {
+        // Darken the game
+        let size = vec2(16.0 / 9.0, 1.0) * self.camera.fov;
+        let overlay = Aabb2::point(self.camera.center).extend_symmetric(size / 2.0);
+        let mut color = Color::BLACK;
+        color.a = 0.5;
+        self.geng.draw2d().draw2d(
             framebuffer,
             &self.camera,
-            text,
-            vec2(geng::TextAlign::CENTER, geng::TextAlign::TOP),
-            mat3::translate(self.camera.center + vec2(0.0, 0.8 * self.camera.fov / 2.0))
-                * mat3::scale_uniform(0.7),
-            Color::BLACK,
+            &draw2d::Quad::new(overlay, color),
         );
 
-        // Item hint
-        let cell_pos =
-            (cursor_world_pos / self.cell_size + vec2::splat(0.5)).map(|x| x.floor() as Coord);
-        if let Some(item) = model.items.iter().find(|item| item.position == cell_pos) {
+        let mut items = Vec::new();
+        for &item in &model.player.items {
+            if let Some((_, count)) = items.iter_mut().find(|(kind, _)| *kind == item) {
+                *count += 1;
+            } else {
+                items.push((item, 1));
+            }
+        }
+
+        let size = vec2(1.5, 1.5);
+        let mut hint = None;
+        for (i, (item, count)) in items.into_iter().enumerate() {
+            let pos = vec2(-1.5, 2.0) + vec2(i, 0).as_f32() * size;
+            let target = Aabb2::point(pos).extend_symmetric(size / 2.0);
+
+            if target.contains(cursor_world_pos) {
+                hint = Some(item);
+            }
+
+            self.draw_at(target, &self.assets.sprites.cell, framebuffer);
+            let texture = self.assets.sprites.item_texture(item);
+            self.draw_at(target, texture, framebuffer);
+
+            if count > 1 {
+                let pos = pos + vec2(0.3, 0.3) * size;
+                let radius = 0.15;
+                let target = Aabb2::point(pos).extend_uniform(radius);
+                // let mut color = Color::BLACK;
+                // color.a = 0.5;
+                // self.geng.draw2d().draw2d(
+                //     framebuffer,
+                //     &self.camera,
+                //     &draw2d::Ellipse::circle(pos, radius * 1.5, color),
+                // );
+                self.geng.draw2d().draw2d(
+                    framebuffer,
+                    &self.camera,
+                    &draw2d::Text::unit(
+                        self.geng.default_font().clone(),
+                        format!("x{}", count),
+                        Color::WHITE,
+                    )
+                    .fit_into(target),
+                );
+            }
+        }
+
+        if let Some(item) = hint {
             self.draw_item_hint(item, cursor_world_pos, framebuffer);
         }
     }
 
     fn draw_item_hint(
         &self,
-        item: &Item,
+        item: ItemKind,
         cursor_world_pos: vec2<f32>,
         framebuffer: &mut ugli::Framebuffer,
     ) {
-        let target =
+        let mut target =
             Aabb2::point(cursor_world_pos).extend_positive(self.cell_size * vec2(0.0, 3.5));
+        if target.max.y > self.camera.fov / 2.0 {
+            target = target.translate(vec2(0.0, self.camera.fov / 2.0 - target.max.y));
+        }
+
         let background = &self.assets.sprites.item_card;
         let size = background.size().as_f32();
         let target = geng_utils::layout::fit_aabb_height(size, target, 0.0);
@@ -175,7 +277,7 @@ impl GameRender {
             &self.camera,
             &draw2d::Text::unit(
                 self.geng.default_font().clone(),
-                format!("{}", item.kind),
+                format!("{}", item),
                 Color::try_from("#333").unwrap(),
             )
             .align_bounding_box(vec2(0.5, 1.0))
@@ -183,7 +285,7 @@ impl GameRender {
         );
 
         // Icon
-        let icon = self.assets.sprites.item_texture(item.kind);
+        let icon = self.assets.sprites.item_texture(item);
         let mut icon_target = target.extend_uniform(-target.height() * 0.1);
         icon_target = icon_target.extend_up(-target.height() * 0.09);
         icon_target = icon_target.extend_down(-target.height() * 0.4);
@@ -208,7 +310,7 @@ impl GameRender {
         //     &draw2d::Quad::new(desc_target, color),
         // );
         let color = Color::try_from("#ffe7cd").unwrap();
-        let description = self.assets.items.get_description(item.kind);
+        let description = self.assets.items.get_description(item);
         self.geng.draw2d().draw2d(
             framebuffer,
             &self.camera,
@@ -231,7 +333,7 @@ impl GameRender {
             let mut color = Color::BLACK;
             color.a = 0.5;
             let radius = 0.1;
-            let target = Aabb2::point(pos).extend_uniform(0.1);
+            let target = Aabb2::point(pos).extend_uniform(radius);
             self.geng.draw2d().draw2d(
                 framebuffer,
                 &self.camera,

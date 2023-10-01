@@ -81,9 +81,13 @@ impl geng::State for Game {
                 {
                     self.model.player_action(PlayerInput::SelectItem(i));
                 }
+            } else if self.render.inventory_button.contains(self.cursor_world_pos) {
+                self.render.show_inventory = !self.render.show_inventory;
             } else {
                 let target = self.cursor_grid_pos.map(|x| x.floor() as Coord);
-                self.model.player_action(PlayerInput::Tile(target));
+                if self.model.grid.check_pos_near(target) {
+                    self.model.player_action(PlayerInput::Tile(target));
+                }
             }
             // return;
         }
