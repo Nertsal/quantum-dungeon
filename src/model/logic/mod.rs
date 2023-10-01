@@ -14,6 +14,11 @@ impl Model {
         log::debug!("Day phase");
         self.phase = Phase::Player;
         self.player.moves_left = 5;
+        for entity in &self.entities {
+            if let EntityKind::Player = entity.kind {
+                self.grid.fractured.insert(entity.position);
+            }
+        }
     }
 
     fn player_phase(&mut self) {

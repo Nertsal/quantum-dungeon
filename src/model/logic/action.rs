@@ -79,8 +79,7 @@ impl Model {
             let entity = self.entities.get_mut(i).unwrap();
             let target = entity.position + move_dir;
             // Fracture tiles as we walk
-            if self.grid.check_pos(target) && !self.grid.fractured.contains(&target) {
-                self.grid.fractured.insert(entity.position);
+            if self.grid.check_pos(target) && self.grid.fractured.insert(target) {
                 let fraction = entity.fraction;
                 self.move_entity_swap(i, target);
                 self.collect_item_at(fraction, target);
