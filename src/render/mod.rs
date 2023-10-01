@@ -153,12 +153,8 @@ impl GameRender {
             Phase::Vision => "Select a direction to look at",
             Phase::Map { .. } => {
                 // Tile plus
-                if model.grid.check_pos_near(cursor_cell_pos) {
-                    self.draw_at_grid(
-                        cursor_cell_pos.as_f32(),
-                        &self.assets.sprites.cell_plus,
-                        framebuffer,
-                    );
+                for pos in model.grid.outside_tiles() {
+                    self.draw_at_grid(pos.as_f32(), &self.assets.sprites.cell_plus, framebuffer);
                 }
 
                 "Select a position to place a new tile"

@@ -38,4 +38,18 @@ impl Grid {
     pub fn expand(&mut self, pos: vec2<Coord>) {
         self.tiles.insert(pos);
     }
+
+    /// Return the outside empty tiles that can be turned into proper tiles.
+    pub fn outside_tiles(&self) -> HashSet<vec2<Coord>> {
+        let mut outside = HashSet::new();
+        for &pos in &self.tiles {
+            for (dx, dy) in [(0, -1), (1, 0), (0, 1), (-1, 0)] {
+                let pos = pos + vec2(dx, dy);
+                if !self.check_pos(pos) {
+                    outside.insert(pos);
+                }
+            }
+        }
+        outside
+    }
 }
