@@ -22,6 +22,7 @@ pub struct Model {
     pub items: Arena<BoardItem>,
     pub entities: Vec<Entity>,
     pub animations: Vec<Animation>,
+    pub ending_animations: Vec<Animation>,
 }
 
 #[derive(Debug, Clone)]
@@ -36,13 +37,6 @@ pub enum Phase {
     },
     /// Player movement.
     Player,
-    /// Resolve active item effects.
-    Active {
-        fraction: Fraction,
-        item_id: Id,
-        start_delay: Lifetime,
-        end_delay: Lifetime,
-    },
     /// Place a tile on the map.
     Map { tiles_left: usize },
     /// Player sets their look direction.
@@ -69,6 +63,7 @@ impl Model {
                 kind: EntityKind::Player,
             }],
             animations: Vec::new(),
+            ending_animations: Vec::new(),
         };
         model.next_level();
         model

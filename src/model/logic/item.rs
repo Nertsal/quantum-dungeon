@@ -7,7 +7,7 @@ impl Model {
         for i in ids {
             let item = &mut self.items[i];
             if item.position == position {
-                self.active_phase(fraction, i);
+                self.resolve_item_active(fraction, i);
                 return;
             }
         }

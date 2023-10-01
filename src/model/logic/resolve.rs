@@ -2,64 +2,36 @@ use super::*;
 
 impl Model {
     pub(super) fn resolve_animations(&mut self, delta_time: Time) {
-        match &mut self.phase {
-            Phase::Passive {
-                item_queue,
-                start_delay,
-                ..
-            } => {
-                // Start animation
-                if !start_delay.is_min() {
-                    start_delay.change(-delta_time);
-                    if start_delay.is_min() {
-                        // Apply effect
-                        if let Some(&item_id) = item_queue.last() {
-                            self.passive_effect(item_id);
-                        }
+        if let Phase::Passive {
+            item_queue,
+            start_delay,
+            ..
+        } = &mut self.phase
+        {
+            // Start animation
+            if !start_delay.is_min() {
+                start_delay.change(-delta_time);
+                if start_delay.is_min() {
+                    // Apply effect
+                    if let Some(&item_id) = item_queue.last() {
+                        self.passive_effect(item_id);
                     }
-                } else if self.animations.is_empty() {
-                    // End animation
-                    if let Phase::Passive {
-                        item_queue,
-                        end_delay,
-                        ..
-                    } = &mut self.phase
-                    {
-                        end_delay.change(-delta_time);
-                        if end_delay.is_min() {
-                            item_queue.pop();
-                            self.resolve_current();
-                        }
+                }
+            } else if self.animations.is_empty() {
+                // End animation
+                if let Phase::Passive {
+                    item_queue,
+                    end_delay,
+                    ..
+                } = &mut self.phase
+                {
+                    end_delay.change(-delta_time);
+                    if end_delay.is_min() {
+                        item_queue.pop();
+                        self.resolve_current();
                     }
                 }
             }
-            Phase::Active {
-                fraction,
-                item_id,
-                start_delay,
-                ..
-            } => {
-                // Start animation
-                if !start_delay.is_min() {
-                    start_delay.change(-delta_time);
-                    if start_delay.is_min() {
-                        // Apply effect
-                        let fraction = *fraction;
-                        let item_id = *item_id;
-                        self.active_effect(fraction, item_id);
-                        self.check_deaths();
-                    }
-                } else if self.animations.is_empty() {
-                    // End animation
-                    if let Phase::Active { end_delay, .. } = &mut self.phase {
-                        end_delay.change(-delta_time);
-                        if end_delay.is_min() {
-                            self.player_phase();
-                        }
-                    }
-                }
-            }
-            _ => (),
         }
     }
 
@@ -109,27 +81,6 @@ impl Model {
         }
     }
 
-    pub(super) fn active_phase(&mut self, fraction: Fraction, item_id: Id) {
-        match self.resolve_item_active(item_id) {
-            Some(true) => {
-                // Animation
-                self.phase = Phase::Active {
-                    fraction,
-                    item_id,
-                    start_delay: Lifetime::new_max(r32(0.2)),
-                    end_delay: Lifetime::new_max(r32(0.2)),
-                };
-            }
-            Some(false) => {
-                // Activate immediately
-                self.active_effect(fraction, item_id);
-            }
-            None => {
-                // Do nothing
-            }
-        }
-    }
-
     /// Start item passive resolution animation.
     /// If there is no animation required for the item, false is returned.
     fn resolve_item_passive(&mut self, item_id: Id) -> bool {
@@ -167,7 +118,7 @@ impl Model {
                 let weapons = self
                     .count_items_near(board_item.position, ItemRef::Category(ItemCategory::Weapon));
                 if let Some(&weapon) = weapons.choose(&mut thread_rng()) {
-                    // TODO: activate weapon
+                    self.resolve_item_active(Fraction::Player, weapon);
                 }
             }
             _ => {}
@@ -175,16 +126,13 @@ impl Model {
     }
 
     /// Start item active resolution animation.
-    /// If there is no animation required for the item, false is returned.
-    /// If the item has no active effect, None is returned.
-    fn resolve_item_active(&mut self, item_id: Id) -> Option<bool> {
+    pub(super) fn resolve_item_active(&mut self, fraction: Fraction, item_id: Id) {
         let Some(board_item) = self.items.get(item_id) else {
-            self.day_phase();
-            return None;
+            return;
         };
 
         let item = &self.player.items[board_item.item_id];
-        match item.kind {
+        let resolution = match item.kind {
             ItemKind::Sword => {
                 let bonus = self
                     .count_items_near(board_item.position, ItemRef::Specific(ItemKind::Sword))
@@ -216,10 +164,27 @@ impl Model {
                 }
             }
             ItemKind::Ghost => None,
+        };
+
+        match resolution {
+            Some(true) => {
+                // Animation
+                self.animations.push(Animation {
+                    time: Lifetime::new_max(r32(0.2)),
+                    kind: AnimationKind::UseActive { fraction, item_id },
+                });
+            }
+            Some(false) => {
+                // Activate immediately
+                self.active_effect(fraction, item_id);
+            }
+            None => {
+                // Do nothing
+            }
         }
     }
 
-    fn active_effect(&mut self, fraction: Fraction, item_id: Id) {
+    pub(super) fn active_effect(&mut self, fraction: Fraction, item_id: Id) {
         let Some(item) = self.items.remove(item_id) else {
             log::error!("tried activating an invalid item {:?}", item_id);
             return;

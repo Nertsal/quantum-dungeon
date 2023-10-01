@@ -77,28 +77,40 @@ impl GameRender {
                 end_delay,
             } = &model.phase
             {
-                item_queue.last().map(|i| (i, start_delay, end_delay))
-            } else if let Phase::Active {
-                item_id,
-                start_delay,
-                end_delay,
-                ..
-            } = &model.phase
-            {
-                Some((item_id, start_delay, end_delay))
+                item_queue
+                    .last()
+                    .and_then(|&item_id| (item_id == i).then_some((*start_delay, *end_delay)))
             } else {
                 None
             };
 
-            let resolution_t = if let Some((item_id, start_delay, end_delay)) = resolving {
-                if *item_id == i {
-                    if start_delay.is_above_min() {
-                        1.0 - start_delay.get_ratio().as_f32()
-                    } else {
-                        end_delay.get_ratio().as_f32()
-                    }
+            let resolving = resolving
+                .or_else(|| {
+                    model.animations.iter().find_map(|anim| {
+                        if let AnimationKind::UseActive { item_id, .. } = anim.kind {
+                            if item_id == i {
+                                return Some((anim.time, Lifetime::new_max(R32::ZERO)));
+                            }
+                        }
+                        None
+                    })
+                })
+                .or_else(|| {
+                    model.ending_animations.iter().find_map(|anim| {
+                        if let AnimationKind::UseActive { item_id, .. } = anim.kind {
+                            if item_id == i {
+                                return Some((Lifetime::new_max(R32::ZERO), anim.time));
+                            }
+                        }
+                        None
+                    })
+                });
+
+            let resolution_t = if let Some((start_delay, end_delay)) = resolving {
+                if start_delay.is_above_min() {
+                    1.0 - start_delay.get_ratio().as_f32()
                 } else {
-                    0.0
+                    end_delay.get_ratio().as_f32()
                 }
             } else {
                 0.0

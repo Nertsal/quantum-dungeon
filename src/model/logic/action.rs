@@ -8,7 +8,7 @@ impl Model {
             self.phase
         );
         match &self.phase {
-            Phase::Player => self.player_move(player_input),
+            Phase::Player if self.animations.is_empty() => self.player_move(player_input),
             Phase::Vision => self.player_vision(player_input),
             Phase::Map { .. } => self.map_action(player_input),
             Phase::Select { options } => {

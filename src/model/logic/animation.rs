@@ -2,6 +2,12 @@ use super::*;
 
 impl Model {
     pub(super) fn update_animations(&mut self, delta_time: Time) {
+        for animation in &mut self.ending_animations {
+            animation.time.change(-delta_time);
+        }
+        self.ending_animations
+            .retain(|anim| anim.time.is_above_min());
+
         let mut finished = Vec::new();
         for (i, animation) in self.animations.iter_mut().enumerate() {
             animation.time.change(-delta_time);
@@ -11,14 +17,23 @@ impl Model {
         }
 
         for i in finished.into_iter().rev() {
-            let animation = self.animations.swap_remove(i);
-            match animation.kind {
+            let mut animation = self.animations.swap_remove(i);
+            match &animation.kind {
+                AnimationKind::UseActive { fraction, item_id } => {
+                    // Activate item
+                    let fraction = *fraction;
+                    let item_id = *item_id;
+                    self.active_effect(fraction, item_id);
+                }
                 AnimationKind::CameraDupe { item } => {
-                    let item = self.items.get(item).unwrap();
+                    // Duplicate an item
+                    let item = self.items.get(*item).unwrap();
                     let item = &self.player.items[item.item_id];
                     self.new_item_and_spawn(item.kind);
                 }
             }
+            animation.time.set_ratio(R32::ONE);
+            self.ending_animations.push(animation);
         }
     }
 
