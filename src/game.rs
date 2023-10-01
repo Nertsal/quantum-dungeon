@@ -84,7 +84,7 @@ impl geng::State for Game {
                         .render
                         .buttons
                         .iter()
-                        .position(|(_, button)| button.contains(self.cursor_world_pos))
+                        .position(|(_, button)| button.contains(self.cursor_ui_pos))
                     {
                         self.model.player_action(PlayerInput::SelectItem(i));
                     }
@@ -95,7 +95,7 @@ impl geng::State for Game {
                         self.model.player_action(PlayerInput::Tile(target));
                     }
                 }
-                _ if self.render.inventory_button.contains(self.cursor_world_pos) => {
+                _ if self.render.inventory_button.contains(self.cursor_ui_pos) => {
                     self.render.show_inventory = !self.render.show_inventory;
                 }
                 _ => {
