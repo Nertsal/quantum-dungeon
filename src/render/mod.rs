@@ -349,23 +349,24 @@ impl GameRender {
 
         // Damage value
         if let Some(damage) = item.temp_stats.damage {
-            let pos = (item.position.as_f32() + vec2(0.0, 0.3)) * self.cell_size;
-            let mut color = Color::BLACK;
-            color.a = 0.5;
+            let pos = (item.position.as_f32() + vec2(0.3, 0.3)) * self.cell_size;
             let radius = 0.1;
             let target = Aabb2::point(pos).extend_uniform(radius);
-            self.geng.draw2d().draw2d(
-                framebuffer,
-                &self.camera,
-                &draw2d::Ellipse::circle(pos, radius * 1.5, color),
-            );
+            // self.geng.draw2d().draw2d(
+            //     framebuffer,
+            //     &self.camera,
+            //     &draw2d::Quad::new(
+            //         Aabb2::point(pos).extend_uniform(radius * 1.2),
+            //         Color::try_from("#c9464b").unwrap(),
+            //     ),
+            // );
             self.geng.draw2d().draw2d(
                 framebuffer,
                 &self.camera,
                 &draw2d::Text::unit(
                     self.geng.default_font().clone(),
                     format!("{}", damage),
-                    Color::WHITE,
+                    Color::try_from("#ffe7cd").unwrap(),
                 )
                 .fit_into(target),
             );
@@ -405,7 +406,31 @@ impl GameRender {
     fn draw_entity(&self, entity: &Entity, framebuffer: &mut ugli::Framebuffer) {
         let texture = match entity.fraction {
             Fraction::Player => &self.assets.sprites.player,
-            Fraction::Enemy => &self.assets.sprites.enemy,
+            Fraction::Enemy => {
+                let pos = (entity.position.as_f32() + vec2(0.3, 0.3)) * self.cell_size;
+                let radius = 0.1;
+                let target = Aabb2::point(pos).extend_uniform(radius);
+                // self.geng.draw2d().draw2d(
+                //     framebuffer,
+                //     &self.camera,
+                //     &draw2d::Quad::new(
+                //         Aabb2::point(pos).extend_uniform(radius * 1.5),
+                //         Color::try_from("#c9464b").unwrap(),
+                //     ),
+                // );
+                self.geng.draw2d().draw2d(
+                    framebuffer,
+                    &self.camera,
+                    &draw2d::Text::unit(
+                        self.geng.default_font().clone(),
+                        format!("{}", entity.health.value()),
+                        Color::try_from("#c9464b").unwrap(),
+                    )
+                    .fit_into(target),
+                );
+
+                &self.assets.sprites.enemy
+            }
         };
 
         self.draw_at_grid(entity.position.as_f32(), texture, framebuffer)
