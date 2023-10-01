@@ -3,20 +3,65 @@ mod gen;
 use super::*;
 
 impl Model {
-    pub fn update(&mut self, _delta_time: Time) {
-        if let Phase::Resolution { next_item } = self.phase {
-            self.phase = Phase::Resolution {
-                next_item: next_item + 1,
-            };
-            self.resolve_item(next_item);
+    pub fn update(&mut self, delta_time: Time) {
+        if let Phase::Resolution { start_delay, .. } = &mut self.phase {
+            // Start animation
+            if !start_delay.is_min() {
+                start_delay.change(-delta_time);
+            } else if self.animations.is_empty() {
+                // End animation
+                if let Phase::Resolution {
+                    current_item,
+                    end_delay,
+                    ..
+                } = &mut self.phase
+                {
+                    end_delay.change(-delta_time);
+                    if end_delay.is_min() {
+                        *current_item += 1;
+                        self.resolve_current();
+                    }
+                }
+            }
         }
     }
 
     pub fn resolution_phase(&mut self) {
         log::debug!("Resolution phase");
-        self.phase = Phase::Resolution { next_item: 0 };
+        self.phase = Phase::Resolution {
+            current_item: 0,
+            start_delay: Lifetime::new_max(r32(0.2)),
+            end_delay: Lifetime::new_max(r32(0.2)),
+        };
         for item in &mut self.items {
             item.temp_stats = item.perm_stats.clone();
+        }
+        self.resolve_current();
+    }
+
+    fn resolve_current(&mut self) {
+        if let Phase::Resolution { current_item, .. } = self.phase {
+            if !self.resolve_item(current_item) {
+                // No animation - skip
+                while let Phase::Resolution { current_item, .. } = &mut self.phase {
+                    *current_item += 1;
+                    let item = *current_item;
+                    if self.resolve_item(item) {
+                        // Yes animation
+                        break;
+                    }
+                }
+            }
+        }
+
+        if let Phase::Resolution {
+            start_delay,
+            end_delay,
+            ..
+        } = &mut self.phase
+        {
+            start_delay.set_ratio(R32::ONE);
+            end_delay.set_ratio(R32::ONE);
         }
     }
 
@@ -26,10 +71,12 @@ impl Model {
         self.player.moves_left = 5;
     }
 
-    pub fn resolve_item(&mut self, item_id: usize) {
+    /// Start item resolution animation.
+    /// If there is no animation required for the item, false is returned.
+    pub fn resolve_item(&mut self, item_id: usize) -> bool {
         let Some(item) = self.items.get(item_id) else {
             self.player_phase();
-            return;
+            return false;
         };
 
         match item.kind {
@@ -39,10 +86,11 @@ impl Model {
                     damage: Some(bonus * 2),
                 };
                 self.items[item_id].temp_stats = item.temp_stats.combine(&bonus);
+                true
             }
-            ItemKind::Forge => {}
-            ItemKind::Boots => {}
-            ItemKind::Map => {}
+            ItemKind::Forge => false,
+            ItemKind::Boots => false,
+            ItemKind::Map => false,
         }
     }
 

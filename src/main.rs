@@ -4,6 +4,7 @@ mod game;
 mod model;
 mod prelude;
 mod render;
+mod util;
 
 use geng::prelude::*;
 

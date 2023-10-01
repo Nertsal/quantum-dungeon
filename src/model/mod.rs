@@ -1,10 +1,11 @@
+mod animation;
 mod entity;
 mod grid;
 mod item;
 mod logic;
 mod player;
 
-pub use self::{entity::*, grid::*, item::*, player::*};
+pub use self::{animation::*, entity::*, grid::*, item::*, player::*};
 
 use crate::prelude::*;
 
@@ -21,6 +22,7 @@ pub struct Model {
     pub visible_tiles: HashSet<vec2<Coord>>,
     pub items: Vec<Item>,
     pub entities: Vec<Entity>,
+    pub animations: Vec<Animation>,
 }
 
 #[derive(Debug, Clone)]
@@ -28,7 +30,11 @@ pub enum Phase {
     /// Shift and spawn items and enemies.
     Night,
     /// Resolve item effects.
-    Resolution { next_item: usize },
+    Resolution {
+        current_item: usize,
+        start_delay: Lifetime,
+        end_delay: Lifetime,
+    },
     /// Player movement.
     Player,
     /// Place a tile on the map.
@@ -56,6 +62,7 @@ impl Model {
                 look_dir: vec2(0, 1),
                 kind: EntityKind::Player,
             }],
+            animations: Vec::new(),
         };
         model.night_phase();
         model.update_vision();

@@ -38,8 +38,26 @@ impl GameRender {
             self.draw_cell(pos, light, framebuffer);
         }
 
-        for item in &model.items {
-            self.draw_item(item, framebuffer);
+        for (i, item) in model.items.iter().enumerate() {
+            let resolution_t = if let Phase::Resolution {
+                current_item,
+                start_delay,
+                end_delay,
+            } = &model.phase
+            {
+                if *current_item == i {
+                    if start_delay.is_above_min() {
+                        1.0 - start_delay.get_ratio().as_f32()
+                    } else {
+                        end_delay.get_ratio().as_f32()
+                    }
+                } else {
+                    0.0
+                }
+            } else {
+                0.0
+            };
+            self.draw_item(item, resolution_t, framebuffer);
         }
         for entity in &model.entities {
             self.draw_entity(entity, framebuffer);
@@ -111,11 +129,12 @@ impl GameRender {
         );
     }
 
-    fn draw_item(&self, item: &Item, framebuffer: &mut ugli::Framebuffer) {
+    fn draw_item(&self, item: &Item, resolution_t: f32, framebuffer: &mut ugli::Framebuffer) {
         let texture = self.assets.sprites.item_texture(item.kind);
         // TODO: place the shadow
         // self.draw_at(item.position, &self.assets.sprites.item_shadow, framebuffer);
-        self.draw_at_grid(item.position, texture, framebuffer);
+        let offset = vec2(0.0, crate::util::smoothstep(resolution_t) * 0.2);
+        self.draw_at_grid(item.position.as_f32() + offset, texture, framebuffer);
 
         // Damage value
         if let Some(damage) = item.temp_stats.damage {
@@ -144,11 +163,11 @@ impl GameRender {
 
     fn draw_at_grid(
         &self,
-        position: vec2<Coord>,
+        position: vec2<f32>,
         texture: &ugli::Texture,
         framebuffer: &mut ugli::Framebuffer,
     ) {
-        let position = position.as_f32() * self.cell_size;
+        let position = position * self.cell_size;
         self.draw_at(
             Aabb2::point(position).extend_symmetric(self.cell_size / 2.0),
             texture,
@@ -178,7 +197,7 @@ impl GameRender {
             Fraction::Enemy => &self.assets.sprites.enemy,
         };
 
-        self.draw_at_grid(entity.position, texture, framebuffer)
+        self.draw_at_grid(entity.position.as_f32(), texture, framebuffer)
     }
 
     fn draw_cell(&self, position: vec2<Coord>, light: bool, framebuffer: &mut ugli::Framebuffer) {
@@ -187,6 +206,6 @@ impl GameRender {
         } else {
             &self.assets.sprites.cell_dark
         };
-        self.draw_at_grid(position, texture, framebuffer)
+        self.draw_at_grid(position.as_f32(), texture, framebuffer)
     }
 }
