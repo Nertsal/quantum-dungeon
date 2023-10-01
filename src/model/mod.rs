@@ -15,6 +15,7 @@ pub type Coord = i64;
 
 pub struct Model {
     pub config: Config,
+    pub level: usize,
     pub turn: Turn,
     pub phase: Phase,
     pub grid: Grid,
@@ -53,8 +54,9 @@ pub enum Phase {
 }
 
 impl Model {
-    pub fn new(config: Config) -> Self {
+    pub fn new(config: Config, level: usize) -> Self {
         let mut model = Self {
+            level,
             config,
             turn: 0,
             phase: Phase::Night,

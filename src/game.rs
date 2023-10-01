@@ -20,7 +20,7 @@ impl Game {
         Self {
             geng: geng.clone(),
             render: GameRender::new(geng, assets),
-            model: Model::new(config),
+            model: Model::new(config, 1),
             framebuffer_size: vec2(1, 1),
             cursor_pos: vec2::ZERO,
             cursor_world_pos: vec2::ZERO,
@@ -76,24 +76,33 @@ impl geng::State for Game {
         }
 
         if geng_utils::key::is_event_press(&event, [MouseButton::Left]) {
-            if let Phase::Select { .. } = self.model.phase {
-                if let Some(i) = self
-                    .render
-                    .buttons
-                    .iter()
-                    .position(|(_, button)| button.contains(self.cursor_world_pos))
-                {
-                    self.model.player_action(PlayerInput::SelectItem(i));
+            match self.model.phase {
+                Phase::Select { .. } => {
+                    if let Some(i) = self
+                        .render
+                        .buttons
+                        .iter()
+                        .position(|(_, button)| button.contains(self.cursor_world_pos))
+                    {
+                        self.model.player_action(PlayerInput::SelectItem(i));
+                    }
                 }
-            } else if self.render.inventory_button.contains(self.cursor_world_pos) {
-                self.render.show_inventory = !self.render.show_inventory;
-            } else {
-                let target = self.cursor_grid_pos.map(|x| x.floor() as Coord);
-                if self.model.grid.check_pos_near(target) {
-                    self.model.player_action(PlayerInput::Tile(target));
+                Phase::Map => {
+                    let target = self.cursor_grid_pos.map(|x| x.floor() as Coord);
+                    if self.model.grid.check_pos_near(target) {
+                        self.model.player_action(PlayerInput::Tile(target));
+                    }
+                }
+                _ if self.render.inventory_button.contains(self.cursor_world_pos) => {
+                    self.render.show_inventory = !self.render.show_inventory;
+                }
+                _ => {
+                    let target = self.cursor_grid_pos.map(|x| x.floor() as Coord);
+                    if self.model.grid.check_pos(target) {
+                        self.model.player_action(PlayerInput::Tile(target));
+                    }
                 }
             }
-            // return;
         }
     }
 
