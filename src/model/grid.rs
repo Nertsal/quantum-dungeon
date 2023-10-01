@@ -22,6 +22,10 @@ impl Grid {
 
     /// Whether the position is empty, but there is a tile right next to it.
     pub fn check_pos_near(&self, pos: vec2<Coord>) -> bool {
+        if self.check_pos(pos) {
+            return false;
+        }
+
         for (dx, dy) in [(0, -1), (1, 0), (0, 1), (-1, 0)] {
             let pos = pos + vec2(dx, dy);
             if self.check_pos(pos) {
@@ -33,9 +37,5 @@ impl Grid {
 
     pub fn expand(&mut self, pos: vec2<Coord>) {
         self.tiles.insert(pos);
-    }
-
-    pub fn fracture(&mut self, pos: vec2<Coord>) {
-        self.fractured.insert(pos);
     }
 }

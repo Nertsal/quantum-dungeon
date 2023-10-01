@@ -38,8 +38,12 @@ impl geng::State for Game {
             None,
             None,
         );
-        self.render
-            .draw(&self.model, self.cursor_world_pos, framebuffer);
+        self.render.draw(
+            &self.model,
+            self.cursor_world_pos,
+            self.cursor_grid_pos.map(|x| x.floor() as Coord),
+            framebuffer,
+        );
     }
 
     fn handle_event(&mut self, event: geng::Event) {

@@ -38,13 +38,14 @@ impl GameRender {
         &mut self,
         model: &Model,
         cursor_world_pos: vec2<f32>,
+        cursor_cell_pos: vec2<Coord>,
         framebuffer: &mut ugli::Framebuffer,
     ) {
         // Tiles
         for &pos in &model.grid.tiles {
             let light = if let Phase::Vision | Phase::Night = model.phase {
                 if model.visible_tiles.contains(&pos) {
-                    TileLight::Normal
+                    TileLight::Light
                 } else {
                     TileLight::Dark
                 }
@@ -106,7 +107,18 @@ impl GameRender {
         self.buttons.clear();
         let text = match &model.phase {
             Phase::Vision => "Select a direction to look at",
-            Phase::Map => "Select a position to place a new tile",
+            Phase::Map => {
+                // Tile plus
+                if model.grid.check_pos_near(cursor_cell_pos) {
+                    self.draw_at_grid(
+                        cursor_cell_pos.as_f32(),
+                        &self.assets.sprites.cell_plus,
+                        framebuffer,
+                    );
+                }
+
+                "Select a position to place a new tile"
+            }
             Phase::Select { options } => {
                 // Darken the game
                 let mut color = Color::BLACK;
@@ -168,9 +180,11 @@ impl GameRender {
             );
 
             // Item hint
-            let cell_pos =
-                (cursor_world_pos / self.cell_size + vec2::splat(0.5)).map(|x| x.floor() as Coord);
-            if let Some(item) = model.items.iter().find(|item| item.position == cell_pos) {
+            if let Some(item) = model
+                .items
+                .iter()
+                .find(|item| item.position == cursor_cell_pos)
+            {
                 self.draw_item_hint(item.kind, cursor_world_pos, framebuffer);
             }
         }
