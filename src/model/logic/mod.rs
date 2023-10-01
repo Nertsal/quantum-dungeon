@@ -6,6 +6,11 @@ impl Model {
     pub fn update(&mut self, _delta_time: Time) {}
 
     pub fn player_action(&mut self, player_input: PlayerInput) {
+        log::debug!(
+            "Player action: {:?}, current phase: {:?}",
+            player_input,
+            self.phase
+        );
         match &self.phase {
             Phase::Player => self.player_move(player_input),
             Phase::Vision => self.player_vision(player_input),
@@ -22,6 +27,7 @@ impl Model {
     }
 
     fn select_item(&mut self, item: ItemKind) {
+        log::debug!("Select item {:?}", item);
         self.player.items.push(item);
         self.turn += 1;
         self.night_phase();
@@ -115,10 +121,12 @@ impl Model {
     }
 
     fn vision_phase(&mut self) {
+        log::debug!("Vision phase");
         self.phase = Phase::Vision;
     }
 
     fn select_phase(&mut self) {
+        log::debug!("Select phase");
         // TODO
         self.update_vision();
 
@@ -147,6 +155,7 @@ impl Model {
     }
 
     pub fn update_vision(&mut self) {
+        log::debug!("Updating vision");
         let mut visible = HashSet::new();
         for entity in &self.entities {
             if let EntityKind::Player = entity.kind {
@@ -213,6 +222,7 @@ impl Model {
     }
 
     fn use_item(&mut self, fraction: Fraction, item: Item) {
+        log::debug!("Use item by fraction {:?}: {:?}", fraction, item);
         match item.kind {
             ItemKind::Sword => {
                 let bonus = self.count_items_near(item.position, ItemKind::Sword) as i64;
