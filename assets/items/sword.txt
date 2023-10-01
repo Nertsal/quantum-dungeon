@@ -1,0 +1,2 @@
+deal 2 damage to nearby enemies.
+deal 2 more damage per nearby sword

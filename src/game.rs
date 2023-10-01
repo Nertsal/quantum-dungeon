@@ -10,6 +10,7 @@ pub struct Game {
     framebuffer_size: vec2<usize>,
     cursor_pos: vec2<f64>,
     cursor_world_pos: vec2<f32>,
+    cursor_grid_pos: vec2<f32>,
     // TODO
     // controls: Controls,
 }
@@ -23,16 +24,8 @@ impl Game {
             framebuffer_size: vec2(1, 1),
             cursor_pos: vec2::ZERO,
             cursor_world_pos: vec2::ZERO,
+            cursor_grid_pos: vec2::ZERO,
         }
-    }
-
-    fn cursor_cell_pos(&self) -> vec2<Coord> {
-        let world_pos = self
-            .render
-            .camera
-            .screen_to_world(self.framebuffer_size.as_f32(), self.cursor_pos.as_f32());
-        let cell_pos = world_pos / self.render.cell_size + vec2::splat(0.5);
-        cell_pos.map(|x| x.floor() as Coord)
     }
 }
 
@@ -89,7 +82,7 @@ impl geng::State for Game {
                     self.model.player_action(PlayerInput::SelectItem(i));
                 }
             } else {
-                let target = self.cursor_cell_pos();
+                let target = self.cursor_grid_pos.map(|x| x.floor() as Coord);
                 self.model.player_action(PlayerInput::Tile(target));
             }
             // return;
@@ -98,10 +91,13 @@ impl geng::State for Game {
 
     fn update(&mut self, delta_time: f64) {
         let delta_time = Time::new(delta_time as _);
+
         self.cursor_world_pos = self
             .render
             .camera
             .screen_to_world(self.framebuffer_size.as_f32(), self.cursor_pos.as_f32());
+        self.cursor_grid_pos = self.cursor_world_pos / self.render.cell_size + vec2::splat(0.5);
+
         self.model.update(delta_time);
     }
 }

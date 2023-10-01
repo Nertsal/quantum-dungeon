@@ -3,6 +3,7 @@ use crate::prelude::*;
 #[derive(geng::asset::Load)]
 pub struct Assets {
     pub sprites: Sprites,
+    pub items: ItemAssets,
 }
 
 #[derive(geng::asset::Load)]
@@ -17,6 +18,11 @@ pub struct Sprites {
     pub player: ugli::Texture,
     pub sword: ugli::Texture,
     pub turn_time: ugli::Texture,
+    pub item_card: ugli::Texture,
+}
+
+pub struct ItemAssets {
+    pub descriptions: HashMap<String, String>,
 }
 
 impl Assets {
@@ -36,4 +42,39 @@ impl Sprites {
             ItemKind::Map => &self.item_shadow,
         }
     }
+}
+
+impl ItemAssets {
+    pub fn get_description(&self, item: ItemKind) -> &str {
+        self.descriptions
+            .get(&format!("{:?}", item).to_lowercase())
+            .map(|x| x.as_str())
+            .unwrap_or("<Description missing>")
+    }
+}
+
+impl geng::asset::Load for ItemAssets {
+    type Options = ();
+
+    fn load(
+        manager: &geng::asset::Manager,
+        path: &std::path::Path,
+        &(): &Self::Options,
+    ) -> geng::asset::Future<Self> {
+        let _manager = manager.clone();
+        let path = path.to_owned();
+        async move {
+            let list: Vec<String> = file::load_detect(path.join("_list.ron")).await?;
+            let mut descriptions = HashMap::new();
+            for name in list {
+                let name = name.to_lowercase().replace(' ', "_");
+                let desc = file::load_string(path.join(format!("{}.txt", name))).await?;
+                descriptions.insert(name, desc);
+            }
+            Ok(Self { descriptions })
+        }
+        .boxed_local()
+    }
+
+    const DEFAULT_EXT: Option<&'static str> = None;
 }

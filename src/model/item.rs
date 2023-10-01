@@ -29,7 +29,7 @@ pub enum ItemCategory {
     Weapon,
 }
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum ItemKind {
     Sword,
     Forge,
@@ -88,5 +88,17 @@ impl ItemStats {
         Self {
             damage: combine(self.damage, other.damage),
         }
+    }
+}
+
+impl Display for ItemKind {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        let name = match self {
+            ItemKind::Sword => "Sword",
+            ItemKind::Forge => "Ancient forge",
+            ItemKind::Boots => "Ultra speed boots",
+            ItemKind::Map => "Grand map",
+        };
+        write!(f, "{}", name)
     }
 }
