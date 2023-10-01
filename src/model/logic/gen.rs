@@ -15,7 +15,8 @@ impl Model {
             }
         }
         self.spawn_enemies();
-        self.night_phase();
+        self.spawn_items(); // First spawn has to be done manually
+        self.night_phase(true);
     }
 
     pub(super) fn shift_items(&mut self) {

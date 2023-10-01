@@ -11,7 +11,7 @@ impl Model {
                     fade_time.change(-delta_time);
                     if fade_time.is_min() {
                         // Night effects
-                        // TODO
+                        self.resolve_night_effects();
                         self.shift_items();
                         self.spawn_items();
                     }
@@ -69,6 +69,14 @@ impl Model {
         self.resolve_current();
     }
 
+    fn resolve_night_effects(&mut self) {
+        // TODO: sequential
+        let ids: Vec<_> = self.items.iter().map(|(i, _)| i).collect();
+        for id in ids {
+            self.resolve_item_night(id);
+        }
+    }
+
     fn resolve_current(&mut self) {
         if let Phase::Passive { item_queue, .. } = &self.phase {
             let Some(&current_item) = item_queue.last() else {
@@ -99,6 +107,27 @@ impl Model {
         {
             start_delay.set_ratio(R32::ONE);
             end_delay.set_ratio(R32::ONE);
+        }
+    }
+
+    /// Start item night resolution animation.
+    // TODO: return bool like resolve_item_passive
+    fn resolve_item_night(&mut self, item_id: Id) {
+        let Some(board_item) = self.items.get(item_id) else {
+            self.day_phase();
+            return; // false
+        };
+
+        let item = &self.player.items[board_item.item_id];
+        if let ItemKind::Ghost = item.kind {
+            if self.visible_tiles.contains(&board_item.position) {
+                // Death
+                self.animations.push(Animation {
+                    time: Lifetime::new_max(r32(0.5)),
+                    kind: AnimationKind::Death { item: item_id },
+                });
+            }
+            // true
         }
     }
 

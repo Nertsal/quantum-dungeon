@@ -10,11 +10,36 @@ impl Model {
     pub fn update(&mut self, delta_time: Time) {
         self.update_animations(delta_time);
         self.resolve_animations(delta_time);
+        if self.animations.is_empty() {
+            self.check_deaths();
+        }
     }
 
-    pub fn night_phase(&mut self) {
+    pub fn get_light_level(&self, position: vec2<Coord>) -> f32 {
+        if let Phase::Night {
+            fade_time,
+            light_time,
+        } = self.phase
+        {
+            if self.visible_tiles.contains(&position) {
+                1.0
+            } else if fade_time.is_above_min() {
+                fade_time.get_ratio().as_f32()
+            } else {
+                1.0 - light_time.get_ratio().as_f32()
+            }
+        } else {
+            1.0
+        }
+    }
+
+    pub fn night_phase(&mut self, start_faded: bool) {
         self.phase = Phase::Night {
-            fade_time: Lifetime::new_max(r32(1.0)),
+            fade_time: if start_faded {
+                Lifetime::new_zero(r32(1.0))
+            } else {
+                Lifetime::new_max(r32(1.0))
+            },
             light_time: Lifetime::new_max(r32(1.0)),
         };
         self.grid.fractured.clear();
@@ -23,6 +48,7 @@ impl Model {
                 self.grid.fractured.insert(entity.position);
             }
         }
+        self.update_vision();
     }
 
     pub fn day_phase(&mut self) {
@@ -79,7 +105,7 @@ impl Model {
                 self.next_level();
             }
         } else {
-            self.night_phase();
+            self.night_phase(false);
         }
     }
 

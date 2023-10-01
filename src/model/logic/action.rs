@@ -89,7 +89,6 @@ impl Model {
         }
 
         if moved {
-            self.check_deaths();
             self.player.moves_left = self.player.moves_left.saturating_sub(1);
             // Phase could have changed when collecting an item
             if let Phase::Player = self.phase {

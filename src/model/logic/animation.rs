@@ -25,6 +25,9 @@ impl Model {
                     let item_id = *item_id;
                     self.active_effect(fraction, item_id);
                 }
+                AnimationKind::Death { item } => {
+                    self.items.remove(*item);
+                }
                 AnimationKind::CameraDupe { item } => {
                     // Duplicate an item
                     let item = self.items.get(*item).unwrap();

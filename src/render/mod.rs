@@ -408,19 +408,7 @@ impl GameRender {
     ) {
         let item = &model.player.items[board_item.item_id];
 
-        let alpha = if let Phase::Night {
-            fade_time,
-            light_time,
-        } = model.phase
-        {
-            if fade_time.is_above_min() {
-                fade_time.get_ratio().as_f32()
-            } else {
-                1.0 - light_time.get_ratio().as_f32()
-            }
-        } else {
-            1.0
-        };
+        let alpha = model.get_light_level(board_item.position);
         let alpha = crate::util::smoothstep(alpha);
         let mut color = Color::WHITE;
         color.a = alpha;
@@ -509,19 +497,7 @@ impl GameRender {
     }
 
     fn draw_entity(&self, entity: &Entity, model: &Model, framebuffer: &mut ugli::Framebuffer) {
-        let alpha = if let Phase::Night {
-            fade_time,
-            light_time,
-        } = model.phase
-        {
-            if fade_time.is_above_min() {
-                fade_time.get_ratio().as_f32()
-            } else {
-                1.0 - light_time.get_ratio().as_f32()
-            }
-        } else {
-            1.0
-        };
+        let alpha = model.get_light_level(entity.position);
         let alpha = crate::util::smoothstep(alpha);
         let mut color = Color::WHITE;
         color.a = alpha;
