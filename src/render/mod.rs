@@ -39,13 +39,19 @@ impl GameRender {
         }
 
         for (i, item) in model.items.iter().enumerate() {
-            let resolution_t = if let Phase::Resolution {
-                current_item,
+            let resolution_t = if let Phase::Passive {
+                current_item: item_id,
                 start_delay,
                 end_delay,
+            }
+            | Phase::Active {
+                item_id,
+                start_delay,
+                end_delay,
+                ..
             } = &model.phase
             {
-                if *current_item == i {
+                if *item_id == i {
                     if start_delay.is_above_min() {
                         1.0 - start_delay.get_ratio().as_f32()
                     } else {

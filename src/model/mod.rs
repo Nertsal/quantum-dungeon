@@ -29,14 +29,21 @@ pub struct Model {
 pub enum Phase {
     /// Shift and spawn items and enemies.
     Night,
-    /// Resolve item effects.
-    Resolution {
+    /// Resolve passive item effects.
+    Passive {
         current_item: usize,
         start_delay: Lifetime,
         end_delay: Lifetime,
     },
     /// Player movement.
     Player,
+    /// Resolve active item effects.
+    Active {
+        fraction: Fraction,
+        item_id: usize,
+        start_delay: Lifetime,
+        end_delay: Lifetime,
+    },
     /// Place a tile on the map.
     Map,
     /// Player sets their look direction.
