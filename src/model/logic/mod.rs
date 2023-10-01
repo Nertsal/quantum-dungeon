@@ -47,8 +47,28 @@ impl Model {
     }
 
     fn next_turn(&mut self) {
-        self.turn += 1;
-        self.night_phase();
+        self.player.turns_left = self.player.turns_left.saturating_sub(1);
+        if self.player.turns_left == 0 {
+            // Damage for every enemy left on the board
+            let damage = self
+                .entities
+                .iter()
+                .filter(|e| e.fraction == Fraction::Enemy)
+                .count();
+            self.player.hearts = self.player.hearts.saturating_sub(damage);
+            if self.player.hearts == 0 {
+                self.game_over();
+            } else {
+                self.next_level();
+            }
+        } else {
+            self.night_phase();
+        }
+    }
+
+    fn game_over(&mut self) {
+        log::info!("Game over");
+        // TODO
     }
 
     fn calculate_empty_space(&self) -> HashSet<vec2<Coord>> {

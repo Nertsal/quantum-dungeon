@@ -9,6 +9,7 @@ pub struct Game {
     model: Model,
     framebuffer_size: vec2<usize>,
     cursor_pos: vec2<f64>,
+    cursor_ui_pos: vec2<f32>,
     cursor_world_pos: vec2<f32>,
     cursor_grid_pos: vec2<f32>,
     // TODO
@@ -23,6 +24,7 @@ impl Game {
             model: Model::new(config),
             framebuffer_size: vec2(1, 1),
             cursor_pos: vec2::ZERO,
+            cursor_ui_pos: vec2::ZERO,
             cursor_world_pos: vec2::ZERO,
             cursor_grid_pos: vec2::ZERO,
         }
@@ -40,7 +42,7 @@ impl geng::State for Game {
         );
         self.render.draw(
             &self.model,
-            self.cursor_world_pos,
+            self.cursor_ui_pos,
             self.cursor_grid_pos.map(|x| x.floor() as Coord),
             framebuffer,
         );
@@ -111,7 +113,11 @@ impl geng::State for Game {
 
         self.cursor_world_pos = self
             .render
-            .camera
+            .world_camera
+            .screen_to_world(self.framebuffer_size.as_f32(), self.cursor_pos.as_f32());
+        self.cursor_ui_pos = self
+            .render
+            .ui_camera
             .screen_to_world(self.framebuffer_size.as_f32(), self.cursor_pos.as_f32());
         self.cursor_grid_pos = self.cursor_world_pos / self.render.cell_size + vec2::splat(0.5);
 

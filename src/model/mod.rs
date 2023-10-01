@@ -10,13 +10,11 @@ pub use self::{animation::*, entity::*, grid::*, item::*, player::*};
 use crate::prelude::*;
 
 pub type Time = R32;
-pub type Turn = u64;
 pub type Coord = i64;
 
 pub struct Model {
     pub config: Config,
     pub level: usize,
-    pub turn: Turn,
     pub phase: Phase,
     pub grid: Grid,
     pub player: Player,
@@ -58,7 +56,6 @@ impl Model {
         let mut model = Self {
             level: 0,
             config,
-            turn: 0,
             phase: Phase::Night,
             grid: Grid::new(3),
             player: Player::new(),
