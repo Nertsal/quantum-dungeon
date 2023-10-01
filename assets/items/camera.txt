@@ -1,0 +1,1 @@
+if there’s a (spooky) item nearby, duplicate it and destroy self after
