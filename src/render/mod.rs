@@ -66,7 +66,7 @@ impl GameRender {
 
         // Entities
         for entity in &model.entities {
-            self.draw_entity(entity, framebuffer);
+            self.draw_entity(entity, model, framebuffer);
         }
 
         // Items
@@ -463,7 +463,7 @@ impl GameRender {
         );
     }
 
-    fn draw_entity(&self, entity: &Entity, framebuffer: &mut ugli::Framebuffer) {
+    fn draw_entity(&self, entity: &Entity, model: &Model, framebuffer: &mut ugli::Framebuffer) {
         let texture = match entity.fraction {
             Fraction::Player => &self.assets.sprites.player,
             Fraction::Enemy => {
@@ -491,8 +491,22 @@ impl GameRender {
                 &self.assets.sprites.enemy
             }
         };
+        self.draw_at_grid(entity.position.as_f32(), texture, framebuffer);
 
-        self.draw_at_grid(entity.position.as_f32(), texture, framebuffer)
+        if let EntityKind::Player = entity.kind {
+            // Draw the remaining moves as circles
+            let moves = model.player.moves_left.min(6);
+            let offset = (moves as f32 - 1.0) / 2.0;
+            for i in 0..moves {
+                let pos = (entity.position.as_f32() + vec2(0.0, -0.27)) * self.cell_size
+                    + vec2(i as f32 - offset, 0.0) * 0.1;
+                self.geng.draw2d().draw2d(
+                    framebuffer,
+                    &self.world_camera,
+                    &draw2d::Ellipse::circle(pos, 0.03, Color::try_from("#ffcd6c").unwrap()),
+                );
+            }
+        }
     }
 
     fn draw_cell(
