@@ -40,6 +40,7 @@ impl Model {
                         if end_delay.is_min() {
                             self.phase = Phase::Player;
                             self.active_effect(fraction, item_id);
+                            self.check_deaths();
                         }
                     }
                 }

@@ -13,13 +13,13 @@ impl Model {
     pub fn day_phase(&mut self) {
         log::debug!("Day phase");
         self.phase = Phase::Player;
-        self.grid.fractured.clear();
         self.player.moves_left = 5;
     }
 
     fn vision_phase(&mut self) {
         log::debug!("Vision phase");
         self.phase = Phase::Vision;
+        self.update_vision();
     }
 
     fn select_phase(&mut self) {
@@ -36,6 +36,11 @@ impl Model {
         let mut rng = thread_rng();
         let options = (0..3).map(|_| *options.choose(&mut rng).unwrap()).collect();
         self.phase = Phase::Select { options };
+    }
+
+    fn next_turn(&mut self) {
+        self.turn += 1;
+        self.night_phase();
     }
 
     fn calculate_empty_space(&self) -> HashSet<vec2<Coord>> {
@@ -73,6 +78,10 @@ impl Model {
 
     fn check_deaths(&mut self) {
         self.entities.retain(|e| e.health.is_above_min());
+        if !self.entities.iter().any(|e| e.fraction == Fraction::Enemy) {
+            // All enemies died -> next level
+            self.next_level();
+        }
     }
 
     /// Move the entity to the target position and swap with the entity occupying the target (if any).

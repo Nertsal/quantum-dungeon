@@ -1,10 +1,25 @@
 use super::*;
 
 impl Model {
+    pub fn next_level(&mut self) {
+        self.level += 1;
+        log::info!("Next level {}", self.level);
+        // TODO: animation
+        self.items.clear();
+        if self.entities.len() == 1 {
+            for entity in &mut self.entities {
+                entity.position = vec2::ZERO;
+            }
+        }
+        self.spawn_enemies();
+        self.night_phase();
+    }
+
     pub fn night_phase(&mut self) {
         self.phase = Phase::Night;
+        self.grid.fractured.clear();
         self.shift_items();
-        self.spawn_enemies();
+        // self.spawn_enemies();
         self.spawn_items();
 
         self.resolution_phase();
@@ -53,7 +68,9 @@ impl Model {
 
         let options = [EntityKind::Dummy];
         let mut rng = thread_rng();
-        for _ in 0..1 {
+
+        let enemies = self.level.min(5);
+        for _ in 0..enemies {
             let kind = options.choose(&mut rng).unwrap();
             let position = *available.iter().choose(&mut rng).unwrap();
 

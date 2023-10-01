@@ -54,9 +54,9 @@ pub enum Phase {
 }
 
 impl Model {
-    pub fn new(config: Config, level: usize) -> Self {
+    pub fn new(config: Config) -> Self {
         let mut model = Self {
-            level,
+            level: 0,
             config,
             turn: 0,
             phase: Phase::Night,
@@ -73,8 +73,7 @@ impl Model {
             }],
             animations: Vec::new(),
         };
-        model.night_phase();
-        model.update_vision();
+        model.next_level();
         model
     }
 }

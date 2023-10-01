@@ -101,8 +101,7 @@ impl Model {
     fn select_item(&mut self, item: ItemKind) {
         log::debug!("Select item {:?}", item);
         self.player.items.push(item);
-        self.turn += 1;
-        self.night_phase();
+        self.next_turn();
     }
 
     fn player_vision(&mut self, player_input: PlayerInput) {
