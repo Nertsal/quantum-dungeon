@@ -18,7 +18,7 @@ pub enum PlayerInput {
 impl Player {
     pub fn new() -> Self {
         Self {
-            moves_left: 5,
+            moves_left: 3,
             turns_left: 10,
             hearts: 3,
             items: [ItemKind::Sword, ItemKind::Map]
