@@ -29,7 +29,8 @@ impl GameRender {
             },
             cell_size: vec2(1.0, 1.0),
             buttons: Vec::new(),
-            inventory_button: Aabb2::point(vec2(0.0, -4.0)).extend_symmetric(vec2(1.5, 0.8) / 2.0),
+            inventory_button: Aabb2::point(vec2(0.0, -4.0))
+                .extend_symmetric(vec2::splat(1.5) / 2.0),
             show_inventory: false,
         }
     }
@@ -190,25 +191,11 @@ impl GameRender {
         }
 
         // Inventory button
-        {
-            let target = self.inventory_button;
-            self.geng.draw2d().draw2d(
-                framebuffer,
-                &self.camera,
-                &draw2d::Quad::new(target, Color::try_from("#333").unwrap()),
-            );
-            self.geng.draw2d().draw2d(
-                framebuffer,
-                &self.camera,
-                &draw2d::Text::unit(
-                    self.geng.default_font().clone(),
-                    "Inventory",
-                    Color::try_from("#ffe7cd").unwrap(),
-                )
-                .align_bounding_box(vec2(0.5, 0.5))
-                .fit_into(target.extend_uniform(-0.1)),
-            );
-        }
+        self.draw_at(
+            self.inventory_button,
+            &self.assets.sprites.inventory,
+            framebuffer,
+        );
     }
 
     fn draw_inventory(
