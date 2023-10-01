@@ -1,3 +1,4 @@
+pub use generational_arena::{Arena, Index as Id};
 pub use geng::prelude::*;
 pub use geng_utils::conversions::*;
 

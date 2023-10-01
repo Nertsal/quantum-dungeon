@@ -19,7 +19,7 @@ pub struct Model {
     pub grid: Grid,
     pub player: Player,
     pub visible_tiles: HashSet<vec2<Coord>>,
-    pub items: Vec<Item>,
+    pub items: Arena<BoardItem>,
     pub entities: Vec<Entity>,
     pub animations: Vec<Animation>,
 }
@@ -30,7 +30,7 @@ pub enum Phase {
     Night,
     /// Resolve passive item effects.
     Passive {
-        current_item: usize,
+        item_queue: Vec<Id>,
         start_delay: Lifetime,
         end_delay: Lifetime,
     },
@@ -39,7 +39,7 @@ pub enum Phase {
     /// Resolve active item effects.
     Active {
         fraction: Fraction,
-        item_id: usize,
+        item_id: Id,
         start_delay: Lifetime,
         end_delay: Lifetime,
     },
@@ -60,7 +60,7 @@ impl Model {
             grid: Grid::new(3),
             player: Player::new(),
             visible_tiles: HashSet::new(),
-            items: Vec::new(),
+            items: Arena::new(),
             entities: vec![Entity {
                 position: vec2(0, 0),
                 fraction: Fraction::Player,

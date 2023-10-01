@@ -1,9 +1,15 @@
 use super::*;
 
 #[derive(Debug, Clone)]
-pub struct Item {
+pub struct BoardItem {
     pub position: vec2<Coord>,
-    pub use_time: usize,
+    pub item_id: usize,
+}
+
+#[derive(Debug, Clone)]
+pub struct InventoryItem {
+    /// The id of the board item, if it is present on the board.
+    pub on_board: Option<Id>,
     pub kind: ItemKind,
     /// Permanent stats that persist through turns.
     pub perm_stats: ItemStats,
@@ -60,16 +66,15 @@ impl ItemKind {
         }
     }
 
-    pub fn instantiate(self, position: vec2<Coord>) -> Item {
-        let (use_time, damage) = match self {
-            ItemKind::Boots => (1, None),
-            ItemKind::Forge => (2, None),
-            ItemKind::Sword => (1, Some(2)),
-            ItemKind::Map => (3, None),
+    pub fn instantiate(self) -> InventoryItem {
+        let damage = match self {
+            ItemKind::Boots => None,
+            ItemKind::Forge => None,
+            ItemKind::Sword => Some(2),
+            ItemKind::Map => None,
         };
-        Item {
-            position,
-            use_time,
+        InventoryItem {
+            on_board: None,
             kind: self,
             perm_stats: ItemStats { damage },
             temp_stats: default(),

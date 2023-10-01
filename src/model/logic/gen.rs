@@ -39,7 +39,6 @@ impl Model {
         let moves: Vec<_> = self
             .items
             .iter()
-            .enumerate()
             .filter(|(_, item)| !self.visible_tiles.contains(&item.position))
             .map(|(i, _)| (i, *available.iter().choose(&mut rng).unwrap()))
             .collect();
@@ -49,7 +48,7 @@ impl Model {
             let from = item.position;
 
             // Swap
-            for item in &mut self.items {
+            for (_, item) in &mut self.items {
                 if item.position == target {
                     item.position = from;
                 }
@@ -96,9 +95,20 @@ impl Model {
         }
 
         let mut rng = thread_rng();
-        for kind in &self.player.items {
+        for (item_id, item) in self.player.items.iter_mut().enumerate() {
+            if let Some(id) = item.on_board {
+                if self.items.contains(id) {
+                    // Already on the board
+                    continue;
+                } else {
+                    // It's been a lie all along
+                    item.on_board = None;
+                }
+            }
+
             let position = *available.iter().choose(&mut rng).unwrap();
-            self.items.push(kind.instantiate(position));
+            let on_board = self.items.insert(BoardItem { position, item_id });
+            item.on_board = Some(on_board);
 
             available.remove(&position);
             if available.is_empty() {

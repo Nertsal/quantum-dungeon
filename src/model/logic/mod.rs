@@ -77,7 +77,7 @@ impl Model {
         for entity in &self.entities {
             available.remove(&entity.position);
         }
-        for item in &self.items {
+        for (_, item) in &self.items {
             available.remove(&item.position);
         }
 

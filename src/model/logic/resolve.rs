@@ -10,14 +10,14 @@ impl Model {
                 } else if self.animations.is_empty() {
                     // End animation
                     if let Phase::Passive {
-                        current_item,
+                        item_queue,
                         end_delay,
                         ..
                     } = &mut self.phase
                     {
                         end_delay.change(-delta_time);
                         if end_delay.is_min() {
-                            *current_item += 1;
+                            item_queue.pop();
                             self.resolve_current();
                         }
                     }
@@ -53,23 +53,30 @@ impl Model {
     pub fn resolution_phase(&mut self) {
         log::debug!("Resolution phase");
         self.phase = Phase::Passive {
-            current_item: 0,
+            item_queue: self.items.iter().map(|(i, _)| i).collect(),
             start_delay: Lifetime::new_max(r32(0.2)),
             end_delay: Lifetime::new_max(r32(0.2)),
         };
-        for item in &mut self.items {
+        for item in &mut self.player.items {
             item.temp_stats = item.perm_stats.clone();
         }
         self.resolve_current();
     }
 
     fn resolve_current(&mut self) {
-        if let Phase::Passive { current_item, .. } = self.phase {
+        if let Phase::Passive { item_queue, .. } = &self.phase {
+            let Some(&current_item) = item_queue.last() else {
+                self.day_phase();
+                return;
+            };
             if !self.resolve_item_passive(current_item) {
                 // No animation - skip
-                while let Phase::Passive { current_item, .. } = &mut self.phase {
-                    *current_item += 1;
-                    let item = *current_item;
+                while let Phase::Passive { item_queue, .. } = &mut self.phase {
+                    item_queue.pop();
+                    let Some(&item) = item_queue.last() else {
+                        self.day_phase();
+                        return;
+                    };
                     if self.resolve_item_passive(item) {
                         // Yes animation
                         break;
@@ -89,7 +96,7 @@ impl Model {
         }
     }
 
-    pub(super) fn active_phase(&mut self, fraction: Fraction, item_id: usize) {
+    pub(super) fn active_phase(&mut self, fraction: Fraction, item_id: Id) {
         if self.resolve_item_active(item_id) {
             self.phase = Phase::Active {
                 fraction,
@@ -103,35 +110,29 @@ impl Model {
         }
     }
 
-    fn active_effect(&mut self, fraction: Fraction, item_id: usize) {
+    fn active_effect(&mut self, fraction: Fraction, item_id: Id) {
         let Some(item) = self.items.get_mut(item_id) else {
-            log::error!("tried activating an invalid item {}", item_id);
+            log::error!("tried activating an invalid item {:?}", item_id);
             return;
         };
-
-        item.use_time = item.use_time.saturating_sub(1);
-        let item = if item.use_time == 0 {
-            // TODO: check indices safety
-            self.items.swap_remove(item_id)
-        } else {
-            item.clone()
-        };
+        let item = item.clone();
         self.use_item(fraction, item);
     }
 
     /// Start item passive resolution animation.
     /// If there is no animation required for the item, false is returned.
-    fn resolve_item_passive(&mut self, item_id: usize) -> bool {
-        let Some(item) = self.items.get(item_id) else {
+    fn resolve_item_passive(&mut self, item_id: Id) -> bool {
+        let Some(board_item) = self.items.get(item_id) else {
             self.day_phase();
             return false;
         };
 
+        let item = &self.player.items[board_item.item_id];
         match item.kind {
             ItemKind::Sword => false,
             ItemKind::Forge => {
                 self.bonus_near_temporary(
-                    item.position,
+                    board_item.position,
                     1,
                     ItemRef::Category(ItemCategory::Weapon),
                     ItemStats { damage: Some(2) },
@@ -145,19 +146,21 @@ impl Model {
 
     /// Start item active resolution animation.
     /// If there is no animation required for the item, false is returned.
-    fn resolve_item_active(&mut self, item_id: usize) -> bool {
-        let Some(item) = self.items.get(item_id) else {
+    fn resolve_item_active(&mut self, item_id: Id) -> bool {
+        let Some(board_item) = self.items.get(item_id) else {
             self.day_phase();
             return false;
         };
 
+        let item = &self.player.items[board_item.item_id];
         match item.kind {
             ItemKind::Sword => {
-                let bonus = self.count_items_near(item.position, ItemKind::Sword) as i64;
+                let bonus = self.count_items_near(board_item.position, ItemKind::Sword) as i64;
                 let bonus = ItemStats {
                     damage: Some(bonus * 2),
                 };
-                self.items[item_id].temp_stats = item.temp_stats.combine(&bonus);
+                let item = &mut self.player.items[board_item.item_id];
+                item.temp_stats = item.temp_stats.combine(&bonus);
                 true
             }
             ItemKind::Forge => false,

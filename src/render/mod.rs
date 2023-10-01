@@ -65,19 +65,27 @@ impl GameRender {
         }
 
         // Items
-        for (i, item) in model.items.iter().enumerate() {
-            let resolution_t = if let Phase::Passive {
-                current_item: item_id,
+        for (i, item) in &model.items {
+            let resolving = if let Phase::Passive {
+                item_queue,
                 start_delay,
                 end_delay,
-            }
-            | Phase::Active {
+            } = &model.phase
+            {
+                item_queue.last().map(|i| (i, start_delay, end_delay))
+            } else if let Phase::Active {
                 item_id,
                 start_delay,
                 end_delay,
                 ..
             } = &model.phase
             {
+                Some((item_id, start_delay, end_delay))
+            } else {
+                None
+            };
+
+            let resolution_t = if let Some((item_id, start_delay, end_delay)) = resolving {
                 if *item_id == i {
                     if start_delay.is_above_min() {
                         1.0 - start_delay.get_ratio().as_f32()
@@ -90,7 +98,8 @@ impl GameRender {
             } else {
                 0.0
             };
-            self.draw_item(item, resolution_t, framebuffer);
+
+            self.draw_item(item, resolution_t, model, framebuffer);
         }
 
         // Entities
@@ -215,11 +224,12 @@ impl GameRender {
             );
 
             // Item hint
-            if let Some(item) = model
+            if let Some((_, item)) = model
                 .items
                 .iter()
-                .find(|item| item.position == cursor_cell_pos)
+                .find(|(_, item)| item.position == cursor_cell_pos)
             {
+                let item = &model.player.items[item.item_id];
                 self.draw_item_hint(item.kind, cursor_ui_pos, framebuffer);
             }
         }
@@ -249,18 +259,18 @@ impl GameRender {
             &draw2d::Quad::new(overlay, color),
         );
 
-        let mut items = Vec::new();
-        for &item in &model.player.items {
-            if let Some((_, count)) = items.iter_mut().find(|(kind, _)| *kind == item) {
-                *count += 1;
-            } else {
-                items.push((item, 1));
-            }
-        }
+        // let mut items = Vec::new();
+        // for &item in &model.player.items {
+        //     if let Some((_, count)) = items.iter_mut().find(|(kind, _)| *kind == item) {
+        //         *count += 1;
+        //     } else {
+        //         items.push((item, 1));
+        //     }
+        // }
 
         let size = vec2(1.5, 1.5);
         let mut hint = None;
-        for (i, (item, count)) in items.into_iter().enumerate() {
+        for (i, item) in model.player.items.iter().enumerate() {
             let pos = vec2(-1.5, 2.0) + vec2(i, 0).as_f32() * size;
             let target = Aabb2::point(pos).extend_symmetric(size / 2.0);
 
@@ -269,35 +279,35 @@ impl GameRender {
             }
 
             self.draw_at_ui(target, &self.assets.sprites.cell, framebuffer);
-            let texture = self.assets.sprites.item_texture(item);
+            let texture = self.assets.sprites.item_texture(item.kind);
             self.draw_at_ui(target, texture, framebuffer);
 
-            if count > 1 {
-                let pos = pos + vec2(0.3, 0.3) * size;
-                let radius = 0.15;
-                let target = Aabb2::point(pos).extend_uniform(radius);
-                // let mut color = Color::BLACK;
-                // color.a = 0.5;
-                // self.geng.draw2d().draw2d(
-                //     framebuffer,
-                //     &self.camera,
-                //     &draw2d::Ellipse::circle(pos, radius * 1.5, color),
-                // );
-                self.geng.draw2d().draw2d(
-                    framebuffer,
-                    &self.ui_camera,
-                    &draw2d::Text::unit(
-                        self.geng.default_font().clone(),
-                        format!("x{}", count),
-                        Color::WHITE,
-                    )
-                    .fit_into(target),
-                );
-            }
+            // if count > 1 {
+            //     let pos = pos + vec2(0.3, 0.3) * size;
+            //     let radius = 0.15;
+            //     let target = Aabb2::point(pos).extend_uniform(radius);
+            //     // let mut color = Color::BLACK;
+            //     // color.a = 0.5;
+            //     // self.geng.draw2d().draw2d(
+            //     //     framebuffer,
+            //     //     &self.camera,
+            //     //     &draw2d::Ellipse::circle(pos, radius * 1.5, color),
+            //     // );
+            //     self.geng.draw2d().draw2d(
+            //         framebuffer,
+            //         &self.ui_camera,
+            //         &draw2d::Text::unit(
+            //             self.geng.default_font().clone(),
+            //             format!("x{}", count),
+            //             Color::WHITE,
+            //         )
+            //         .fit_into(target),
+            //     );
+            // }
         }
 
         if let Some(item) = hint {
-            self.draw_item_hint(item, cursor_ui_pos, framebuffer);
+            self.draw_item_hint(item.kind, cursor_ui_pos, framebuffer);
         }
     }
 
@@ -374,16 +384,24 @@ impl GameRender {
         );
     }
 
-    fn draw_item(&self, item: &Item, resolution_t: f32, framebuffer: &mut ugli::Framebuffer) {
+    fn draw_item(
+        &self,
+        board_item: &BoardItem,
+        resolution_t: f32,
+        model: &Model,
+        framebuffer: &mut ugli::Framebuffer,
+    ) {
+        let item = &model.player.items[board_item.item_id];
+
         let texture = self.assets.sprites.item_texture(item.kind);
         // TODO: place the shadow
         // self.draw_at(item.position, &self.assets.sprites.item_shadow, framebuffer);
         let offset = vec2(0.0, crate::util::smoothstep(resolution_t) * 0.2);
-        self.draw_at_grid(item.position.as_f32() + offset, texture, framebuffer);
+        self.draw_at_grid(board_item.position.as_f32() + offset, texture, framebuffer);
 
         // Damage value
         if let Some(damage) = item.temp_stats.damage {
-            let pos = (item.position.as_f32() + vec2(0.3, 0.3)) * self.cell_size;
+            let pos = (board_item.position.as_f32() + vec2(0.3, 0.3)) * self.cell_size;
             let target = Aabb2::point(pos).extend_uniform(0.06);
             self.geng.draw2d().draw2d(
                 framebuffer,

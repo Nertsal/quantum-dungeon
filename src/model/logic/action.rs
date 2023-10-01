@@ -96,7 +96,7 @@ impl Model {
 
     fn select_item(&mut self, item: ItemKind) {
         log::debug!("Select item {:?}", item);
-        self.player.items.push(item);
+        self.player.items.push(item.instantiate());
         self.next_turn();
     }
 
