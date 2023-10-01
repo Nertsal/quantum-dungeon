@@ -44,7 +44,7 @@ pub enum Phase {
         end_delay: Lifetime,
     },
     /// Place a tile on the map.
-    Map,
+    Map { tiles_left: usize },
     /// Player sets their look direction.
     Vision,
     /// Select a new item.

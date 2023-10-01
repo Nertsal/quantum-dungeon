@@ -28,7 +28,7 @@ impl Model {
                 ItemRef::Category(ItemCategory::Weapon),
                 ItemStats { damage: Some(2) },
             ),
-            ItemKind::Map => self.phase = Phase::Map,
+            ItemKind::Map => self.phase = Phase::Map { tiles_left: 2 },
             ItemKind::Boots => self.player.moves_left += 3,
         }
     }

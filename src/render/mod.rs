@@ -151,7 +151,7 @@ impl GameRender {
         self.buttons.clear();
         let text = match &model.phase {
             Phase::Vision => "Select a direction to look at",
-            Phase::Map => {
+            Phase::Map { .. } => {
                 // Tile plus
                 if model.grid.check_pos_near(cursor_cell_pos) {
                     self.draw_at_grid(

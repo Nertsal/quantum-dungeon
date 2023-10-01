@@ -111,11 +111,10 @@ impl Model {
     }
 
     fn active_effect(&mut self, fraction: Fraction, item_id: Id) {
-        let Some(item) = self.items.get_mut(item_id) else {
+        let Some(item) = self.items.remove(item_id) else {
             log::error!("tried activating an invalid item {:?}", item_id);
             return;
         };
-        let item = item.clone();
         self.use_item(fraction, item);
     }
 

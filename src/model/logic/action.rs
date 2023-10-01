@@ -10,7 +10,7 @@ impl Model {
         match &self.phase {
             Phase::Player => self.player_move(player_input),
             Phase::Vision => self.player_vision(player_input),
-            Phase::Map => self.map_action(player_input),
+            Phase::Map { .. } => self.map_action(player_input),
             Phase::Select { options } => {
                 if let PlayerInput::SelectItem(i) = player_input {
                     self.select_item(options[i]);
@@ -32,9 +32,16 @@ impl Model {
             log::error!("position {} is already valid, select an empty one", pos);
             return;
         }
-        self.grid.expand(pos);
 
-        self.player_phase();
+        if let Phase::Map { tiles_left } = &mut self.phase {
+            self.grid.expand(pos);
+            *tiles_left = tiles_left.saturating_sub(1);
+            if *tiles_left == 0 {
+                self.player_phase();
+            }
+        } else {
+            log::error!("tried map action but not in a map phase");
+        }
     }
 
     fn player_move(&mut self, player_input: PlayerInput) {

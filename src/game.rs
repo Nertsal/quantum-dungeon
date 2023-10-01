@@ -89,7 +89,7 @@ impl geng::State for Game {
                         self.model.player_action(PlayerInput::SelectItem(i));
                     }
                 }
-                Phase::Map => {
+                Phase::Map { .. } => {
                     let target = self.cursor_grid_pos.map(|x| x.floor() as Coord);
                     if self.model.grid.check_pos_near(target) {
                         self.model.player_action(PlayerInput::Tile(target));
