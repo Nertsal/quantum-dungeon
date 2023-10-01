@@ -89,6 +89,10 @@ impl Model {
         let mut visible = HashSet::new();
         for entity in &self.entities {
             if let EntityKind::Player = entity.kind {
+                if entity.look_dir == vec2::ZERO {
+                    log::error!("entity has zero look dir");
+                    continue;
+                }
                 let mut pos = entity.position;
                 visible.insert(pos);
                 loop {

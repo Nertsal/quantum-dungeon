@@ -68,7 +68,7 @@ impl Model {
                 moves.push(i);
             }
         }
-        if move_dir.x.abs() + move_dir.y.abs() > 1 {
+        if move_dir.x.abs() + move_dir.y.abs() != 1 {
             // Invalid move
             log::error!("invalid move {}", move_dir);
             return;
@@ -118,7 +118,11 @@ impl Model {
                         return;
                     }
                 };
-                entity.look_dir = dir.map(|x| x.clamp_abs(1));
+                if dir.x.abs() + dir.y.abs() != 1 {
+                    log::error!("invalid input direction during phase Vision: {}", dir);
+                    return;
+                }
+                entity.look_dir = dir;
             }
         }
         self.select_phase();
