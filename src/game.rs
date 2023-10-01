@@ -9,6 +9,7 @@ pub struct Game {
     model: Model,
     framebuffer_size: vec2<usize>,
     cursor_pos: vec2<f64>,
+    cursor_world_pos: vec2<f32>,
     // TODO
     // controls: Controls,
 }
@@ -21,6 +22,7 @@ impl Game {
             model: Model::new(config),
             framebuffer_size: vec2(1, 1),
             cursor_pos: vec2::ZERO,
+            cursor_world_pos: vec2::ZERO,
         }
     }
 
@@ -43,7 +45,8 @@ impl geng::State for Game {
             None,
             None,
         );
-        self.render.draw(&self.model, framebuffer);
+        self.render
+            .draw(&self.model, self.cursor_world_pos, framebuffer);
     }
 
     fn handle_event(&mut self, event: geng::Event) {
@@ -77,7 +80,14 @@ impl geng::State for Game {
 
         if geng_utils::key::is_event_press(&event, [MouseButton::Left]) {
             if let Phase::Select { .. } = self.model.phase {
-                // TODO
+                if let Some(i) = self
+                    .render
+                    .buttons
+                    .iter()
+                    .position(|(_, button)| button.contains(self.cursor_world_pos))
+                {
+                    self.model.player_action(PlayerInput::SelectItem(i));
+                }
             } else {
                 let target = self.cursor_cell_pos();
                 self.model.player_action(PlayerInput::Tile(target));
@@ -88,6 +98,10 @@ impl geng::State for Game {
 
     fn update(&mut self, delta_time: f64) {
         let delta_time = Time::new(delta_time as _);
+        self.cursor_world_pos = self
+            .render
+            .camera
+            .screen_to_world(self.framebuffer_size.as_f32(), self.cursor_pos.as_f32());
         self.model.update(delta_time);
     }
 }

@@ -5,6 +5,7 @@ pub struct GameRender {
     assets: Rc<Assets>,
     pub camera: Camera2d,
     pub cell_size: vec2<f32>,
+    pub buttons: Vec<(ItemKind, Aabb2<f32>)>,
 }
 
 impl GameRender {
@@ -18,10 +19,16 @@ impl GameRender {
                 fov: 10.0,
             },
             cell_size: vec2(1.0, 1.0),
+            buttons: Vec::new(),
         }
     }
 
-    pub fn draw(&mut self, model: &Model, framebuffer: &mut ugli::Framebuffer) {
+    pub fn draw(
+        &mut self,
+        model: &Model,
+        cursor_world_pos: vec2<f32>,
+        framebuffer: &mut ugli::Framebuffer,
+    ) {
         for &pos in &model.grid.tiles {
             let light = if let Phase::Vision | Phase::Night = model.phase {
                 model.visible_tiles.contains(&pos)
@@ -51,6 +58,7 @@ impl GameRender {
             &draw2d::TexturedQuad::colored(overlay, overlay_texture, color),
         );
 
+        self.buttons.clear();
         let text = match &model.phase {
             Phase::Vision => "Select a direction to look at",
             Phase::Map => "Select a position to place a new tile",
@@ -65,11 +73,25 @@ impl GameRender {
 
                 let size = 2.0;
                 let offset = size * (options.len() as f32 - 1.0) / 2.0;
-                for (i, &item) in options.iter().enumerate() {
-                    let pos = vec2(i as f32 * size - offset, 0.0);
-                    let target = Aabb2::point(pos).extend_symmetric(vec2::splat(size) / 2.0 * 0.9);
+                self.buttons = options
+                    .iter()
+                    .enumerate()
+                    .map(|(i, &item)| {
+                        let pos = vec2(i as f32 * size - offset, 0.0);
+                        let target =
+                            Aabb2::point(pos).extend_symmetric(vec2::splat(size) / 2.0 * 0.9);
+                        (item, target)
+                    })
+                    .collect();
+
+                for &(item, target) in &self.buttons {
                     let texture = self.assets.sprites.item_texture(item);
-                    self.draw_at(target, &self.assets.sprites.cell, framebuffer);
+                    let background = if target.contains(cursor_world_pos) {
+                        &self.assets.sprites.cell
+                    } else {
+                        &self.assets.sprites.cell_dark
+                    };
+                    self.draw_at(target, background, framebuffer);
                     self.draw_at(target, texture, framebuffer);
                 }
 
