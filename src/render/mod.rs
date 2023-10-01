@@ -50,7 +50,7 @@ impl GameRender {
     ) {
         // Tiles
         for &pos in &model.grid.tiles {
-            let light = if let Phase::Vision | Phase::Night = model.phase {
+            let light = if let Phase::Vision | Phase::Night { .. } = model.phase {
                 if model.visible_tiles.contains(&pos) {
                     TileLight::Light
                 } else {
@@ -166,7 +166,12 @@ impl GameRender {
             Phase::Map { .. } => {
                 // Tile plus
                 for pos in model.grid.outside_tiles() {
-                    self.draw_at_grid(pos.as_f32(), &self.assets.sprites.cell_plus, framebuffer);
+                    self.draw_at_grid(
+                        pos.as_f32(),
+                        &self.assets.sprites.cell_plus,
+                        Color::WHITE,
+                        framebuffer,
+                    );
                 }
 
                 "Select a position to place a new tile"
@@ -403,11 +408,33 @@ impl GameRender {
     ) {
         let item = &model.player.items[board_item.item_id];
 
+        let alpha = if let Phase::Night {
+            fade_time,
+            light_time,
+        } = model.phase
+        {
+            if fade_time.is_above_min() {
+                fade_time.get_ratio().as_f32()
+            } else {
+                1.0 - light_time.get_ratio().as_f32()
+            }
+        } else {
+            1.0
+        };
+        let alpha = crate::util::smoothstep(alpha);
+        let mut color = Color::WHITE;
+        color.a = alpha;
+
         let texture = self.assets.sprites.item_texture(item.kind);
         // TODO: place the shadow
         // self.draw_at(item.position, &self.assets.sprites.item_shadow, framebuffer);
         let offset = vec2(0.0, crate::util::smoothstep(resolution_t) * 0.2);
-        self.draw_at_grid(board_item.position.as_f32() + offset, texture, framebuffer);
+        self.draw_at_grid(
+            board_item.position.as_f32() + offset,
+            texture,
+            color,
+            framebuffer,
+        );
 
         // Damage value
         if let Some(damage) = item.temp_stats.damage {
@@ -416,18 +443,21 @@ impl GameRender {
             self.geng.draw2d().draw2d(
                 framebuffer,
                 &self.world_camera,
-                &draw2d::TexturedQuad::new(
+                &draw2d::TexturedQuad::colored(
                     Aabb2::point(pos).extend_uniform(0.14),
                     &self.assets.sprites.weapon_damage,
+                    color,
                 ),
             );
+            let mut color = Color::try_from("#424242").unwrap();
+            color.a = alpha;
             self.geng.draw2d().draw2d(
                 framebuffer,
                 &self.world_camera,
                 &draw2d::Text::unit(
                     self.geng.default_font().clone(),
                     format!("{}", damage),
-                    Color::try_from("#424242").unwrap(),
+                    color,
                 )
                 .fit_into(target),
             );
@@ -438,12 +468,14 @@ impl GameRender {
         &self,
         position: vec2<f32>,
         texture: &ugli::Texture,
+        color: Color,
         framebuffer: &mut ugli::Framebuffer,
     ) {
         let position = position * self.cell_size;
         self.draw_at(
             Aabb2::point(position).extend_symmetric(self.cell_size / 2.0),
             texture,
+            color,
             &self.world_camera,
             framebuffer,
         )
@@ -455,13 +487,14 @@ impl GameRender {
         texture: &ugli::Texture,
         framebuffer: &mut ugli::Framebuffer,
     ) {
-        self.draw_at(target, texture, &self.ui_camera, framebuffer)
+        self.draw_at(target, texture, Color::WHITE, &self.ui_camera, framebuffer)
     }
 
     fn draw_at(
         &self,
         target: Aabb2<f32>,
         texture: &ugli::Texture,
+        color: Color,
         camera: &Camera2d,
         framebuffer: &mut ugli::Framebuffer,
     ) {
@@ -471,11 +504,28 @@ impl GameRender {
         self.geng.draw2d().draw2d(
             framebuffer,
             camera,
-            &draw2d::TexturedQuad::new(target, texture),
+            &draw2d::TexturedQuad::colored(target, texture, color),
         );
     }
 
     fn draw_entity(&self, entity: &Entity, model: &Model, framebuffer: &mut ugli::Framebuffer) {
+        let alpha = if let Phase::Night {
+            fade_time,
+            light_time,
+        } = model.phase
+        {
+            if fade_time.is_above_min() {
+                fade_time.get_ratio().as_f32()
+            } else {
+                1.0 - light_time.get_ratio().as_f32()
+            }
+        } else {
+            1.0
+        };
+        let alpha = crate::util::smoothstep(alpha);
+        let mut color = Color::WHITE;
+        color.a = alpha;
+
         let texture = match entity.fraction {
             Fraction::Player => &self.assets.sprites.player,
             Fraction::Enemy => {
@@ -484,18 +534,21 @@ impl GameRender {
                 self.geng.draw2d().draw2d(
                     framebuffer,
                     &self.world_camera,
-                    &draw2d::TexturedQuad::new(
+                    &draw2d::TexturedQuad::colored(
                         Aabb2::point(pos).extend_uniform(0.14),
                         &self.assets.sprites.enemy_health,
+                        color,
                     ),
                 );
+                let mut color = Color::try_from("#424242").unwrap();
+                color.a = alpha;
                 self.geng.draw2d().draw2d(
                     framebuffer,
                     &self.world_camera,
                     &draw2d::Text::unit(
                         self.geng.default_font().clone(),
                         format!("{}", entity.health.value()),
-                        Color::try_from("#424242").unwrap(),
+                        color,
                     )
                     .fit_into(target),
                 );
@@ -503,7 +556,8 @@ impl GameRender {
                 &self.assets.sprites.enemy
             }
         };
-        self.draw_at_grid(entity.position.as_f32(), texture, framebuffer);
+
+        self.draw_at_grid(entity.position.as_f32(), texture, color, framebuffer);
 
         if let EntityKind::Player = entity.kind {
             // Draw the remaining moves as circles
@@ -532,6 +586,6 @@ impl GameRender {
             TileLight::Dark => &self.assets.sprites.cell_dark,
             TileLight::Light => &self.assets.sprites.cell_light,
         };
-        self.draw_at_grid(position.as_f32(), texture, framebuffer)
+        self.draw_at_grid(position.as_f32(), texture, Color::WHITE, framebuffer)
     }
 }

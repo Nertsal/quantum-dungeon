@@ -28,7 +28,10 @@ pub struct Model {
 #[derive(Debug, Clone)]
 pub enum Phase {
     /// Shift and spawn items and enemies.
-    Night,
+    Night {
+        fade_time: Lifetime,
+        light_time: Lifetime,
+    },
     /// Resolve passive item effects.
     Passive {
         item_queue: Vec<Id>,
@@ -50,7 +53,10 @@ impl Model {
         let mut model = Self {
             level: 0,
             config,
-            phase: Phase::Night,
+            phase: Phase::Night {
+                fade_time: Lifetime::new_zero(r32(0.5)),
+                light_time: Lifetime::new_max(r32(0.5)),
+            },
             grid: Grid::new(3),
             player: Player::new(),
             visible_tiles: HashSet::new(),

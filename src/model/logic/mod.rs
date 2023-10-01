@@ -12,10 +12,23 @@ impl Model {
         self.resolve_animations(delta_time);
     }
 
+    pub fn night_phase(&mut self) {
+        self.phase = Phase::Night {
+            fade_time: Lifetime::new_max(r32(1.0)),
+            light_time: Lifetime::new_max(r32(1.0)),
+        };
+        self.grid.fractured.clear();
+        for entity in &self.entities {
+            if let EntityKind::Player = entity.kind {
+                self.grid.fractured.insert(entity.position);
+            }
+        }
+    }
+
     pub fn day_phase(&mut self) {
         log::debug!("Day phase");
         self.phase = Phase::Player;
-        self.player.moves_left = 5;
+        self.player.moves_left = 3;
     }
 
     fn player_phase(&mut self) {

@@ -18,9 +18,9 @@ pub enum PlayerInput {
 impl Player {
     pub fn new() -> Self {
         Self {
-            moves_left: 3,
-            turns_left: 10,
-            hearts: 3,
+            moves_left: 0,
+            turns_left: 0,
+            hearts: 0,
             items: [ItemKind::Sword, ItemKind::Map]
                 .into_iter()
                 .map(ItemKind::instantiate)

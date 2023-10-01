@@ -3,7 +3,10 @@ use super::*;
 impl Model {
     pub fn next_level(&mut self) {
         self.level += 1;
+        self.player.turns_left = 10;
+        self.player.hearts = 3;
         log::info!("Next level {}", self.level);
+
         // TODO: animation
         self.items.clear();
         if self.entities.len() == 1 {
@@ -15,23 +18,7 @@ impl Model {
         self.night_phase();
     }
 
-    pub fn night_phase(&mut self) {
-        self.phase = Phase::Night;
-        self.grid.fractured.clear();
-        for entity in &self.entities {
-            if let EntityKind::Player = entity.kind {
-                self.grid.fractured.insert(entity.position);
-            }
-        }
-
-        self.shift_items();
-        // self.spawn_enemies();
-        self.spawn_items();
-
-        self.resolution_phase();
-    }
-
-    fn shift_items(&mut self) {
+    pub(super) fn shift_items(&mut self) {
         let mut available: HashSet<_> = self.grid.tiles.sub(&self.visible_tiles);
         for entity in &self.entities {
             available.remove(&entity.position);
@@ -94,7 +81,7 @@ impl Model {
         }
     }
 
-    fn spawn_items(&mut self) {
+    pub(super) fn spawn_items(&mut self) {
         let mut available = self.calculate_empty_space().sub(&self.visible_tiles);
         if available.is_empty() {
             return;

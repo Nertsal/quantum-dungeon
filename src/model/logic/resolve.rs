@@ -2,36 +2,57 @@ use super::*;
 
 impl Model {
     pub(super) fn resolve_animations(&mut self, delta_time: Time) {
-        if let Phase::Passive {
-            item_queue,
-            start_delay,
-            ..
-        } = &mut self.phase
-        {
-            // Start animation
-            if !start_delay.is_min() {
-                start_delay.change(-delta_time);
-                if start_delay.is_min() {
-                    // Apply effect
-                    if let Some(&item_id) = item_queue.last() {
-                        self.passive_effect(item_id);
+        match &mut self.phase {
+            Phase::Night {
+                fade_time,
+                light_time,
+            } => {
+                if fade_time.is_above_min() {
+                    fade_time.change(-delta_time);
+                    if fade_time.is_min() {
+                        // Night effects
+                        // TODO
+                        self.shift_items();
+                        self.spawn_items();
                     }
-                }
-            } else if self.animations.is_empty() {
-                // End animation
-                if let Phase::Passive {
-                    item_queue,
-                    end_delay,
-                    ..
-                } = &mut self.phase
-                {
-                    end_delay.change(-delta_time);
-                    if end_delay.is_min() {
-                        item_queue.pop();
-                        self.resolve_current();
+                } else if self.animations.is_empty() {
+                    light_time.change(-delta_time);
+                    if light_time.is_min() {
+                        self.resolution_phase();
                     }
                 }
             }
+            Phase::Passive {
+                item_queue,
+                start_delay,
+                ..
+            } => {
+                // Start animation
+                if start_delay.is_above_min() {
+                    start_delay.change(-delta_time);
+                    if start_delay.is_min() {
+                        // Apply effect
+                        if let Some(&item_id) = item_queue.last() {
+                            self.passive_effect(item_id);
+                        }
+                    }
+                } else if self.animations.is_empty() {
+                    // End animation
+                    if let Phase::Passive {
+                        item_queue,
+                        end_delay,
+                        ..
+                    } = &mut self.phase
+                    {
+                        end_delay.change(-delta_time);
+                        if end_delay.is_min() {
+                            item_queue.pop();
+                            self.resolve_current();
+                        }
+                    }
+                }
+            }
+            _ => (),
         }
     }
 
