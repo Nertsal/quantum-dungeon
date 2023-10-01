@@ -3,10 +3,20 @@ use super::*;
 impl Model {
     pub(super) fn resolve_animations(&mut self, delta_time: Time) {
         match &mut self.phase {
-            Phase::Passive { start_delay, .. } => {
+            Phase::Passive {
+                item_queue,
+                start_delay,
+                ..
+            } => {
                 // Start animation
                 if !start_delay.is_min() {
                     start_delay.change(-delta_time);
+                    if start_delay.is_min() {
+                        // Apply effect
+                        if let Some(&item_id) = item_queue.last() {
+                            self.passive_effect(item_id);
+                        }
+                    }
                 } else if self.animations.is_empty() {
                     // End animation
                     if let Phase::Passive {
@@ -23,24 +33,27 @@ impl Model {
                     }
                 }
             }
-            Phase::Active { start_delay, .. } => {
+            Phase::Active {
+                fraction,
+                item_id,
+                start_delay,
+                ..
+            } => {
                 // Start animation
                 if !start_delay.is_min() {
                     start_delay.change(-delta_time);
+                    if start_delay.is_min() {
+                        // Apply effect
+                        let fraction = *fraction;
+                        let item_id = *item_id;
+                        self.active_effect(fraction, item_id);
+                        self.check_deaths();
+                    }
                 } else if self.animations.is_empty() {
                     // End animation
-                    if let Phase::Active {
-                        fraction,
-                        item_id,
-                        ref mut end_delay,
-                        ..
-                    } = self.phase
-                    {
+                    if let Phase::Active { end_delay, .. } = &mut self.phase {
                         end_delay.change(-delta_time);
                         if end_delay.is_min() {
-                            self.phase = Phase::Player;
-                            self.active_effect(fraction, item_id);
-                            self.check_deaths();
                             self.player_phase();
                         }
                     }
@@ -117,14 +130,6 @@ impl Model {
         }
     }
 
-    fn active_effect(&mut self, fraction: Fraction, item_id: Id) {
-        let Some(item) = self.items.remove(item_id) else {
-            log::error!("tried activating an invalid item {:?}", item_id);
-            return;
-        };
-        self.use_item(fraction, item);
-    }
-
     /// Start item passive resolution animation.
     /// If there is no animation required for the item, false is returned.
     fn resolve_item_passive(&mut self, item_id: Id) -> bool {
@@ -134,8 +139,22 @@ impl Model {
         };
 
         let item = &self.player.items[board_item.item_id];
+        #[allow(clippy::match_like_matches_macro)]
         match item.kind {
-            ItemKind::Sword => false,
+            ItemKind::Forge => true,
+            ItemKind::Ghost => true,
+            _ => false,
+        }
+    }
+
+    fn passive_effect(&mut self, item_id: Id) {
+        let Some(board_item) = self.items.get(item_id) else {
+            log::error!("tried passivating an invalid item {:?}", item_id);
+            return;
+        };
+
+        let item = &self.player.items[board_item.item_id];
+        match item.kind {
             ItemKind::Forge => {
                 self.bonus_near_temporary(
                     board_item.position,
@@ -143,11 +162,15 @@ impl Model {
                     ItemRef::Category(ItemCategory::Weapon),
                     ItemStats { damage: Some(2) },
                 );
-                true
             }
-            ItemKind::Boots => false,
-            ItemKind::Map => false,
-            ItemKind::Camera => false,
+            ItemKind::Ghost => {
+                let weapons = self
+                    .count_items_near(board_item.position, ItemRef::Category(ItemCategory::Weapon));
+                if let Some(&weapon) = weapons.choose(&mut thread_rng()) {
+                    // TODO: activate weapon
+                }
+            }
+            _ => {}
         }
     }
 
@@ -192,6 +215,42 @@ impl Model {
                     }
                 }
             }
+            ItemKind::Ghost => None,
+        }
+    }
+
+    fn active_effect(&mut self, fraction: Fraction, item_id: Id) {
+        let Some(item) = self.items.remove(item_id) else {
+            log::error!("tried activating an invalid item {:?}", item_id);
+            return;
+        };
+        self.use_item(fraction, item);
+    }
+
+    fn use_item(&mut self, fraction: Fraction, board_item: BoardItem) {
+        log::debug!("Use item by fraction {:?}: {:?}", fraction, board_item);
+        let item = &self.player.items[board_item.item_id];
+        match item.kind {
+            ItemKind::Sword => {
+                let damage = item.temp_stats.damage.unwrap_or_default();
+                let range = 1;
+                self.deal_damage_around(board_item.position, fraction, damage, range);
+            }
+            ItemKind::Forge => self.bonus_near_temporary(
+                board_item.position,
+                1,
+                ItemRef::Category(ItemCategory::Weapon),
+                ItemStats { damage: Some(2) },
+            ),
+            ItemKind::Map => self.phase = Phase::Map { tiles_left: 2 },
+            ItemKind::Boots => {
+                self.player.items.remove(board_item.item_id);
+                self.player.moves_left += 3;
+            }
+            ItemKind::Camera => {
+                self.player.items.remove(board_item.item_id);
+            }
+            ItemKind::Ghost => {}
         }
     }
 }

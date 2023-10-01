@@ -46,6 +46,7 @@ impl Sprites {
             ItemKind::Boots => &self.boot,
             ItemKind::Map => &self.item_shadow,
             ItemKind::Camera => &self.item_shadow,
+            ItemKind::Ghost => &self.item_shadow,
         }
     }
 }

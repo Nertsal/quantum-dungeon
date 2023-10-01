@@ -16,11 +16,6 @@ impl Model {
         log::debug!("Day phase");
         self.phase = Phase::Player;
         self.player.moves_left = 5;
-        for entity in &self.entities {
-            if let EntityKind::Player = entity.kind {
-                self.grid.fractured.insert(entity.position);
-            }
-        }
     }
 
     fn player_phase(&mut self) {
@@ -48,6 +43,7 @@ impl Model {
             ItemKind::Boots,
             ItemKind::Map,
             ItemKind::Camera,
+            // ItemKind::Ghost,
         ];
         let mut rng = thread_rng();
         let options = (0..3).map(|_| *options.choose(&mut rng).unwrap()).collect();

@@ -46,13 +46,14 @@ pub enum ItemKind {
     Boots,
     Map,
     Camera,
+    Ghost,
 }
 
 impl ItemRef {
     pub fn check(&self, item: ItemKind) -> bool {
         match self {
             ItemRef::Category(category) => item.categories().contains(category),
-            ItemRef::Specific(_) => todo!(),
+            ItemRef::Specific(kind) => item == *kind,
         }
     }
 }
@@ -65,6 +66,7 @@ impl ItemKind {
             ItemKind::Sword => vec![ItemCategory::Weapon],
             ItemKind::Map => vec![ItemCategory::Treasure],
             ItemKind::Camera => vec![ItemCategory::Tech],
+            ItemKind::Ghost => vec![ItemCategory::Spooky],
         }
     }
 
@@ -75,6 +77,7 @@ impl ItemKind {
             ItemKind::Sword => Some(2),
             ItemKind::Map => None,
             ItemKind::Camera => None,
+            ItemKind::Ghost => None,
         };
         InventoryItem {
             on_board: None,
@@ -111,6 +114,7 @@ impl Display for ItemKind {
             ItemKind::Boots => "Ultra speed boots",
             ItemKind::Map => "Grand map",
             ItemKind::Camera => "Camera",
+            ItemKind::Ghost => "Ghost",
         };
         write!(f, "{}", name)
     }

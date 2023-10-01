@@ -13,32 +13,6 @@ impl Model {
         }
     }
 
-    pub(super) fn use_item(&mut self, fraction: Fraction, board_item: BoardItem) {
-        log::debug!("Use item by fraction {:?}: {:?}", fraction, board_item);
-        let item = &self.player.items[board_item.item_id];
-        match item.kind {
-            ItemKind::Sword => {
-                let damage = item.temp_stats.damage.unwrap_or_default();
-                let range = 1;
-                self.deal_damage_around(board_item.position, fraction, damage, range);
-            }
-            ItemKind::Forge => self.bonus_near_temporary(
-                board_item.position,
-                1,
-                ItemRef::Category(ItemCategory::Weapon),
-                ItemStats { damage: Some(2) },
-            ),
-            ItemKind::Map => self.phase = Phase::Map { tiles_left: 2 },
-            ItemKind::Boots => {
-                self.player.items.remove(board_item.item_id);
-                self.player.moves_left += 3;
-            }
-            ItemKind::Camera => {
-                self.player.items.remove(board_item.item_id);
-            }
-        }
-    }
-
     /// Give a temporary bonus to nearby items.
     pub(super) fn bonus_near_temporary(
         &mut self,
@@ -55,7 +29,7 @@ impl Model {
         }
     }
 
-    fn deal_damage_around(
+    pub(super) fn deal_damage_around(
         &mut self,
         position: vec2<Coord>,
         source_fraction: Fraction,
