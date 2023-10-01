@@ -6,8 +6,11 @@ impl Model {
         self.shift_items();
         self.spawn_enemies();
         self.spawn_items();
-        self.phase = Phase::Items;
+        self.phase = Phase::Resolution;
         // TODO
+        for item in &mut self.items {
+            item.temp_stats = item.perm_stats.clone();
+        }
         self.phase = Phase::Player;
         self.player.moves_left = 5;
     }

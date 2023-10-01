@@ -221,28 +221,42 @@ impl Model {
         }
     }
 
-    fn use_item(&mut self, fraction: Fraction, item: Item) {
+    fn use_item(&mut self, fraction: Fraction, mut item: Item) {
         log::debug!("Use item by fraction {:?}: {:?}", fraction, item);
         match item.kind {
             ItemKind::Sword => {
+                // TODO: move to resolution phase
                 let bonus = self.count_items_near(item.position, ItemKind::Sword) as i64;
-                let bonus = item.bonus + bonus;
-                let damage = 2 + bonus * 2;
+                let bonus = ItemStats {
+                    damage: Some(bonus * 2),
+                };
+                item.temp_stats = item.temp_stats.combine(&bonus);
+                let damage = 2 + item.temp_stats.damage.unwrap_or_default();
                 let range = 1;
                 self.deal_damage_around(item.position, fraction, damage, range);
             }
-            ItemKind::Forge => {
-                self.bonus_near(item.position, 1, ItemRef::Category(ItemCategory::Weapon), 1)
-            }
+            ItemKind::Forge => self.bonus_near_temporary(
+                item.position,
+                1,
+                ItemRef::Category(ItemCategory::Weapon),
+                ItemStats { damage: Some(2) },
+            ),
             ItemKind::Map => self.phase = Phase::Map,
             ItemKind::Boots => self.player.moves_left += 3,
         }
     }
 
-    fn bonus_near(&mut self, position: vec2<Coord>, range: Coord, item_ref: ItemRef, bonus: i64) {
+    /// Give a temporary bonus to nearby items.
+    fn bonus_near_temporary(
+        &mut self,
+        position: vec2<Coord>,
+        range: Coord,
+        item_ref: ItemRef,
+        bonus: ItemStats,
+    ) {
         for item in &mut self.items {
             if distance(item.position, position) <= range && item_ref.check(item.kind) {
-                item.bonus += bonus;
+                item.temp_stats = item.temp_stats.combine(&bonus);
             }
         }
     }

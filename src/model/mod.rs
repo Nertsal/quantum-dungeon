@@ -28,7 +28,7 @@ pub enum Phase {
     /// Shift and spawn items and enemies.
     Night,
     /// Resolve item effects.
-    Items,
+    Resolution,
     /// Player movement.
     Player,
     /// Place a tile on the map.

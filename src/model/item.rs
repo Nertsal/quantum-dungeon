@@ -5,7 +5,15 @@ pub struct Item {
     pub position: vec2<Coord>,
     pub use_time: usize,
     pub kind: ItemKind,
-    pub bonus: i64,
+    /// Permanent stats that persist through turns.
+    pub perm_stats: ItemStats,
+    /// Resolution stats that reset every turn.
+    pub temp_stats: ItemStats,
+}
+
+#[derive(Debug, Clone, Default)]
+pub struct ItemStats {
+    pub damage: Option<i64>,
 }
 
 /// A reference to an item kind or a category of items.
@@ -49,17 +57,36 @@ impl ItemKind {
     }
 
     pub fn instantiate(self, position: vec2<Coord>) -> Item {
-        let use_time = match self {
-            ItemKind::Boots => 1,
-            ItemKind::Forge => 2,
-            ItemKind::Sword => 1,
-            ItemKind::Map => 3,
+        let (use_time, damage) = match self {
+            ItemKind::Boots => (1, None),
+            ItemKind::Forge => (2, None),
+            ItemKind::Sword => (1, Some(2)),
+            ItemKind::Map => (3, None),
         };
         Item {
             position,
             use_time,
             kind: self,
-            bonus: 0,
+            perm_stats: ItemStats { damage },
+            temp_stats: default(),
+        }
+    }
+}
+
+impl ItemStats {
+    pub fn combine(&self, other: &Self) -> Self {
+        fn combine<T: Add<T, Output = T>>(value: Option<T>, other: Option<T>) -> Option<T> {
+            match value {
+                Some(a) => match other {
+                    Some(b) => Some(a + b),
+                    None => Some(a),
+                },
+                None => other,
+            }
+        }
+
+        Self {
+            damage: combine(self.damage, other.damage),
         }
     }
 }
