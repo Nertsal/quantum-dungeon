@@ -32,7 +32,7 @@ impl Model {
     }
 
     /// Give a temporary bonus to nearby items.
-    fn bonus_near_temporary(
+    pub(super) fn bonus_near_temporary(
         &mut self,
         position: vec2<Coord>,
         range: Coord,

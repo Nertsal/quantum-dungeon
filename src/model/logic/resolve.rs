@@ -128,8 +128,13 @@ impl Model {
         match item.kind {
             ItemKind::Sword => false,
             ItemKind::Forge => {
-                // TODO
-                false
+                self.bonus_near_temporary(
+                    item.position,
+                    1,
+                    ItemRef::Category(ItemCategory::Weapon),
+                    ItemStats { damage: Some(2) },
+                );
+                true
             }
             ItemKind::Boots => false,
             ItemKind::Map => false,
