@@ -118,15 +118,21 @@ impl GameRender {
                     })
                     .collect();
 
+                let mut hint = None;
                 for &(item, target) in &self.buttons {
                     let texture = self.assets.sprites.item_texture(item);
                     let background = if target.contains(cursor_world_pos) {
+                        hint = Some(item);
                         &self.assets.sprites.cell
                     } else {
                         &self.assets.sprites.cell_dark
                     };
                     self.draw_at(target, background, framebuffer);
                     self.draw_at(target, texture, framebuffer);
+                }
+
+                if let Some(item) = hint {
+                    self.draw_item_hint(item, cursor_world_pos, framebuffer);
                 }
 
                 "Select an item"
