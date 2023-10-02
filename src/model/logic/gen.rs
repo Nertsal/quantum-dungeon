@@ -10,7 +10,7 @@ impl Model {
         self.level += 1;
         log::info!("Next level {}", self.level);
 
-        let turns = 5 + 2_usize.pow(self.level as u32 / 4);
+        let turns = 4 + 2_usize.pow(self.level as u32 / 4);
         let turns = turns.min(10);
         self.player.turns_left = turns;
         // self.player.hearts = 3;
