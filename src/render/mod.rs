@@ -41,9 +41,9 @@ impl GameRender {
             buttons: Vec::new(),
             skip_turn_button: Aabb2::point(vec2(7.0, -1.0))
                 .extend_symmetric(vec2::splat(1.5) / 2.0),
-            skip_item_button: Aabb2::point(vec2(7.0, -1.0))
+            skip_item_button: Aabb2::point(vec2(0.75, -3.0))
                 .extend_symmetric(vec2::splat(1.5) / 2.0),
-            reroll_button: Aabb2::point(vec2(5.5, -1.0)).extend_symmetric(vec2::splat(1.5) / 2.0),
+            reroll_button: Aabb2::point(vec2(-0.75, -3.0)).extend_symmetric(vec2::splat(1.5) / 2.0),
             inventory_button: Aabb2::point(vec2(7.0, 1.0)).extend_symmetric(vec2::splat(1.5) / 2.0),
             retry_button: Aabb2::point(vec2(0.0, -3.0)).extend_symmetric(vec2::splat(1.5) / 2.0),
             show_inventory: false,
