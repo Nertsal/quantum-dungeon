@@ -24,7 +24,7 @@ impl Model {
         for (target, board_item) in &self.items {
             let item = &mut self.player.items[board_item.item_id];
             if distance(board_item.position, position) <= range && item_ref.check(item.kind) {
-                self.animations.push(Animation::new(
+                self.animations.insert(Animation::new(
                     self.config.animation_time,
                     AnimationKind::Bonus {
                         from: position,
@@ -46,7 +46,7 @@ impl Model {
     ) {
         for (target, entity) in self.entities.iter().enumerate() {
             if source_fraction != entity.fraction && distance(entity.position, position) <= range {
-                self.animations.push(Animation::new(
+                self.animations.insert(Animation::new(
                     self.config.animation_time,
                     AnimationKind::Damage {
                         from: position,

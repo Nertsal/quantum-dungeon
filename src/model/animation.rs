@@ -6,6 +6,8 @@ pub type Lifetime = geng_utils::bounded::Bounded<Time>;
 pub struct Animation {
     pub time: Lifetime,
     pub kind: AnimationKind,
+    /// The id of the animation this one has to start after.
+    pub dependent_on: Option<Id>,
 }
 
 #[derive(Debug, Clone)]
@@ -39,6 +41,15 @@ impl Animation {
         Self {
             time: Lifetime::new_max(time),
             kind,
+            dependent_on: None,
+        }
+    }
+
+    /// Set a dependency.
+    pub fn after(self, animation: Id) -> Self {
+        Self {
+            dependent_on: Some(animation),
+            ..self
         }
     }
 }

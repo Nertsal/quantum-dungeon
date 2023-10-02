@@ -122,7 +122,7 @@ impl Model {
             ItemKind::Ghost => {
                 if self.visible_tiles.contains(&board_item.position) {
                     // Death
-                    self.animations.push(Animation::new(
+                    self.animations.insert(Animation::new(
                         self.config.animation_time,
                         AnimationKind::Death { item: item_id },
                     ));
@@ -207,6 +207,8 @@ impl Model {
                 self.deal_damage_around(board_item.position, Fraction::Player, damage, 1);
             }
             ItemKind::GreedyPot => {
+                let mut bonus_animation = None;
+                let mut stats = item.current_stats();
                 if rng.gen_bool(0.1) {
                     // Destroy nearby treasure and gain +2 dmg
                     let treasures = self.count_items_near(
@@ -214,18 +216,27 @@ impl Model {
                         ItemRef::Category(ItemCategory::Treasure),
                     );
                     if let Some(&treasure) = treasures.choose(&mut rng) {
+                        // TODO: animation
                         let treasure = self.items.remove(treasure).unwrap();
                         self.player.items.remove(treasure.item_id);
 
-                        let board_item = self.items.get(item_id).unwrap();
-                        let item = &mut self.player.items[board_item.item_id];
-                        item.perm_stats.damage =
-                            Some(item.perm_stats.damage.unwrap_or_default() + 2);
+                        let bonus = ItemStats { damage: Some(2) };
+                        stats = stats.combine(&bonus);
+
+                        let id = self.animations.insert(Animation::new(
+                            self.config.animation_time,
+                            AnimationKind::Bonus {
+                                from: treasure.position,
+                                target: item_id,
+                                bonus,
+                                permanent: true,
+                            },
+                        ));
+                        bonus_animation = Some(id);
                     }
                 }
 
                 let board_item = self.items.get(item_id).unwrap();
-                let item = &mut self.player.items[board_item.item_id];
                 let enemies: Vec<usize> = self
                     .entities
                     .iter()
@@ -234,14 +245,16 @@ impl Model {
                     .map(|(i, _)| i)
                     .collect();
                 if let Some(&enemy) = enemies.choose(&mut rng) {
-                    self.animations.push(Animation::new(
+                    let mut animation = Animation::new(
                         self.config.animation_time,
                         AnimationKind::Damage {
                             from: board_item.position,
                             target: enemy,
-                            damage: item.current_stats().damage.unwrap_or_default(),
+                            damage: stats.damage.unwrap_or_default(),
                         },
-                    ));
+                    );
+                    animation.dependent_on = bonus_animation;
+                    self.animations.insert(animation);
                 }
             }
             ItemKind::SpiritCoin => {
@@ -250,7 +263,7 @@ impl Model {
                     .count_items_near(board_item.position, ItemRef::Specific(ItemKind::Chest))
                     .is_empty()
                 {
-                    self.animations.push(Animation::new(
+                    self.animations.insert(Animation::new(
                         self.config.animation_time,
                         AnimationKind::Dupe {
                             kind: ItemKind::SpiritCoin,
@@ -267,7 +280,7 @@ impl Model {
                         .map(|(i, _)| i)
                         .collect();
                     if let Some(&enemy) = enemies.choose(&mut rng) {
-                        self.animations.push(Animation::new(
+                        self.animations.insert(Animation::new(
                             self.config.animation_time,
                             AnimationKind::Damage {
                                 from: board_item.position,
@@ -338,7 +351,7 @@ impl Model {
             }
             ItemKind::MagicWire => {
                 // Duplicate
-                self.animations.push(Animation::new(
+                self.animations.insert(Animation::new(
                     self.config.animation_time,
                     AnimationKind::Dupe {
                         kind: ItemKind::MagicWire,
@@ -358,7 +371,7 @@ impl Model {
                     for (target, item) in &self.items {
                         let item = &mut self.player.items[item.item_id];
                         if ItemRef::Category(ItemCategory::Weapon).check(item.kind) {
-                            self.animations.push(Animation::new(
+                            self.animations.insert(Animation::new(
                                 self.config.animation_time,
                                 AnimationKind::Bonus {
                                     from: from_position,
@@ -418,7 +431,7 @@ impl Model {
                 match spooky.choose(&mut rng) {
                     None => None, // Do nothing
                     Some(&item) => {
-                        self.animations.push(Animation::new(
+                        self.animations.insert(Animation::new(
                             self.config.animation_time,
                             AnimationKind::Dupe {
                                 kind: self.player.items[self.items[item].item_id].kind,
@@ -440,7 +453,7 @@ impl Model {
         match resolution {
             Some(true) => {
                 // Animation
-                self.animations.push(Animation::new(
+                self.animations.insert(Animation::new(
                     self.config.effect_padding_time,
                     AnimationKind::UseActive { fraction, item_id },
                 ));
@@ -492,7 +505,7 @@ impl Model {
                     .map(|(i, _)| i)
                     .collect();
                 if let Some(&enemy) = enemies.choose(&mut thread_rng()) {
-                    self.animations.push(Animation::new(
+                    self.animations.insert(Animation::new(
                         self.config.animation_time,
                         AnimationKind::Damage {
                             from: board_item.position,
@@ -513,7 +526,7 @@ impl Model {
                     .map(|(i, _)| i)
                     .collect();
                 if let Some(&enemy) = enemies.choose(&mut thread_rng()) {
-                    self.animations.push(Animation::new(
+                    self.animations.insert(Animation::new(
                         self.config.animation_time,
                         AnimationKind::Damage {
                             from: board_item.position,
@@ -535,7 +548,7 @@ impl Model {
                 let damage = item.current_stats().damage.unwrap_or_default();
                 for (target, entity) in self.entities.iter().enumerate() {
                     if let Fraction::Enemy = entity.fraction {
-                        self.animations.push(Animation::new(
+                        self.animations.insert(Animation::new(
                             self.config.animation_time,
                             AnimationKind::Damage {
                                 from: board_item.position,

@@ -21,7 +21,7 @@ pub struct Model {
     pub visible_tiles: HashSet<vec2<Coord>>,
     pub items: Arena<BoardItem>,
     pub entities: Vec<Entity>,
-    pub animations: Vec<Animation>,
+    pub animations: Arena<Animation>,
     pub ending_animations: Vec<Animation>,
 }
 
@@ -73,7 +73,7 @@ impl Model {
                 look_dir: vec2(0, 1),
                 kind: EntityKind::Player,
             }],
-            animations: Vec::new(),
+            animations: Arena::new(),
             ending_animations: Vec::new(),
         };
         model.next_level();

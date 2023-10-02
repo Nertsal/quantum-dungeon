@@ -9,15 +9,25 @@ impl Model {
             .retain(|anim| anim.time.is_above_min());
 
         let mut finished = Vec::new();
-        for (i, animation) in self.animations.iter_mut().enumerate() {
+
+        let ids: Vec<Id> = self.animations.iter().map(|(i, _)| i).collect();
+        for i in ids {
+            if let Some(id) = self.animations[i].dependent_on {
+                if self.animations.contains(id) {
+                    // Wait for the animation to finish
+                    continue;
+                }
+            }
+
+            let animation = &mut self.animations[i];
             animation.time.change(-delta_time);
             if animation.time.is_min() {
                 finished.push(i);
             }
         }
 
-        for i in finished.into_iter().rev() {
-            let mut animation = self.animations.swap_remove(i);
+        for i in finished {
+            let mut animation = self.animations.remove(i).unwrap();
             match &animation.kind {
                 AnimationKind::UseActive { fraction, item_id } => {
                     // Activate item

@@ -102,7 +102,7 @@ impl GameRender {
 
             let resolving = resolving
                 .or_else(|| {
-                    model.animations.iter().find_map(|anim| {
+                    model.animations.iter().find_map(|(_, anim)| {
                         if let AnimationKind::UseActive { item_id, .. } = anim.kind {
                             if item_id == i {
                                 return Some((anim.time, Lifetime::new_max(R32::ZERO)));
@@ -275,7 +275,7 @@ impl GameRender {
     }
 
     fn draw_animations(&self, model: &Model, framebuffer: &mut ugli::Framebuffer) {
-        for animation in &model.animations {
+        for (_, animation) in &model.animations {
             self.draw_animation(
                 animation,
                 1.0 - animation.time.get_ratio().as_f32(),
@@ -303,6 +303,11 @@ impl GameRender {
         model: &Model,
         framebuffer: &mut ugli::Framebuffer,
     ) {
+        if end_t == 1.0 && start_t == 0.0 {
+            // Not even started yet
+            return;
+        }
+
         match &animation.kind {
             AnimationKind::Damage {
                 from,
