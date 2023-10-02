@@ -553,7 +553,10 @@ impl Model {
                 let range = 1;
                 self.deal_damage_around(board_item.position, fraction, damage, range, vec![]);
             }
-            ItemKind::Map => self.phase = Phase::Map { tiles_left: 2 },
+            ItemKind::Map => {
+                self.phase = Phase::Map { tiles_left: 2 };
+                self.player.items.remove(board_item.item_id);
+            }
             ItemKind::Boots => {
                 self.player.items.remove(board_item.item_id);
                 self.player.moves_left += 3;
