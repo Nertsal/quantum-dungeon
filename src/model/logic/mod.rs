@@ -140,7 +140,7 @@ impl Model {
     }
 
     fn retry(&mut self) {
-        *self = Self::new(self.config.clone());
+        *self = Self::new(self.assets.clone(), self.config.clone());
     }
 
     fn calculate_empty_space(&self) -> HashSet<vec2<Coord>> {

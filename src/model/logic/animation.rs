@@ -101,6 +101,7 @@ impl Model {
                 }
                 AnimationKind::EntityDeath { entity, .. } => {
                     self.entities.remove(*entity);
+                    self.assets.sounds.enemy_death.play();
                 }
                 AnimationKind::ItemDeath { item, .. } => {
                     let item = self.items.remove(*item).unwrap();
@@ -111,6 +112,7 @@ impl Model {
                 }
                 AnimationKind::Damage { target, damage, .. } => {
                     self.entities[*target].health.change(-damage);
+                    self.assets.sounds.damage.play();
                 }
                 AnimationKind::Bonus {
                     target,

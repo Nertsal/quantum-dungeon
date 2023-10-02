@@ -14,6 +14,7 @@ pub type Coord = i64;
 pub type Score = u64;
 
 pub struct Model {
+    pub assets: Rc<Assets>,
     pub config: Config,
     pub level: usize,
     pub turn: usize,
@@ -65,8 +66,9 @@ pub enum Phase {
 }
 
 impl Model {
-    pub fn new(config: Config) -> Self {
+    pub fn new(assets: Rc<Assets>, config: Config) -> Self {
         let mut model = Self {
+            assets,
             level: 0,
             turn: 0,
             score: 0,

@@ -21,7 +21,7 @@ impl Game {
         Self {
             geng: geng.clone(),
             render: GameRender::new(geng, assets),
-            model: Model::new(config),
+            model: Model::new(assets.clone(), config),
             framebuffer_size: vec2(1, 1),
             cursor_pos: vec2::ZERO,
             cursor_ui_pos: vec2::ZERO,

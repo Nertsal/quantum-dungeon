@@ -3,9 +3,20 @@ use crate::prelude::*;
 #[derive(geng::asset::Load)]
 pub struct Assets {
     pub sprites: Sprites,
+    pub sounds: Sounds,
     pub items: ItemAssets,
     #[load(path = "font/Bodo Amat.ttf")]
     pub font: Rc<geng::Font>,
+}
+
+#[derive(geng::asset::Load)]
+pub struct Sounds {
+    #[load(ext = "mp3")]
+    pub step: geng::Sound,
+    #[load(ext = "mp3")]
+    pub damage: geng::Sound,
+    #[load(ext = "mp3")]
+    pub enemy_death: geng::Sound,
 }
 
 #[derive(geng::asset::Load)]

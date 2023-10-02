@@ -57,6 +57,7 @@ impl Model {
             if *tiles_left == 0 {
                 self.player_phase();
             }
+            self.assets.sounds.step.play();
         } else {
             log::error!("tried map action but not in a map phase");
         }
@@ -98,6 +99,7 @@ impl Model {
                     player.position = target_pos;
                     self.grid.fractured.insert(target_pos);
                     self.player_phase();
+                    self.assets.sounds.step.play();
                 } else {
                     log::error!(
                         "invalid input during phase Portal, expected a magic item position, found a non-magic item"
@@ -167,6 +169,7 @@ impl Model {
 
         if moved {
             self.player.moves_left = self.player.moves_left.saturating_sub(1);
+            self.assets.sounds.step.play();
         }
     }
 
