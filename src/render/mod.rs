@@ -216,22 +216,20 @@ impl GameRender {
                 "Select a position to place a new tile"
             }
             Phase::Select { .. } => {
-                // Darken the game
-                let mut color = Color::BLACK;
-                color.a = 0.5;
-                self.geng.draw2d().draw2d(
-                    framebuffer,
-                    &self.ui_camera,
-                    &draw2d::Quad::new(overlay, color),
-                );
+                if !self.show_inventory {
+                    // Darken the game
+                    let mut color = Color::BLACK;
+                    color.a = 0.5;
+                    self.geng.draw2d().draw2d(
+                        framebuffer,
+                        &self.ui_camera,
+                        &draw2d::Quad::new(overlay, color),
+                    );
+                }
 
                 "Select an item"
             }
         };
-
-        if self.show_inventory {
-            self.draw_inventory(model, cursor_ui_pos, framebuffer);
-        }
 
         {
             // Text
@@ -252,20 +250,11 @@ impl GameRender {
                 &draw2d::Text::unit(self.geng.default_font().clone(), text, Color::BLACK)
                     .fit_into(Aabb2::point(target.center()).extend_symmetric(vec2(3.0, 0.5) / 2.0)),
             );
-
-            if let Phase::Select { .. } = model.phase {
-            } else if let Some((_, item)) = model
-                .items
-                .iter()
-                .find(|(_, item)| item.position == cursor_cell_pos)
-            {
-                // Item hint
-                let item = &model.player.items[item.item_id];
-                self.draw_item_hint(item.kind, cursor_ui_pos, framebuffer);
-            }
         }
 
-        if let Phase::Select { options, .. } = &model.phase {
+        if self.show_inventory {
+            self.draw_inventory(model, cursor_ui_pos, framebuffer);
+        } else if let Phase::Select { options, .. } = &model.phase {
             // Buttons
             let size = 2.0;
             let offset = size * (options.len() as f32 - 1.0) / 2.0;
@@ -301,14 +290,22 @@ impl GameRender {
             if let Some(item) = hint {
                 self.draw_item_hint(item, cursor_ui_pos, framebuffer);
             }
-        } else {
-            // Inventory button
-            self.draw_at_ui(
-                self.inventory_button,
-                &self.assets.sprites.inventory,
-                framebuffer,
-            );
+        } else if let Some((_, item)) = model
+            .items
+            .iter()
+            .find(|(_, item)| item.position == cursor_cell_pos)
+        {
+            // Item hint
+            let item = &model.player.items[item.item_id];
+            self.draw_item_hint(item.kind, cursor_ui_pos, framebuffer);
         }
+
+        // Inventory button
+        self.draw_at_ui(
+            self.inventory_button,
+            &self.assets.sprites.inventory,
+            framebuffer,
+        );
     }
 
     fn draw_animations(&self, model: &Model, framebuffer: &mut ugli::Framebuffer) {
