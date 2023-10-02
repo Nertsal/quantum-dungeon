@@ -158,10 +158,16 @@ impl Model {
                 );
             }
             ItemKind::Ghost => {
-                let weapons = self
+                let mut weapons = self
                     .count_items_near(board_item.position, ItemRef::Category(ItemCategory::Weapon));
-                if let Some(&weapon) = weapons.choose(&mut thread_rng()) {
-                    self.resolve_item_active(Fraction::Player, weapon);
+                let mut rng = thread_rng();
+                while !weapons.is_empty() {
+                    // Find a weapon with an active effect
+                    let i = rng.gen_range(0..weapons.len());
+                    let weapon = weapons.swap_remove(i);
+                    if self.resolve_item_active(Fraction::Player, weapon) {
+                        break;
+                    }
                 }
             }
             ItemKind::SoulCrystal => {
@@ -176,9 +182,10 @@ impl Model {
     }
 
     /// Start item active resolution animation.
-    pub(super) fn resolve_item_active(&mut self, fraction: Fraction, item_id: Id) {
+    /// Returns false, if the item does not have an active effect.
+    pub(super) fn resolve_item_active(&mut self, fraction: Fraction, item_id: Id) -> bool {
         let Some(board_item) = self.items.get(item_id) else {
-            return;
+            return false;
         };
 
         let item = &self.player.items[board_item.item_id];
@@ -225,13 +232,16 @@ impl Model {
                     time: Lifetime::new_max(r32(0.2)),
                     kind: AnimationKind::UseActive { fraction, item_id },
                 });
+                true
             }
             Some(false) => {
                 // Activate immediately
                 self.active_effect(fraction, item_id);
+                true
             }
             None => {
                 // Do nothing
+                false
             }
         }
     }
