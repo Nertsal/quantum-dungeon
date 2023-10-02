@@ -73,11 +73,27 @@ impl GameRender {
                     }
                 }
                 Phase::Night { .. } => {
-                    if model.visible_tiles.contains(&pos) {
-                        TileLight::Light
-                    } else {
-                        TileLight::Dark
-                    }
+                    // Crossfade
+                    let t = model.get_light_level(pos);
+                    let t = crate::util::smoothstep(t);
+                    let mut color = Color::WHITE;
+                    color.a = 1.0 - t;
+                    self.draw_at_grid(
+                        pos.as_f32(),
+                        Angle::ZERO,
+                        &self.assets.sprites.cell_dark,
+                        color,
+                        framebuffer,
+                    );
+                    color.a = t;
+                    self.draw_at_grid(
+                        pos.as_f32(),
+                        Angle::ZERO,
+                        &self.assets.sprites.cell,
+                        color,
+                        framebuffer,
+                    );
+                    continue;
                 }
                 _ => {
                     if model.grid.fractured.contains(&pos) {
