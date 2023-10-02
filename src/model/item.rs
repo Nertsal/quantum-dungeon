@@ -157,7 +157,7 @@ impl ItemKind {
             ItemKind::SpiritCoin => None,
             ItemKind::Chest => None,
             ItemKind::MagicTreasureBag => None,
-            ItemKind::ElectricRod => Some(0),
+            ItemKind::ElectricRod => Some(2),
             ItemKind::MagicWire => None,
             ItemKind::Melter => None,
             ItemKind::Phantom => Some(1),
