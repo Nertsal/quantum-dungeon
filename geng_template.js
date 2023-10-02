@@ -218,7 +218,7 @@ function makeClosure(arg0, arg1, dtor, f) {
     return real;
 }
 function __wbg_adapter_34(arg0, arg1, arg2) {
-    wasm.wasm_bindgen__convert__closures__invoke1__h1880d817a2b75606(arg0, arg1, addHeapObject(arg2));
+    wasm._dyn_core__ops__function__Fn__A____Output___R_as_wasm_bindgen__closure__WasmClosure___describe__invoke__h3afa01b1004eb2c3(arg0, arg1, addHeapObject(arg2));
 }
 
 function makeMutClosure(arg0, arg1, dtor, f) {
@@ -246,7 +246,7 @@ function makeMutClosure(arg0, arg1, dtor, f) {
     return real;
 }
 function __wbg_adapter_43(arg0, arg1) {
-    wasm.wasm_bindgen__convert__closures__invoke0_mut__h80d7d2d0f5f5aa6a(arg0, arg1);
+    wasm._dyn_core__ops__function__FnMut_____Output___R_as_wasm_bindgen__closure__WasmClosure___describe__invoke__h7ba89ef5d441f392(arg0, arg1);
 }
 
 function __wbg_adapter_48(arg0, arg1, arg2) {
@@ -1492,40 +1492,40 @@ function __wbg_get_imports() {
         const ret = wasm.memory;
         return addHeapObject(ret);
     };
-    imports.wbg.__wbindgen_closure_wrapper754 = function(arg0, arg1, arg2) {
-        const ret = makeClosure(arg0, arg1, 264, __wbg_adapter_34);
+    imports.wbg.__wbindgen_closure_wrapper688 = function(arg0, arg1, arg2) {
+        const ret = makeClosure(arg0, arg1, 259, __wbg_adapter_34);
         return addHeapObject(ret);
     };
-    imports.wbg.__wbindgen_closure_wrapper756 = function(arg0, arg1, arg2) {
-        const ret = makeClosure(arg0, arg1, 264, __wbg_adapter_34);
+    imports.wbg.__wbindgen_closure_wrapper690 = function(arg0, arg1, arg2) {
+        const ret = makeClosure(arg0, arg1, 259, __wbg_adapter_34);
         return addHeapObject(ret);
     };
-    imports.wbg.__wbindgen_closure_wrapper758 = function(arg0, arg1, arg2) {
-        const ret = makeClosure(arg0, arg1, 264, __wbg_adapter_34);
+    imports.wbg.__wbindgen_closure_wrapper692 = function(arg0, arg1, arg2) {
+        const ret = makeClosure(arg0, arg1, 259, __wbg_adapter_34);
         return addHeapObject(ret);
     };
-    imports.wbg.__wbindgen_closure_wrapper760 = function(arg0, arg1, arg2) {
-        const ret = makeClosure(arg0, arg1, 264, __wbg_adapter_34);
+    imports.wbg.__wbindgen_closure_wrapper694 = function(arg0, arg1, arg2) {
+        const ret = makeClosure(arg0, arg1, 259, __wbg_adapter_34);
         return addHeapObject(ret);
     };
-    imports.wbg.__wbindgen_closure_wrapper762 = function(arg0, arg1, arg2) {
-        const ret = makeMutClosure(arg0, arg1, 264, __wbg_adapter_43);
+    imports.wbg.__wbindgen_closure_wrapper696 = function(arg0, arg1, arg2) {
+        const ret = makeMutClosure(arg0, arg1, 259, __wbg_adapter_43);
         return addHeapObject(ret);
     };
-    imports.wbg.__wbindgen_closure_wrapper764 = function(arg0, arg1, arg2) {
-        const ret = makeClosure(arg0, arg1, 264, __wbg_adapter_34);
+    imports.wbg.__wbindgen_closure_wrapper698 = function(arg0, arg1, arg2) {
+        const ret = makeClosure(arg0, arg1, 259, __wbg_adapter_34);
         return addHeapObject(ret);
     };
-    imports.wbg.__wbindgen_closure_wrapper1330 = function(arg0, arg1, arg2) {
-        const ret = makeMutClosure(arg0, arg1, 532, __wbg_adapter_48);
+    imports.wbg.__wbindgen_closure_wrapper1334 = function(arg0, arg1, arg2) {
+        const ret = makeMutClosure(arg0, arg1, 533, __wbg_adapter_48);
         return addHeapObject(ret);
     };
-    imports.wbg.__wbindgen_closure_wrapper3868 = function(arg0, arg1, arg2) {
-        const ret = makeMutClosure(arg0, arg1, 1691, __wbg_adapter_51);
+    imports.wbg.__wbindgen_closure_wrapper3872 = function(arg0, arg1, arg2) {
+        const ret = makeMutClosure(arg0, arg1, 1692, __wbg_adapter_51);
         return addHeapObject(ret);
     };
-    imports.wbg.__wbindgen_closure_wrapper3901 = function(arg0, arg1, arg2) {
-        const ret = makeMutClosure(arg0, arg1, 1703, __wbg_adapter_54);
+    imports.wbg.__wbindgen_closure_wrapper3905 = function(arg0, arg1, arg2) {
+        const ret = makeMutClosure(arg0, arg1, 1704, __wbg_adapter_54);
         return addHeapObject(ret);
     };
     imports['./snippets/geng-3750f959708a1ebc/inline3.js'] = __wbg_star0;
