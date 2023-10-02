@@ -1,0 +1,3 @@
+Deal 0 dmg to random enemy when use, destroy self after
+
+gain dmg +1 per turn
