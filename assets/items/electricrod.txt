@@ -1,0 +1,1 @@
+deal 2 dmg per connected tech item (diag doesn’t count)

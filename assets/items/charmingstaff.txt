@@ -1,0 +1,2 @@
+gain +2 dmg when observed at night
+lose 2 dmg when not observed at night

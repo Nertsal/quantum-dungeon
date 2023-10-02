@@ -1,0 +1,1 @@
+has 20% to destroy a nearby tech item and give all weapon +1 dmg (permanent)
