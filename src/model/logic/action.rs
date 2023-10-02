@@ -17,11 +17,15 @@ impl Model {
                 extra_items,
             } => match player_input {
                 PlayerInput::SelectItem(i) => self.select_item(options[i]),
-                PlayerInput::Skip => self.select_phase(0),
+                PlayerInput::Skip => {
+                    self.select_phase(0);
+                    self.assets.sounds.step.play();
+                }
                 PlayerInput::Reroll => {
                     if self.player.refreshes > 0 {
                         self.player.refreshes -= 1;
-                        self.select_phase(extra_items + 1)
+                        self.select_phase(extra_items + 1);
+                        self.assets.sounds.step.play();
                     }
                 }
                 _ => {
@@ -31,6 +35,7 @@ impl Model {
             Phase::GameOver => {
                 if let PlayerInput::Retry = player_input {
                     self.retry();
+                    self.assets.sounds.step.play();
                 }
             }
             _ => {}
@@ -124,6 +129,7 @@ impl Model {
         if let PlayerInput::Skip = player_input {
             log::debug!("Skipping turn");
             self.vision_phase();
+            self.assets.sounds.step.play();
             return;
         }
 
@@ -182,6 +188,7 @@ impl Model {
             0
         };
         self.select_phase(items);
+        self.assets.sounds.step.play();
     }
 
     fn player_vision(&mut self, player_input: PlayerInput) {
@@ -207,6 +214,7 @@ impl Model {
 
         self.update_vision();
         if let PlayerInput::Vision { commit: true, .. } = player_input {
+            self.assets.sounds.step.play();
             self.phase = Phase::PostVision {
                 timer: Lifetime::new_max(r32(1.0)),
             };

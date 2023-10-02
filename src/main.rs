@@ -30,7 +30,8 @@ fn main() {
     Geng::run_with(&geng_options, |geng| async move {
         let manager = geng.asset_manager();
 
-        let assets = assets::Assets::load(manager).await.unwrap();
+        let mut assets = assets::Assets::load(manager).await.unwrap();
+        assets.music.set_looped(true);
         let mut music = assets.music.play();
         music.set_volume(0.2);
 

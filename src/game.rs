@@ -2,9 +2,9 @@ use geng::{Key, MouseButton};
 
 use crate::{prelude::*, render::GameRender};
 
-#[allow(dead_code)]
 pub struct Game {
     geng: Geng,
+    assets: Rc<Assets>,
     render: GameRender,
     model: Model,
     framebuffer_size: vec2<usize>,
@@ -20,6 +20,7 @@ impl Game {
     pub fn new(geng: &Geng, assets: &Rc<Assets>, config: Config) -> Self {
         Self {
             geng: geng.clone(),
+            assets: assets.clone(),
             render: GameRender::new(geng, assets),
             model: Model::new(assets.clone(), config),
             framebuffer_size: vec2(1, 1),
@@ -87,6 +88,7 @@ impl geng::State for Game {
         if geng_utils::key::is_event_press(&event, [MouseButton::Left]) {
             if self.render.inventory_button.contains(self.cursor_ui_pos) {
                 self.render.show_inventory = !self.render.show_inventory;
+                self.assets.sounds.step.play();
                 return;
             }
             match self.model.phase {
