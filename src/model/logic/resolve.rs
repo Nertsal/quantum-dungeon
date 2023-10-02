@@ -13,6 +13,7 @@ impl Model {
                         // Night effects
                         self.resolve_night_effects();
                         self.shift_items();
+                        // TODO: shift entities
                         self.spawn_items();
                     }
                 } else if self.animations.is_empty() {
@@ -188,7 +189,6 @@ impl Model {
             ItemKind::Boots => Some(false),
             ItemKind::Map => Some(false),
             ItemKind::Camera => {
-                // TODO: animation
                 let spooky = self
                     .count_items_near(board_item.position, ItemRef::Category(ItemCategory::Spooky));
                 let mut rng = thread_rng();
@@ -204,6 +204,7 @@ impl Model {
                 }
             }
             ItemKind::Ghost => None,
+            ItemKind::FireScroll => Some(true),
         };
 
         match resolution {
@@ -256,6 +257,22 @@ impl Model {
                 self.player.items.remove(board_item.item_id);
             }
             ItemKind::Ghost => {}
+            ItemKind::FireScroll => {
+                // TODO: move to resolve to have animation
+                let enemies: Vec<usize> = self
+                    .entities
+                    .iter()
+                    .enumerate()
+                    .filter(|(_, e)| matches!(e.fraction, Fraction::Enemy))
+                    .map(|(i, _)| i)
+                    .collect();
+                if let Some(&enemy) = enemies.choose(&mut thread_rng()) {
+                    let enemy = &mut self.entities[enemy];
+                    enemy
+                        .health
+                        .change(-item.temp_stats.damage.unwrap_or_default());
+                }
+            }
         }
     }
 }

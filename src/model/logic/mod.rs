@@ -83,6 +83,7 @@ impl Model {
             ItemKind::Map,
             ItemKind::Camera,
             ItemKind::Ghost,
+            ItemKind::FireScroll,
         ];
         let mut rng = thread_rng();
         let options = (0..3).map(|_| *options.choose(&mut rng).unwrap()).collect();

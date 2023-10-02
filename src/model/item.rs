@@ -47,6 +47,7 @@ pub enum ItemKind {
     Map,
     Camera,
     Ghost,
+    FireScroll,
 }
 
 impl ItemRef {
@@ -60,13 +61,15 @@ impl ItemRef {
 
 impl ItemKind {
     pub fn categories(&self) -> Vec<ItemCategory> {
+        use ItemCategory::*;
         match self {
-            ItemKind::Boots => vec![ItemCategory::Tech],
-            ItemKind::Forge => vec![ItemCategory::Magic],
-            ItemKind::Sword => vec![ItemCategory::Weapon],
-            ItemKind::Map => vec![ItemCategory::Treasure],
-            ItemKind::Camera => vec![ItemCategory::Tech],
-            ItemKind::Ghost => vec![ItemCategory::Spooky],
+            ItemKind::Boots => vec![Tech],
+            ItemKind::Forge => vec![Magic],
+            ItemKind::Sword => vec![Weapon],
+            ItemKind::Map => vec![Treasure],
+            ItemKind::Camera => vec![Tech],
+            ItemKind::Ghost => vec![Spooky],
+            ItemKind::FireScroll => vec![Magic, Weapon],
         }
     }
 
@@ -78,6 +81,7 @@ impl ItemKind {
             ItemKind::Map => None,
             ItemKind::Camera => None,
             ItemKind::Ghost => None,
+            ItemKind::FireScroll => Some(5),
         };
         InventoryItem {
             on_board: None,
@@ -115,6 +119,7 @@ impl Display for ItemKind {
             ItemKind::Map => "Grand map",
             ItemKind::Camera => "Camera",
             ItemKind::Ghost => "Ghost",
+            ItemKind::FireScroll => "Fire scroll",
         };
         write!(f, "{}", name)
     }
