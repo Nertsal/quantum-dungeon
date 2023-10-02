@@ -141,7 +141,7 @@ impl GameRender {
 
         // Hearts
         for i in 0..model.player.hearts {
-            let pos = self.ui_camera.center + vec2(-3.0, 3.3) + vec2(i, 0).as_f32() * 0.6;
+            let pos = self.ui_camera.center + vec2(-3.0, 2.5) + vec2(i, 0).as_f32() * 0.6;
             let size = vec2::splat(1.5);
             let target = Aabb2::point(pos).extend_symmetric(size / 2.0);
             self.draw_at_ui(target, &self.assets.sprites.heart, framebuffer);
@@ -149,7 +149,7 @@ impl GameRender {
 
         {
             // Timer
-            let pos = vec2(2.5, 3.3);
+            let pos = vec2(2.5, 2.5);
             let size = vec2::splat(1.5);
             let icon_target = Aabb2::point(pos).extend_symmetric(size / 2.0);
             self.draw_at_ui(icon_target, &self.assets.sprites.turn_time, framebuffer);
@@ -182,6 +182,9 @@ impl GameRender {
 
         self.buttons.clear();
         let text = match &model.phase {
+            Phase::Night { .. } => "Night",
+            Phase::Player | Phase::Passive { .. } => "Day",
+            Phase::Portal => "Select a magic item",
             Phase::Vision => "Select a direction to look at",
             Phase::Map { .. } => {
                 // Tile plus
@@ -196,7 +199,7 @@ impl GameRender {
 
                 "Select a position to place a new tile"
             }
-            Phase::Select { options, .. } => {
+            Phase::Select { .. } => {
                 // Darken the game
                 let mut color = Color::BLACK;
                 color.a = 0.5;
@@ -206,60 +209,32 @@ impl GameRender {
                     &draw2d::Quad::new(overlay, color),
                 );
 
-                // Buttons
-                let size = 2.0;
-                let offset = size * (options.len() as f32 - 1.0) / 2.0;
-                self.buttons = options
-                    .iter()
-                    .enumerate()
-                    .map(|(i, &item)| {
-                        let pos = vec2(i as f32 * size - offset, 0.0);
-                        let target =
-                            Aabb2::point(pos).extend_symmetric(vec2::splat(size) / 2.0 * 0.9);
-                        (item, target)
-                    })
-                    .collect();
-
-                let mut hint = None;
-                for &(item, target) in &self.buttons {
-                    let texture = self.assets.sprites.item_texture(item);
-                    let background = if target.contains(cursor_ui_pos) {
-                        hint = Some(item);
-                        &self.assets.sprites.cell
-                    } else {
-                        &self.assets.sprites.cell_dark
-                    };
-                    self.draw_at_ui(target, background, framebuffer);
-                    self.draw_at_ui(target, texture, framebuffer);
-                }
-
-                self.draw_at_ui(
-                    self.reroll_button,
-                    &self.assets.sprites.reroll_button,
-                    framebuffer,
-                );
-
-                if let Some(item) = hint {
-                    self.draw_item_hint(item, cursor_ui_pos, framebuffer);
-                }
-
                 "Select an item"
             }
-            _ => "",
         };
 
         if self.show_inventory {
             self.draw_inventory(model, cursor_ui_pos, framebuffer);
-        } else {
+        }
+
+        {
             // Text
-            self.geng.default_font().draw(
+            let pos = self.ui_camera.center + vec2(0.0, 0.8 * self.ui_camera.fov / 2.0);
+            let size = vec2(
+                3.0 * self.assets.sprites.panel.size().as_f32().aspect(),
+                3.0,
+            );
+            let target = Aabb2::point(pos).extend_symmetric(size / 2.0);
+            self.geng.draw2d().draw2d(
                 framebuffer,
                 &self.ui_camera,
-                text,
-                vec2(geng::TextAlign::CENTER, geng::TextAlign::TOP),
-                mat3::translate(self.ui_camera.center + vec2(0.0, 0.8 * self.ui_camera.fov / 2.0))
-                    * mat3::scale_uniform(0.7),
-                Color::BLACK,
+                &draw2d::TexturedQuad::new(target, &self.assets.sprites.panel),
+            );
+            self.geng.draw2d().draw2d(
+                framebuffer,
+                &self.ui_camera,
+                &draw2d::Text::unit(self.geng.default_font().clone(), text, Color::BLACK)
+                    .fit_into(Aabb2::point(target.center()).extend_symmetric(vec2(3.0, 0.5) / 2.0)),
             );
 
             if let Phase::Select { .. } = model.phase {
@@ -274,12 +249,50 @@ impl GameRender {
             }
         }
 
-        // Inventory button
-        self.draw_at_ui(
-            self.inventory_button,
-            &self.assets.sprites.inventory,
-            framebuffer,
-        );
+        if let Phase::Select { options, .. } = &model.phase {
+            // Buttons
+            let size = 2.0;
+            let offset = size * (options.len() as f32 - 1.0) / 2.0;
+            self.buttons = options
+                .iter()
+                .enumerate()
+                .map(|(i, &item)| {
+                    let pos = vec2(i as f32 * size - offset, 0.0);
+                    let target = Aabb2::point(pos).extend_symmetric(vec2::splat(size) / 2.0 * 0.9);
+                    (item, target)
+                })
+                .collect();
+
+            let mut hint = None;
+            for &(item, target) in &self.buttons {
+                let texture = self.assets.sprites.item_texture(item);
+                let background = if target.contains(cursor_ui_pos) {
+                    hint = Some(item);
+                    &self.assets.sprites.cell
+                } else {
+                    &self.assets.sprites.cell_dark
+                };
+                self.draw_at_ui(target, background, framebuffer);
+                self.draw_at_ui(target, texture, framebuffer);
+            }
+
+            self.draw_at_ui(
+                self.reroll_button,
+                &self.assets.sprites.reroll_button,
+                framebuffer,
+            );
+
+            if let Some(item) = hint {
+                self.draw_item_hint(item, cursor_ui_pos, framebuffer);
+            }
+        } else {
+            // Inventory button
+            self.draw_at_ui(
+                self.inventory_button,
+                &self.assets.sprites.inventory,
+                framebuffer,
+            );
+        }
     }
 
     fn draw_animations(&self, model: &Model, framebuffer: &mut ugli::Framebuffer) {
