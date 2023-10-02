@@ -1,7 +1,11 @@
 use crate::prelude::*;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct Config {}
+pub struct Config {
+    pub animation_time: Time,
+    /// The time before and after the effect.
+    pub effect_padding_time: Time,
+}
 
 impl Config {
     pub async fn load(path: impl AsRef<std::path::Path>) -> anyhow::Result<Self> {

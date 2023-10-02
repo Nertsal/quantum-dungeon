@@ -15,3 +15,12 @@ pub enum AnimationKind {
     Dupe { kind: ItemKind },
     // BonusFly { from: vec2<Coord>, to: vec2<Coord> },
 }
+
+impl Animation {
+    pub fn new(time: Time, kind: AnimationKind) -> Self {
+        Self {
+            time: Lifetime::new_max(time),
+            kind,
+        }
+    }
+}

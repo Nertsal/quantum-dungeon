@@ -122,10 +122,10 @@ impl Model {
             ItemKind::Ghost => {
                 if self.visible_tiles.contains(&board_item.position) {
                     // Death
-                    self.animations.push(Animation {
-                        time: Lifetime::new_max(r32(0.5)),
-                        kind: AnimationKind::Death { item: item_id },
-                    });
+                    self.animations.push(Animation::new(
+                        self.config.animation_time,
+                        AnimationKind::Death { item: item_id },
+                    ));
                 }
                 // true
             }
@@ -246,12 +246,12 @@ impl Model {
                     .count_items_near(board_item.position, ItemRef::Specific(ItemKind::Chest))
                     .is_empty()
                 {
-                    self.animations.push(Animation {
-                        time: Lifetime::new_max(r32(0.5)),
-                        kind: AnimationKind::Dupe {
+                    self.animations.push(Animation::new(
+                        self.config.animation_time,
+                        AnimationKind::Dupe {
                             kind: ItemKind::SpiritCoin,
                         },
-                    });
+                    ));
                 }
 
                 if rng.gen_bool(0.2) {
@@ -328,12 +328,12 @@ impl Model {
             }
             ItemKind::MagicWire => {
                 // Duplicate
-                self.animations.push(Animation {
-                    time: Lifetime::new_max(r32(0.5)),
-                    kind: AnimationKind::Dupe {
+                self.animations.push(Animation::new(
+                    self.config.animation_time,
+                    AnimationKind::Dupe {
                         kind: ItemKind::MagicWire,
                     },
-                });
+                ));
             }
             ItemKind::Melter => {
                 // Destroy nearby tech item
@@ -400,12 +400,12 @@ impl Model {
                 match spooky.choose(&mut rng) {
                     None => None, // Do nothing
                     Some(&item) => {
-                        self.animations.push(Animation {
-                            time: Lifetime::new_max(r32(0.5)),
-                            kind: AnimationKind::Dupe {
+                        self.animations.push(Animation::new(
+                            self.config.animation_time,
+                            AnimationKind::Dupe {
                                 kind: self.player.items[self.items[item].item_id].kind,
                             },
-                        });
+                        ));
                         Some(true)
                     }
                 }
@@ -422,10 +422,10 @@ impl Model {
         match resolution {
             Some(true) => {
                 // Animation
-                self.animations.push(Animation {
-                    time: Lifetime::new_max(r32(0.2)),
-                    kind: AnimationKind::UseActive { fraction, item_id },
-                });
+                self.animations.push(Animation::new(
+                    self.config.effect_padding_time,
+                    AnimationKind::UseActive { fraction, item_id },
+                ));
                 true
             }
             Some(false) => {
