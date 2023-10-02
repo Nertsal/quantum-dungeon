@@ -45,7 +45,10 @@ pub enum Phase {
     /// Player sets their look direction.
     Vision,
     /// Select a new item.
-    Select { options: Vec<ItemKind> },
+    Select {
+        options: Vec<ItemKind>,
+        extra_items: usize,
+    },
 }
 
 impl Model {

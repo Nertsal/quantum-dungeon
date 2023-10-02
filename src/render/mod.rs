@@ -176,7 +176,7 @@ impl GameRender {
 
                 "Select a position to place a new tile"
             }
-            Phase::Select { options } => {
+            Phase::Select { options, .. } => {
                 // Darken the game
                 let mut color = Color::BLACK;
                 color.a = 0.5;

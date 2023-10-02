@@ -42,6 +42,7 @@ impl Model {
             },
             light_time: Lifetime::new_max(r32(1.0)),
         };
+        self.player.extra_items = 1;
         self.grid.fractured.clear();
         for entity in &self.entities {
             if let EntityKind::Player = entity.kind {
@@ -71,31 +72,38 @@ impl Model {
         self.update_vision();
     }
 
-    fn select_phase(&mut self) {
+    fn select_phase(&mut self, items: usize) {
         log::debug!("Select phase");
         // TODO
         self.update_vision();
 
-        let options = {
-            use ItemKind::*;
-            [
-                Sword,
-                Forge,
-                Boots,
-                Map,
-                Camera,
-                Ghost,
-                FireScroll,
-                SoulCrystal,
-                RadiationCore,
-                GreedyPot,
-                SpiritCoin,
-                Chest,
-            ]
-        };
-        let mut rng = thread_rng();
-        let options = (0..3).map(|_| *options.choose(&mut rng).unwrap()).collect();
-        self.phase = Phase::Select { options };
+        if items > 0 {
+            let options = {
+                use ItemKind::*;
+                [
+                    Sword,
+                    Forge,
+                    Boots,
+                    Map,
+                    Camera,
+                    Ghost,
+                    FireScroll,
+                    SoulCrystal,
+                    RadiationCore,
+                    GreedyPot,
+                    SpiritCoin,
+                    Chest,
+                ]
+            };
+            let mut rng = thread_rng();
+            let options = (0..3).map(|_| *options.choose(&mut rng).unwrap()).collect();
+            self.phase = Phase::Select {
+                options,
+                extra_items: items - 1,
+            };
+        } else {
+            self.next_turn();
+        }
     }
 
     fn next_turn(&mut self) {

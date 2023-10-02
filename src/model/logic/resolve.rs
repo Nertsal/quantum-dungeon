@@ -127,7 +127,6 @@ impl Model {
     /// If there is an animation required for the item, its priority is returned.
     fn resolve_item_passive(&mut self, item_id: Id) -> Option<isize> {
         let Some(board_item) = self.items.get(item_id) else {
-            self.day_phase();
             return None;
         };
 
@@ -139,6 +138,7 @@ impl Model {
             ItemKind::RadiationCore => Some(0),
             ItemKind::GreedyPot => Some(0),
             ItemKind::SpiritCoin => Some(0),
+            ItemKind::Chest => Some(0),
             _ => None,
         }
     }
@@ -245,6 +245,22 @@ impl Model {
                     // Destroy self
                     self.player.items.remove(board_item.item_id);
                     self.items.remove(item_id);
+                }
+            }
+            ItemKind::Chest => {
+                let chests: Vec<Id> = self
+                    .items
+                    .iter()
+                    .filter(|(_, item)| self.player.items[item.item_id].kind == ItemKind::Chest)
+                    .map(|(i, _)| i)
+                    .collect();
+                if chests.len() >= 3 {
+                    // Destroy 3 chests, gain 1 item
+                    for i in chests.into_iter().take(3) {
+                        let board_item = self.items.remove(i).unwrap();
+                        self.player.items.remove(board_item.item_id);
+                    }
+                    self.player.extra_items += 1;
                 }
             }
             _ => {}

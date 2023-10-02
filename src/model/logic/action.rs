@@ -11,7 +11,7 @@ impl Model {
             Phase::Player if self.animations.is_empty() => self.player_move(player_input),
             Phase::Vision => self.player_vision(player_input),
             Phase::Map { .. } => self.map_action(player_input),
-            Phase::Select { options } => {
+            Phase::Select { options, .. } => {
                 if let PlayerInput::SelectItem(i) = player_input {
                     self.select_item(options[i]);
                 } else {
@@ -102,7 +102,12 @@ impl Model {
     fn select_item(&mut self, item: ItemKind) {
         log::debug!("Select item {:?}", item);
         self.player.items.insert(item.instantiate());
-        self.next_turn();
+        let items = if let Phase::Select { extra_items, .. } = self.phase {
+            extra_items
+        } else {
+            0
+        };
+        self.select_phase(items);
     }
 
     fn player_vision(&mut self, player_input: PlayerInput) {
@@ -123,6 +128,6 @@ impl Model {
                 entity.look_dir = dir;
             }
         }
-        self.select_phase();
+        self.select_phase(self.player.extra_items);
     }
 }
