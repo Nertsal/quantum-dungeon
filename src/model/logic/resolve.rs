@@ -414,6 +414,7 @@ impl Model {
             ItemKind::SoulCrystal => Some(true),
             ItemKind::Phantom => Some(true),
             ItemKind::KingSkull => Some(true),
+            ItemKind::GoldenLantern => Some(true),
             ItemKind::WarpPortal => Some(true),
             _ => None,
         };
@@ -520,6 +521,10 @@ impl Model {
                 // Destroy and light up for 3 turns
                 self.player.items.remove(board_item.item_id);
                 self.grid.light_up(board_item.position, 1, 3);
+            }
+            ItemKind::CharmingStaff => {
+                let damage = item.current_stats().damage.unwrap_or_default();
+                self.deal_damage_around(board_item.position, Fraction::Player, damage, 1);
             }
             ItemKind::WarpPortal => {
                 if self.items.iter().any(|(_, i)| {
