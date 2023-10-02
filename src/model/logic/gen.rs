@@ -8,9 +8,12 @@ impl Model {
         }
 
         self.level += 1;
-        self.player.turns_left = 10;
-        self.player.hearts = 3;
         log::info!("Next level {}", self.level);
+
+        let turns = 5 + 2_usize.pow(self.level as u32 / 4);
+        let turns = turns.min(10);
+        self.player.turns_left = turns;
+        // self.player.hearts = 3;
 
         // TODO: animation
         self.items.clear();
@@ -86,7 +89,12 @@ impl Model {
         let options = [EntityKind::Dummy];
         let mut rng = thread_rng();
 
-        let enemies = self.level.min(5);
+        let enemies = ((self.level + 1) % 4 + self.level / 4).saturating_sub(1);
+        let enemies = enemies.min(5);
+
+        let health = 5 * 2_usize.pow(self.level as u32 / 4);
+        let health = health as i64;
+
         for _ in 0..enemies {
             let kind = options.choose(&mut rng).unwrap();
             let position = *available.iter().choose(&mut rng).unwrap();
@@ -94,7 +102,7 @@ impl Model {
             self.entities.insert(Entity {
                 position,
                 fraction: Fraction::Enemy,
-                health: Health::new_max(5),
+                health: Health::new_max(health),
                 look_dir: vec2(0, -1),
                 kind: kind.clone(),
             });
