@@ -531,8 +531,8 @@ impl Model {
                 self.deal_damage_nearest(board_item.position, damage, vec![]);
             }
             ItemKind::Map => {
-                self.phase = Phase::Map { tiles_left: 2 };
-                self.player.items.remove(board_item.item_id);
+                self.phase = Phase::Map { tiles_left: 1 };
+                // self.player.items.remove(board_item.item_id);
             }
             ItemKind::Boots => {
                 self.player.items.remove(board_item.item_id);
