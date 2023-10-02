@@ -234,10 +234,14 @@ impl Model {
                     .map(|(i, _)| i)
                     .collect();
                 if let Some(&enemy) = enemies.choose(&mut rng) {
-                    let enemy = &mut self.entities[enemy];
-                    enemy
-                        .health
-                        .change(-item.current_stats().damage.unwrap_or_default());
+                    self.animations.push(Animation::new(
+                        self.config.animation_time,
+                        AnimationKind::Damage {
+                            from: board_item.position,
+                            target: enemy,
+                            damage: item.current_stats().damage.unwrap_or_default(),
+                        },
+                    ));
                 }
             }
             ItemKind::SpiritCoin => {
@@ -263,8 +267,14 @@ impl Model {
                         .map(|(i, _)| i)
                         .collect();
                     if let Some(&enemy) = enemies.choose(&mut rng) {
-                        let enemy = &mut self.entities[enemy];
-                        enemy.health.change(-5);
+                        self.animations.push(Animation::new(
+                            self.config.animation_time,
+                            AnimationKind::Damage {
+                                from: board_item.position,
+                                target: enemy,
+                                damage: 5,
+                            },
+                        ));
                     }
 
                     // Destroy self
@@ -480,10 +490,15 @@ impl Model {
                     .map(|(i, _)| i)
                     .collect();
                 if let Some(&enemy) = enemies.choose(&mut thread_rng()) {
-                    let enemy = &mut self.entities[enemy];
-                    enemy
-                        .health
-                        .change(-item.current_stats().damage.unwrap_or_default());
+                    self.animations.push(Animation::new(
+                        self.config.animation_time,
+                        AnimationKind::Damage {
+                            from: board_item.position,
+                            target: enemy,
+                            damage: item.current_stats().damage.unwrap_or_default(),
+                        },
+                    ));
+                    // TODO: after the animation
                     self.player.items.remove(board_item.item_id);
                 }
             }
@@ -496,10 +511,15 @@ impl Model {
                     .map(|(i, _)| i)
                     .collect();
                 if let Some(&enemy) = enemies.choose(&mut thread_rng()) {
-                    let enemy = &mut self.entities[enemy];
-                    enemy
-                        .health
-                        .change(-item.current_stats().damage.unwrap_or_default());
+                    self.animations.push(Animation::new(
+                        self.config.animation_time,
+                        AnimationKind::Damage {
+                            from: board_item.position,
+                            target: enemy,
+                            damage: item.current_stats().damage.unwrap_or_default(),
+                        },
+                    ));
+                    // TODO: after the animation
                     self.player.items.remove(board_item.item_id);
                 }
             }
@@ -511,9 +531,16 @@ impl Model {
             ItemKind::KingSkull => {
                 // deal damage to all enemies
                 let damage = item.current_stats().damage.unwrap_or_default();
-                for entity in &mut self.entities {
+                for (target, entity) in self.entities.iter().enumerate() {
                     if let Fraction::Enemy = entity.fraction {
-                        entity.health.change(-damage);
+                        self.animations.push(Animation::new(
+                            self.config.animation_time,
+                            AnimationKind::Damage {
+                                from: board_item.position,
+                                target,
+                                damage,
+                            },
+                        ));
                     }
                 }
             }

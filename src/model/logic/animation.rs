@@ -31,6 +31,9 @@ impl Model {
                 AnimationKind::Dupe { kind } => {
                     self.new_item_and_spawn(*kind);
                 }
+                AnimationKind::Damage { target, damage, .. } => {
+                    self.entities[*target].health.change(-damage);
+                }
             }
             animation.time.set_ratio(R32::ONE);
             self.ending_animations.push(animation);

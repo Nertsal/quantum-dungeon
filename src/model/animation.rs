@@ -10,10 +10,21 @@ pub struct Animation {
 
 #[derive(Debug, Clone)]
 pub enum AnimationKind {
-    UseActive { fraction: Fraction, item_id: Id },
-    Death { item: Id },
-    Dupe { kind: ItemKind },
-    // BonusFly { from: vec2<Coord>, to: vec2<Coord> },
+    UseActive {
+        fraction: Fraction,
+        item_id: Id,
+    },
+    Death {
+        item: Id,
+    },
+    Dupe {
+        kind: ItemKind,
+    },
+    Damage {
+        from: vec2<Coord>,
+        target: usize,
+        damage: Hp,
+    },
 }
 
 impl Animation {

@@ -36,9 +36,16 @@ impl Model {
         damage: Hp,
         range: Coord,
     ) {
-        for entity in &mut self.entities {
+        for (target, entity) in self.entities.iter().enumerate() {
             if source_fraction != entity.fraction && distance(entity.position, position) <= range {
-                entity.health.change(-damage);
+                self.animations.push(Animation::new(
+                    self.config.animation_time,
+                    AnimationKind::Damage {
+                        from: position,
+                        target,
+                        damage,
+                    },
+                ));
             }
         }
     }

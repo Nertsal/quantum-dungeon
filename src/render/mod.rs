@@ -135,6 +135,8 @@ impl GameRender {
             self.draw_item(item, resolution_t, model, framebuffer);
         }
 
+        self.draw_animations(model, framebuffer);
+
         // Hearts
         for i in 0..model.player.hearts {
             let pos = self.ui_camera.center + vec2(-3.0, 3.3) + vec2(i, 0).as_f32() * 0.6;
@@ -270,6 +272,71 @@ impl GameRender {
             &self.assets.sprites.inventory,
             framebuffer,
         );
+    }
+
+    fn draw_animations(&self, model: &Model, framebuffer: &mut ugli::Framebuffer) {
+        for animation in &model.animations {
+            self.draw_animation(
+                animation,
+                1.0 - animation.time.get_ratio().as_f32(),
+                1.0,
+                model,
+                framebuffer,
+            );
+        }
+        for animation in &model.ending_animations {
+            self.draw_animation(
+                animation,
+                1.0,
+                animation.time.get_ratio().as_f32(),
+                model,
+                framebuffer,
+            );
+        }
+    }
+
+    fn draw_animation(
+        &self,
+        animation: &Animation,
+        start_t: f32, // 0.0 -> 1.0
+        end_t: f32,   // 1.0 -> 0.0
+        model: &Model,
+        framebuffer: &mut ugli::Framebuffer,
+    ) {
+        match &animation.kind {
+            AnimationKind::Damage {
+                from,
+                target,
+                damage,
+            } if end_t == 1.0 => {
+                let from = from.as_f32() * self.cell_size;
+                let target = model.entities[*target].position.as_f32() * self.cell_size;
+                let t = crate::util::smoothstep(start_t);
+                let pos = from + (target - from) * t;
+
+                // let pos = (board_item.position.as_f32() + vec2(0.3, 0.3)) * self.cell_size;
+                let target = Aabb2::point(pos).extend_uniform(0.06);
+                self.geng.draw2d().draw2d(
+                    framebuffer,
+                    &self.world_camera,
+                    &draw2d::TexturedQuad::new(
+                        Aabb2::point(pos).extend_uniform(0.14),
+                        &self.assets.sprites.weapon_damage,
+                    ),
+                );
+                self.geng.draw2d().draw2d(
+                    framebuffer,
+                    &self.world_camera,
+                    &draw2d::Text::unit(
+                        self.geng.default_font().clone(),
+                        format!("{}", damage),
+                        Color::try_from("#424242").unwrap(),
+                    )
+                    .fit_into(target),
+                );
+            }
+            _ => (),
+        }
     }
 
     fn draw_inventory(
