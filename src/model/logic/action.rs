@@ -180,23 +180,27 @@ impl Model {
             if let EntityKind::Player = entity.kind {
                 let dir = match player_input {
                     PlayerInput::Dir(dir) => dir,
-                    PlayerInput::Tile(pos) => pos - entity.position,
+                    PlayerInput::Tile(pos) | PlayerInput::Vision { pos, .. } => {
+                        pos - entity.position
+                    }
                     _ => {
                         log::error!("invalid input during phase Vision, expected tile or dir");
                         return;
                     }
                 };
-                if dir.x.abs() + dir.y.abs() != 1 {
+                if dir.x != 0 && dir.y != 0 {
                     log::error!("invalid input direction during phase Vision: {}", dir);
                     return;
                 }
-                entity.look_dir = dir;
+                entity.look_dir = dir.map(|x| x.clamp_abs(1));
             }
         }
 
-        self.phase = Phase::PostVision {
-            timer: Lifetime::new_max(r32(1.0)),
-        };
         self.update_vision();
+        if let PlayerInput::Vision { commit: true, .. } = player_input {
+            self.phase = Phase::PostVision {
+                timer: Lifetime::new_max(r32(1.0)),
+            };
+        }
     }
 }

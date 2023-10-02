@@ -255,6 +255,7 @@ impl GameRender {
                 for pos in model.grid.outside_tiles() {
                     self.draw_at_grid(
                         pos.as_f32(),
+                        Angle::ZERO,
                         &self.assets.sprites.cell_plus,
                         Color::WHITE,
                         framebuffer,
@@ -508,6 +509,7 @@ impl GameRender {
                 color.a = crate::util::smoothstep(end_t);
                 self.draw_at_grid(
                     pos.as_f32(),
+                    Angle::ZERO,
                     &self.assets.sprites.destroy_effect,
                     color,
                     framebuffer,
@@ -518,6 +520,7 @@ impl GameRender {
                 color.a = crate::util::smoothstep(end_t);
                 self.draw_at_grid(
                     pos.as_f32(),
+                    Angle::ZERO,
                     &self.assets.sprites.enemy_death,
                     color,
                     framebuffer,
@@ -844,7 +847,7 @@ impl GameRender {
         // TODO: place the shadow
         // self.draw_at(item.position, &self.assets.sprites.item_shadow, framebuffer);
         let offset = vec2(0.0, crate::util::smoothstep(resolution_t) * 0.2);
-        self.draw_at_grid(position + offset, texture, color, framebuffer);
+        self.draw_at_grid(position + offset, Angle::ZERO, texture, color, framebuffer);
 
         // Damage value
         if let Some(damage) = item.current_stats().damage {
@@ -873,6 +876,7 @@ impl GameRender {
     fn draw_at_grid(
         &self,
         position: vec2<f32>,
+        rotation: Angle<f32>,
         texture: &ugli::Texture,
         color: Color,
         framebuffer: &mut ugli::Framebuffer,
@@ -880,6 +884,7 @@ impl GameRender {
         let position = position * self.cell_size;
         self.draw_at(
             Aabb2::point(position).extend_symmetric(self.cell_size / 2.0),
+            rotation,
             texture,
             color,
             &self.world_camera,
@@ -893,12 +898,20 @@ impl GameRender {
         texture: &ugli::Texture,
         framebuffer: &mut ugli::Framebuffer,
     ) {
-        self.draw_at(target, texture, Color::WHITE, &self.ui_camera, framebuffer)
+        self.draw_at(
+            target,
+            Angle::ZERO,
+            texture,
+            Color::WHITE,
+            &self.ui_camera,
+            framebuffer,
+        )
     }
 
     fn draw_at(
         &self,
         target: Aabb2<f32>,
+        rotation: Angle<f32>,
         texture: &ugli::Texture,
         color: Color,
         camera: &Camera2d,
@@ -910,7 +923,13 @@ impl GameRender {
         self.geng.draw2d().draw2d(
             framebuffer,
             camera,
-            &draw2d::TexturedQuad::colored(target, texture, color),
+            &draw2d::TexturedQuad::colored(
+                Aabb2::ZERO.extend_symmetric(target.size() / 2.0),
+                texture,
+                color,
+            )
+            .rotate(rotation)
+            .translate(target.center()),
         );
     }
 
@@ -943,7 +962,26 @@ impl GameRender {
         }
 
         let texture = match entity.fraction {
-            Fraction::Player => &self.assets.sprites.player,
+            Fraction::Player => {
+                if let Phase::Vision
+                | Phase::PostVision { .. }
+                | Phase::Select { .. }
+                | Phase::Night { .. } = model.phase
+                {
+                    if entity.look_dir != vec2::ZERO {
+                        let rotation = entity.look_dir.as_f32().arg();
+                        self.draw_at_grid(
+                            position + entity.look_dir.as_f32() * 0.35,
+                            rotation,
+                            &self.assets.sprites.player_vision,
+                            color,
+                            framebuffer,
+                        )
+                    };
+                }
+
+                &self.assets.sprites.player
+            }
             Fraction::Enemy => {
                 let pos = (position + vec2(0.3, 0.3)) * self.cell_size;
                 let target = Aabb2::point(pos).extend_uniform(0.06);
@@ -973,7 +1011,7 @@ impl GameRender {
             }
         };
 
-        self.draw_at_grid(position, texture, color, framebuffer);
+        self.draw_at_grid(position, Angle::ZERO, texture, color, framebuffer);
 
         if let EntityKind::Player = entity.kind {
             // Draw the remaining moves as circles
@@ -1002,6 +1040,12 @@ impl GameRender {
             TileLight::Dark => &self.assets.sprites.cell_dark,
             TileLight::Light => &self.assets.sprites.cell_light,
         };
-        self.draw_at_grid(position.as_f32(), texture, Color::WHITE, framebuffer)
+        self.draw_at_grid(
+            position.as_f32(),
+            Angle::ZERO,
+            texture,
+            Color::WHITE,
+            framebuffer,
+        )
     }
 }

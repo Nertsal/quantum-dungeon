@@ -14,6 +14,7 @@ pub struct Player {
 pub enum PlayerInput {
     Dir(vec2<Coord>),
     Tile(vec2<Coord>),
+    Vision { pos: vec2<Coord>, commit: bool },
     SelectItem(usize),
     Reroll,
     Skip,

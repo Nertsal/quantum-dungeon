@@ -110,6 +110,15 @@ impl geng::State for Game {
                         self.model.player_action(PlayerInput::Reroll);
                     }
                 }
+                Phase::Vision => {
+                    let target = self.cursor_grid_pos.map(|x| x.floor() as Coord);
+                    // if self.model.grid.check_pos(target) {
+                    self.model.player_action(PlayerInput::Vision {
+                        pos: target,
+                        commit: true,
+                    });
+                    // }
+                }
                 _ => {
                     let target = self.cursor_grid_pos.map(|x| x.floor() as Coord);
                     // if self.model.grid.check_pos(target) {
@@ -132,6 +141,14 @@ impl geng::State for Game {
             .ui_camera
             .screen_to_world(self.framebuffer_size.as_f32(), self.cursor_pos.as_f32());
         self.cursor_grid_pos = self.cursor_world_pos / self.render.cell_size + vec2::splat(0.5);
+
+        if let Phase::Vision = self.model.phase {
+            let target = self.cursor_grid_pos.map(|x| x.floor() as Coord);
+            self.model.player_action(PlayerInput::Vision {
+                pos: target,
+                commit: false,
+            });
+        }
 
         self.model.update(delta_time);
     }
