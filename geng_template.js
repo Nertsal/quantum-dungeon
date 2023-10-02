@@ -292,7 +292,7 @@ function getArrayF32FromWasm0(ptr, len) {
     ptr = ptr >>> 0;
     return getFloat32Memory0().subarray(ptr / 4, ptr / 4 + len);
 }
-function __wbg_adapter_482(arg0, arg1, arg2, arg3) {
+function __wbg_adapter_486(arg0, arg1, arg2, arg3) {
     wasm.wasm_bindgen__convert__closures__invoke2_mut__h4fd115fdc6718006(arg0, arg1, addHeapObject(arg2), addHeapObject(arg3));
 }
 
@@ -1203,6 +1203,9 @@ function __wbg_get_imports() {
         const ret = new Image();
         return addHeapObject(ret);
     }, arguments) };
+    imports.wbg.__wbg_setvalue_e87773a453ea7d5a = function(arg0, arg1) {
+        getObject(arg0).value = arg1;
+    };
     imports.wbg.__wbg_top_98ff0408c018d25e = function(arg0) {
         const ret = getObject(arg0).top;
         return ret;
@@ -1210,6 +1213,10 @@ function __wbg_get_imports() {
     imports.wbg.__wbg_left_23a613d619fb4206 = function(arg0) {
         const ret = getObject(arg0).left;
         return ret;
+    };
+    imports.wbg.__wbg_gain_a05ea6655b818d06 = function(arg0) {
+        const ret = getObject(arg0).gain;
+        return addHeapObject(ret);
     };
     imports.wbg.__wbg_new_6e0409b42ad01006 = function() { return handleError(function (arg0) {
         const ret = new GainNode(getObject(arg0));
@@ -1421,7 +1428,7 @@ function __wbg_get_imports() {
                 const a = state0.a;
                 state0.a = 0;
                 try {
-                    return __wbg_adapter_482(a, state0.b, arg0, arg1);
+                    return __wbg_adapter_486(a, state0.b, arg0, arg1);
                 } finally {
                     state0.a = a;
                 }
@@ -1534,10 +1541,6 @@ function __wbg_get_imports() {
         const ret = wasm.memory;
         return addHeapObject(ret);
     };
-    imports.wbg.__wbindgen_closure_wrapper258 = function(arg0, arg1, arg2) {
-        const ret = makeClosure(arg0, arg1, 3, __wbg_adapter_34);
-        return addHeapObject(ret);
-    };
     imports.wbg.__wbindgen_closure_wrapper260 = function(arg0, arg1, arg2) {
         const ret = makeClosure(arg0, arg1, 3, __wbg_adapter_34);
         return addHeapObject(ret);
@@ -1551,26 +1554,30 @@ function __wbg_get_imports() {
         return addHeapObject(ret);
     };
     imports.wbg.__wbindgen_closure_wrapper266 = function(arg0, arg1, arg2) {
-        const ret = makeMutClosure(arg0, arg1, 3, __wbg_adapter_43);
-        return addHeapObject(ret);
-    };
-    imports.wbg.__wbindgen_closure_wrapper268 = function(arg0, arg1, arg2) {
         const ret = makeClosure(arg0, arg1, 3, __wbg_adapter_34);
         return addHeapObject(ret);
     };
-    imports.wbg.__wbindgen_closure_wrapper1347 = function(arg0, arg1, arg2) {
+    imports.wbg.__wbindgen_closure_wrapper268 = function(arg0, arg1, arg2) {
+        const ret = makeMutClosure(arg0, arg1, 3, __wbg_adapter_43);
+        return addHeapObject(ret);
+    };
+    imports.wbg.__wbindgen_closure_wrapper270 = function(arg0, arg1, arg2) {
+        const ret = makeClosure(arg0, arg1, 3, __wbg_adapter_34);
+        return addHeapObject(ret);
+    };
+    imports.wbg.__wbindgen_closure_wrapper1350 = function(arg0, arg1, arg2) {
         const ret = makeMutClosure(arg0, arg1, 534, __wbg_adapter_48);
         return addHeapObject(ret);
     };
-    imports.wbg.__wbindgen_closure_wrapper1666 = function(arg0, arg1, arg2) {
+    imports.wbg.__wbindgen_closure_wrapper1669 = function(arg0, arg1, arg2) {
         const ret = makeMutClosure(arg0, arg1, 670, __wbg_adapter_51);
         return addHeapObject(ret);
     };
-    imports.wbg.__wbindgen_closure_wrapper3933 = function(arg0, arg1, arg2) {
+    imports.wbg.__wbindgen_closure_wrapper3937 = function(arg0, arg1, arg2) {
         const ret = makeMutClosure(arg0, arg1, 1721, __wbg_adapter_54);
         return addHeapObject(ret);
     };
-    imports.wbg.__wbindgen_closure_wrapper3966 = function(arg0, arg1, arg2) {
+    imports.wbg.__wbindgen_closure_wrapper3970 = function(arg0, arg1, arg2) {
         const ret = makeMutClosure(arg0, arg1, 1733, __wbg_adapter_57);
         return addHeapObject(ret);
     };
