@@ -1,3 +1,5 @@
-Deal 0 dmg to random enemy when use, destroy self after
+On use :
+Deals 0 damage to a random enemy, destroys itself after.
 
-gain dmg +1 per turn
+On turn start :
+Gain +1 damage permanently.

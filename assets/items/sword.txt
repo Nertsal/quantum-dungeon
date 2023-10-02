@@ -1,2 +1,5 @@
-deal 2 damage to nearby enemies.
-deal 2 more damage per nearby sword
+On use :
+Deals 2 damage to all nearby enemies.
+
+On turn start :
+Gain +2 damage for each nearby sword until the end of the turn.

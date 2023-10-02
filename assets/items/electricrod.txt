@@ -1,1 +1,2 @@
-deal 2 dmg per connected tech item (diag doesn’t count)
+On use :
+Deals 2 damage per connected tech item.

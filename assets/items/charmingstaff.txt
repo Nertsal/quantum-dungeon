@@ -1,2 +1,6 @@
-gain +2 dmg when observed at night
-lose 2 dmg when not observed at night
+On use :
+Deals 0 damage to a nearby enemy.
+
+At night :
+Gains +2 damage permanently when observed.
+Gains -2 damage permanently when not observed.

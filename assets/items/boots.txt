@@ -1,1 +1,2 @@
-player can move 3 more tile this turn, destroy after use
+On use :
+Gain 3 movement this turn, destroyed itself after.

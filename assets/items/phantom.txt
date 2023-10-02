@@ -1,2 +1,2 @@
-deal 1 dmg,
-increase 1 dmg per use
+On use :
+Deals 1 damage to all nearby enemies and gains +1 damage permanently.

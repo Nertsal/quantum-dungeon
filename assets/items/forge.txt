@@ -1,1 +1,2 @@
-all nearby (weapon) will do 2 more damage
+On turn start :
+All nearby weapon gain +2 damage until the end of the turn.
