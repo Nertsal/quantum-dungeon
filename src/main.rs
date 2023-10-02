@@ -1,6 +1,7 @@
 mod assets;
 mod config;
 mod game;
+mod main_menu;
 mod model;
 mod prelude;
 mod render;
@@ -31,7 +32,7 @@ fn main() {
         let assets = assets::Assets::load(manager).await.unwrap();
         let config_path = opts.config.unwrap_or_else(|| "assets/config.ron".into());
         let config = config::Config::load(config_path).await.unwrap();
-        let state = game::Game::new(&geng, &Rc::new(assets), config);
+        let state = main_menu::MainMenu::new(&geng, &Rc::new(assets), config);
         geng.run_state(state).await;
     });
 }

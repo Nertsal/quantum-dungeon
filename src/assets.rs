@@ -24,10 +24,12 @@ pub struct Sprites {
     pub item_shadow: ugli::Texture,
     pub enemy: ugli::Texture,
     pub player: ugli::Texture,
+    pub player_vision: ugli::Texture,
     pub reroll_button: ugli::Texture,
     pub panel: ugli::Texture,
     pub destroy_effect: ugli::Texture,
     pub enemy_death: ugli::Texture,
+    pub play_button: ugli::Texture,
 
     pub camera: ugli::Texture,
     pub charming_staff: ugli::Texture,
