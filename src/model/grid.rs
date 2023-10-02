@@ -34,9 +34,18 @@ impl Grid {
         self.tiles.contains(&pos)
     }
 
+    /// Whether the position is inside the possible extension limits.
+    pub fn check_in_limits(&self, pos: vec2<Coord>) -> bool {
+        // Limit to 5x5
+        pos.x.abs() < 3 && pos.y.abs() < 3
+    }
+
     /// Whether the position is empty, but there is a tile right next to it.
     pub fn check_pos_near(&self, pos: vec2<Coord>) -> bool {
         if self.check_pos(pos) {
+            return false;
+        }
+        if !self.check_in_limits(pos) {
             return false;
         }
 
@@ -59,7 +68,7 @@ impl Grid {
         for &pos in &self.tiles {
             for (dx, dy) in [(0, -1), (1, 0), (0, 1), (-1, 0)] {
                 let pos = pos + vec2(dx, dy);
-                if !self.check_pos(pos) {
+                if !self.check_pos(pos) && self.check_in_limits(pos) {
                     outside.insert(pos);
                 }
             }

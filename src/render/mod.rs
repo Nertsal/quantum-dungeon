@@ -32,7 +32,7 @@ impl GameRender {
                 fov: 10.0,
             },
             world_camera: Camera2d {
-                center: vec2::ZERO,
+                center: vec2(0.0, 0.5),
                 rotation: Angle::ZERO,
                 fov: 7.0,
             },
