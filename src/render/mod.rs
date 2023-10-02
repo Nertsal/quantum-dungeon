@@ -757,25 +757,56 @@ impl GameRender {
 
         // Description
         let mut desc_target = target.extend_uniform(-target.height() * 0.1);
-        desc_target = desc_target.extend_up(-target.height() * 0.47);
+        desc_target = desc_target.extend_up(-target.height() * 0.49);
         desc_target = desc_target.extend_down(-target.height() * 0.015);
         desc_target = desc_target.extend_uniform(-desc_target.height() * 0.05);
-        // let mut color = Color::GREEN;
-        // color.a = 0.5;
-        // self.geng.draw2d().draw2d(
-        //     framebuffer,
-        //     &self.camera,
-        //     &draw2d::Quad::new(desc_target, color),
-        // );
+
         let color = Color::try_from("#ffe7cd").unwrap();
         let description = self.assets.items.get_description(item);
-        self.geng.draw2d().draw2d(
-            framebuffer,
-            &self.ui_camera,
-            &draw2d::Text::unit(self.assets.font.clone(), description, color)
-                .align_bounding_box(vec2(0.0, 1.0))
-                .fit_into(desc_target),
-        );
+
+        let mut lines = Vec::new();
+        for source_line in description.lines() {
+            let mut line = String::new();
+            for word in source_line.split_whitespace() {
+                if line.is_empty() {
+                    line += word;
+                    continue;
+                }
+                if line.len() + word.len() > 20 {
+                    lines.push(line);
+                    line = word.to_string();
+                } else {
+                    line += " ";
+                    line += word;
+                }
+            }
+            if !line.is_empty() {
+                lines.push(line);
+            }
+        }
+
+        let font_size = 0.15;
+        for (i, line) in lines.into_iter().enumerate() {
+            let position = desc_target.top_left() - vec2(0.0, i as f32) * font_size * 1.2;
+            self.assets.font.draw(
+                framebuffer,
+                &self.ui_camera,
+                &line,
+                vec2::splat(geng::TextAlign::LEFT),
+                mat3::translate(position)
+                    * mat3::scale_uniform(font_size)
+                    * mat3::translate(vec2(0.0, -0.25)),
+                color,
+            );
+        }
+
+        // self.geng.draw2d().draw2d(
+        //     framebuffer,
+        //     &self.ui_camera,
+        //     &draw2d::Text::unit(self.assets.font.clone(), description, color)
+        //         .align_bounding_box(vec2(0.0, 1.0))
+        //         .fit_into(desc_target),
+        // );
     }
 
     fn draw_item(
