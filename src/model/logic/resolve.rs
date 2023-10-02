@@ -230,7 +230,7 @@ impl Model {
             }
             ItemKind::RadiationCore => {
                 let damage = item.current_stats().damage.unwrap_or_default();
-                self.deal_damage_around(board_item.position, Fraction::Player, damage, 1, vec![]);
+                self.deal_damage_around(board_item.position, damage, 1, vec![]);
             }
             ItemKind::GreedyPot => {
                 let mut bonus_animation = None;
@@ -562,29 +562,16 @@ impl Model {
                 }
             }
             ItemKind::SoulCrystal => {
-                let enemies: Vec<Id> = self
-                    .entities
-                    .iter()
-                    .filter(|(_, e)| matches!(e.fraction, Fraction::Enemy))
-                    .map(|(i, _)| i)
-                    .collect();
-                if let Some(&enemy) = enemies.choose(&mut thread_rng()) {
-                    self.animations.insert(Animation::new(
-                        self.config.animation_time,
-                        AnimationKind::Damage {
-                            from: board_item.position,
-                            target: enemy,
-                            damage: item.current_stats().damage.unwrap_or_default(),
-                        },
-                    ));
-                    // TODO: after the animation
-                    self.player.items.remove(board_item.item_id);
-                }
+                let inv_id = board_item.item_id;
+                let damage = item.current_stats().damage.unwrap_or_default();
+                self.deal_damage_nearest(board_item.position, damage, vec![]);
+                // TODO: after the animation
+                self.player.items.remove(inv_id);
             }
             ItemKind::Phantom => {
                 let damage = item.current_stats().damage.unwrap_or_default();
                 item.perm_stats.damage = Some(item.perm_stats.damage.unwrap_or_default() + 1);
-                self.deal_damage_around(board_item.position, Fraction::Player, damage, 1, vec![]);
+                self.deal_damage_nearest(board_item.position, damage, vec![]);
             }
             ItemKind::KingSkull => {
                 // deal damage to all enemies
@@ -609,7 +596,7 @@ impl Model {
             }
             ItemKind::CharmingStaff => {
                 let damage = item.current_stats().damage.unwrap_or_default();
-                self.deal_damage_around(board_item.position, Fraction::Player, damage, 1, vec![]);
+                self.deal_damage_random(board_item.position, damage, vec![]);
             }
             ItemKind::WarpPortal => {
                 if self.items.iter().any(|(_, i)| {
@@ -620,11 +607,11 @@ impl Model {
             }
             ItemKind::Solitude => {
                 let damage = item.current_stats().damage.unwrap_or_default();
-                self.deal_damage_around(board_item.position, Fraction::Player, damage, 1, vec![]);
+                self.deal_damage_nearest(board_item.position, damage, vec![]);
             }
             ItemKind::ElectricRod => {
                 let damage = item.current_stats().damage.unwrap_or_default();
-                self.deal_damage_around(board_item.position, Fraction::Player, damage, 1, vec![]);
+                self.deal_damage_nearest(board_item.position, damage, vec![]);
             }
             _ => {}
         }

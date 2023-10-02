@@ -40,11 +40,11 @@ impl Model {
     pub(super) fn deal_damage_around(
         &mut self,
         position: vec2<Coord>,
-        source_fraction: Fraction,
         damage: Hp,
         range: Coord,
         after: Vec<Id>,
     ) {
+        let source_fraction = Fraction::Player;
         for (target, entity) in &self.entities {
             if source_fraction != entity.fraction && distance(entity.position, position) <= range {
                 self.animations.insert(
