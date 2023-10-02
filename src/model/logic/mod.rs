@@ -79,6 +79,9 @@ impl Model {
     fn vision_phase(&mut self) {
         log::debug!("Vision phase");
         self.phase = Phase::Vision;
+        for entity in &mut self.entities {
+            entity.look_dir = vec2::ZERO;
+        }
         self.update_vision();
     }
 
@@ -152,7 +155,6 @@ impl Model {
         for entity in &self.entities {
             if let EntityKind::Player = entity.kind {
                 if entity.look_dir == vec2::ZERO {
-                    log::error!("entity has zero look dir");
                     continue;
                 }
                 let mut pos = entity.position;

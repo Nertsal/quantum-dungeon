@@ -191,6 +191,10 @@ impl Model {
                 entity.look_dir = dir;
             }
         }
-        self.select_phase(self.player.extra_items);
+
+        self.phase = Phase::PostVision {
+            timer: Lifetime::new_max(r32(1.0)),
+        };
+        self.update_vision();
     }
 }

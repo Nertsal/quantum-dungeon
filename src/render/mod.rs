@@ -53,7 +53,7 @@ impl GameRender {
         // Tiles
         for &pos in &model.grid.tiles {
             let light = match model.phase {
-                Phase::Vision | Phase::Select { .. } => {
+                Phase::Vision | Phase::PostVision { .. } | Phase::Select { .. } => {
                     if model.visible_tiles.contains(&pos) {
                         TileLight::Light
                     } else {
@@ -195,6 +195,7 @@ impl GameRender {
             Phase::Player | Phase::Passive { .. } => "Day",
             Phase::Portal => "Select a magic item",
             Phase::Vision => "Select a direction to look at",
+            Phase::PostVision { .. } => "Night",
             Phase::LevelFinished { win, .. } => {
                 if *win {
                     "Level completed"
