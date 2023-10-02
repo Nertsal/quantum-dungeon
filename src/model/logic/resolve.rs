@@ -520,6 +520,13 @@ impl Model {
                 self.player.items.remove(board_item.item_id);
                 self.grid.light_up(board_item.position, 1, 3);
             }
+            ItemKind::WarpPortal => {
+                if self.items.iter().any(|(_, i)| {
+                    ItemRef::Category(ItemCategory::Magic).check(self.player.items[i.item_id].kind)
+                }) {
+                    self.phase = Phase::Portal
+                }
+            }
             _ => {}
         }
     }

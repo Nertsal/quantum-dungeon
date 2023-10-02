@@ -11,6 +11,7 @@ impl Model {
             Phase::Player if self.animations.is_empty() => self.player_move(player_input),
             Phase::Vision => self.player_vision(player_input),
             Phase::Map { .. } => self.map_action(player_input),
+            Phase::Portal => self.portal_action(player_input),
             Phase::Select { options, .. } => {
                 if let PlayerInput::SelectItem(i) = player_input {
                     self.select_item(options[i]);
@@ -28,8 +29,11 @@ impl Model {
             log::error!("invalid input during phase Map, expected a tile");
             return;
         };
-        if self.grid.check_pos(pos) {
-            log::error!("position {} is already valid, select an empty one", pos);
+        if !self.grid.check_pos_near(pos) {
+            log::error!(
+                "position {} is not valid, select an empty one on the edge",
+                pos
+            );
             return;
         }
 
@@ -41,6 +45,48 @@ impl Model {
             }
         } else {
             log::error!("tried map action but not in a map phase");
+        }
+    }
+
+    /// Swap position with a magic item.
+    fn portal_action(&mut self, player_input: PlayerInput) {
+        let PlayerInput::Tile(target_pos) = player_input else {
+            log::error!("invalid input during phase Portal, expected a tile");
+            return;
+        };
+        if !self.grid.check_pos(target_pos) {
+            log::error!("position {} is not valid, select a valid tile", target_pos);
+            return;
+        }
+
+        if let Phase::Portal = self.phase {
+            if let Some((_, target)) = self
+                .items
+                .iter_mut()
+                .find(|(_, item)| item.position == target_pos)
+            {
+                let item = &self.player.items[target.item_id];
+                if ItemRef::Category(ItemCategory::Magic).check(item.kind) {
+                    let Some((player, _)) = self
+                        .entities
+                        .iter()
+                        .enumerate()
+                        .find(|(_, e)| matches!(e.kind, EntityKind::Player))
+                    else {
+                        log::error!("Player not found");
+                        return;
+                    };
+                    self.move_entity_swap(player, target_pos);
+                } else {
+                    log::error!(
+                        "invalid input during phase Portal, expected a magic item position, found a non-magic item"
+                    );
+                }
+            } else {
+                log::error!("invalid input during phase Portal, expected a magic item position, found nothing");
+            }
+        } else {
+            log::error!("tried portal action but not in a portal phase");
         }
     }
 
@@ -59,7 +105,14 @@ impl Model {
                 // TODO: if there are multiple players, resolve conflicting movement
                 move_dir = match player_input {
                     PlayerInput::Dir(dir) => dir,
-                    PlayerInput::Tile(pos) => pos - entity.position,
+                    PlayerInput::Tile(pos) => {
+                        if !self.grid.check_pos(pos) {
+                            log::error!("invalid input during phase Player, expected a valid tile");
+                            return;
+                        } else {
+                            pos - entity.position
+                        }
+                    }
                     _ => {
                         log::error!("invalid input during phase Player, expected tile or dir");
                         return;

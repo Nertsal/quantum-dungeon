@@ -42,6 +42,8 @@ pub enum Phase {
     Player,
     /// Place a tile on the map.
     Map { tiles_left: usize },
+    /// Swap position with a magic item.
+    Portal,
     /// Player sets their look direction.
     Vision,
     /// Select a new item.

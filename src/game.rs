@@ -89,20 +89,14 @@ impl geng::State for Game {
                         self.model.player_action(PlayerInput::SelectItem(i));
                     }
                 }
-                Phase::Map { .. } => {
-                    let target = self.cursor_grid_pos.map(|x| x.floor() as Coord);
-                    if self.model.grid.check_pos_near(target) {
-                        self.model.player_action(PlayerInput::Tile(target));
-                    }
-                }
                 _ if self.render.inventory_button.contains(self.cursor_ui_pos) => {
                     self.render.show_inventory = !self.render.show_inventory;
                 }
                 _ => {
                     let target = self.cursor_grid_pos.map(|x| x.floor() as Coord);
-                    if self.model.grid.check_pos(target) {
-                        self.model.player_action(PlayerInput::Tile(target));
-                    }
+                    // if self.model.grid.check_pos(target) {
+                    self.model.player_action(PlayerInput::Tile(target));
+                    // }
                 }
             }
         }
