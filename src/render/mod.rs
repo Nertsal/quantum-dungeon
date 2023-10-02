@@ -442,8 +442,12 @@ impl GameRender {
 
         let size = vec2(1.5, 1.5);
         let mut hint = None;
+        let row_max = 5;
+        let offset = items.len().min(row_max).saturating_sub(1) as f32 / 2.0;
         for (i, (_, item)) in items.iter().enumerate() {
-            let pos = vec2(-1.5, 2.0) + vec2(i, 0).as_f32() * size;
+            let x = i % row_max;
+            let y = i / row_max;
+            let pos = vec2(0.0, 2.0) + vec2(x as f32 - offset, -(y as f32)) * size;
             let target = Aabb2::point(pos).extend_symmetric(size / 2.0);
 
             if target.contains(cursor_ui_pos) {
