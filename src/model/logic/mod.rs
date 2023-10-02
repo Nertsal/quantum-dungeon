@@ -90,7 +90,10 @@ impl Model {
         self.update_vision();
 
         if items > 0 {
-            let options = ItemKind::all();
+            let options: Vec<_> = ItemKind::all()
+                .into_iter()
+                .filter(|item| *item != ItemKind::KingSkull)
+                .collect();
             let mut rng = thread_rng();
             let options = (0..3).map(|_| *options.choose(&mut rng).unwrap()).collect();
             self.phase = Phase::Select {
