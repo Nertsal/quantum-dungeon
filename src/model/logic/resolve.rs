@@ -515,30 +515,29 @@ impl Model {
     }
 
     pub(super) fn active_effect(&mut self, fraction: Fraction, item_id: Id) {
-        let Some(item) = self.items.remove(item_id) else {
+        let Some(board_item) = self.items.get_mut(item_id) else {
             log::error!("tried activating an invalid item {:?}", item_id);
             return;
         };
-        self.use_item(fraction, item);
-    }
-
-    fn use_item(&mut self, fraction: Fraction, board_item: BoardItem) {
         log::debug!("Use item by fraction {:?}: {:?}", fraction, board_item);
+
         let item = &mut self.player.items[board_item.item_id];
         match item.kind {
             ItemKind::Sword => {
                 let damage = item.current_stats().damage.unwrap_or_default();
-                self.deal_damage_nearest(board_item.position, damage, vec![]);
+                let position = board_item.position;
+                self.deal_damage_nearest(position, damage, vec![]);
             }
             ItemKind::Map => {
                 self.phase = Phase::Map { tiles_left: 1 };
-                // self.player.items.remove(board_item.item_id);
             }
             ItemKind::Boots => {
+                // TODO: animation
                 self.player.items.remove(board_item.item_id);
                 self.player.moves_left += 3;
             }
             ItemKind::Camera => {
+                // TODO: animation
                 self.player.items.remove(board_item.item_id);
             }
             ItemKind::FireScroll => {
@@ -564,14 +563,17 @@ impl Model {
             ItemKind::SoulCrystal => {
                 let inv_id = board_item.item_id;
                 let damage = item.current_stats().damage.unwrap_or_default();
-                self.deal_damage_nearest(board_item.position, damage, vec![]);
+                let position = board_item.position;
+                self.deal_damage_nearest(position, damage, vec![]);
                 // TODO: after the animation
+                // TODO: animation
                 self.player.items.remove(inv_id);
             }
             ItemKind::Phantom => {
                 let damage = item.current_stats().damage.unwrap_or_default();
                 item.perm_stats.damage = Some(item.perm_stats.damage.unwrap_or_default() + 1);
-                self.deal_damage_nearest(board_item.position, damage, vec![]);
+                let position = board_item.position;
+                self.deal_damage_nearest(position, damage, vec![]);
             }
             ItemKind::KingSkull => {
                 // deal damage to all enemies
@@ -591,12 +593,14 @@ impl Model {
             }
             ItemKind::GoldenLantern => {
                 // Destroy and light up for 3 turns
+                // TODO: animation
                 self.player.items.remove(board_item.item_id);
                 self.grid.light_up(board_item.position, 1, 3);
             }
             ItemKind::CharmingStaff => {
                 let damage = item.current_stats().damage.unwrap_or_default();
-                self.deal_damage_random(board_item.position, damage, vec![]);
+                let position = board_item.position;
+                self.deal_damage_random(position, damage, vec![]);
             }
             ItemKind::WarpPortal => {
                 if self.items.iter().any(|(_, i)| {
@@ -607,11 +611,13 @@ impl Model {
             }
             ItemKind::Solitude => {
                 let damage = item.current_stats().damage.unwrap_or_default();
-                self.deal_damage_nearest(board_item.position, damage, vec![]);
+                let position = board_item.position;
+                self.deal_damage_nearest(position, damage, vec![]);
             }
             ItemKind::ElectricRod => {
                 let damage = item.current_stats().damage.unwrap_or_default();
-                self.deal_damage_nearest(board_item.position, damage, vec![]);
+                let position = board_item.position;
+                self.deal_damage_nearest(position, damage, vec![]);
             }
             _ => {}
         }

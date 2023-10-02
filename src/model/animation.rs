@@ -12,6 +12,21 @@ pub struct Animation {
 
 #[derive(Debug, Clone)]
 pub enum AnimationKind {
+    MovePlayer {
+        entity_id: Id,
+        move_item: Option<Id>,
+        move_entity: Option<Id>,
+        target_pos: vec2<Coord>,
+    },
+    MoveItem {
+        /// Id of the item on the board.
+        item_id: Id,
+        target_pos: vec2<Coord>,
+    },
+    MoveEntity {
+        entity_id: Id,
+        target_pos: vec2<Coord>,
+    },
     UseActive {
         fraction: Fraction,
         item_id: Id,

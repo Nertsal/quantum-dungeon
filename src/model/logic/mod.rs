@@ -13,6 +13,11 @@ impl Model {
         if let Phase::LevelFinished { .. } = self.phase {
         } else if self.animations.is_empty() && self.ending_animations.is_empty() {
             self.check_deaths();
+            if let Phase::Player = self.phase {
+                if self.player.moves_left == 0 {
+                    self.vision_phase();
+                }
+            }
         }
     }
 
@@ -68,11 +73,7 @@ impl Model {
     }
 
     fn player_phase(&mut self) {
-        if self.player.moves_left == 0 {
-            self.vision_phase();
-        } else {
-            self.phase = Phase::Player;
-        }
+        self.phase = Phase::Player;
     }
 
     fn vision_phase(&mut self) {
@@ -217,7 +218,6 @@ impl Model {
             return;
         };
 
-        let from_pos = entity.position;
         let target_pos = if self.grid.check_pos(target_pos) {
             target_pos
         } else {
@@ -228,25 +228,36 @@ impl Model {
         let fraction = entity.fraction;
 
         // Swap with entities
-        if let Some((_, target)) = self
+        let mut move_entity = None;
+        if let Some((i, _)) = self
             .entities
             .iter_mut()
             .find(|(_, e)| e.position == target_pos)
         {
-            target.position = from_pos;
+            move_entity = Some(i);
         }
 
-        // Activate or swap items
+        // Activate and swap items
         let ids: Vec<_> = self.items.iter().map(|(i, _)| i).collect();
+        let mut move_item = None;
         for i in ids {
-            if self.items[i].position == target_pos && !self.resolve_item_active(fraction, i) {
+            if self.items[i].position == target_pos {
+                // Activate
+                self.resolve_item_active(fraction, i);
                 // Swap
-                self.items[i].position = from_pos;
+                move_item = Some(i);
             }
         }
 
-        let entity = self.entities.get_mut(entity_id).unwrap();
-        entity.position = target_pos;
+        self.animations.insert(Animation::new(
+            0.0,
+            AnimationKind::MovePlayer {
+                entity_id,
+                move_entity,
+                move_item,
+                target_pos,
+            },
+        ));
     }
 }
 

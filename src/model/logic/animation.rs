@@ -19,11 +19,23 @@ impl Model {
                 }
             }
 
+            let animation = &self.animations[i];
+            if let AnimationKind::MovePlayer { .. } = &animation.kind {
+                // Wait for effects
+                if let Phase::Player = self.phase {
+                    if self.animations.len() > 1 {
+                        continue;
+                    }
+                } else {
+                    continue;
+                }
+            }
+
             let animation = &mut self.animations[i];
             animation.time.change(-delta_time);
             if animation.time.is_min() {
                 if let AnimationKind::UseActive { .. } = animation.kind {
-                    if self.animations.len() > 1 {
+                    if self.animations.len() > 2 {
                         // Wait for other animations
                         continue;
                     }
@@ -35,6 +47,52 @@ impl Model {
         for i in finished {
             let mut animation = self.animations.remove(i).unwrap();
             match &animation.kind {
+                &AnimationKind::MovePlayer {
+                    entity_id,
+                    move_item,
+                    move_entity,
+                    target_pos,
+                } => {
+                    self.animations.insert(Animation::new(
+                        self.config.animation_time,
+                        AnimationKind::MoveEntity {
+                            entity_id,
+                            target_pos,
+                        },
+                    ));
+
+                    let target_pos = self.entities[entity_id].position;
+                    if let Some(entity_id) = move_entity {
+                        self.animations.insert(Animation::new(
+                            self.config.animation_time,
+                            AnimationKind::MoveEntity {
+                                entity_id,
+                                target_pos,
+                            },
+                        ));
+                    }
+                    if let Some(item_id) = move_item {
+                        self.animations.insert(Animation::new(
+                            self.config.animation_time,
+                            AnimationKind::MoveItem {
+                                item_id,
+                                target_pos,
+                            },
+                        ));
+                    }
+                }
+                AnimationKind::MoveEntity {
+                    entity_id,
+                    target_pos,
+                } => {
+                    self.entities[*entity_id].position = *target_pos;
+                }
+                AnimationKind::MoveItem {
+                    item_id,
+                    target_pos,
+                } => {
+                    self.items[*item_id].position = *target_pos;
+                }
                 AnimationKind::UseActive { fraction, item_id } => {
                     // Activate item
                     let fraction = *fraction;

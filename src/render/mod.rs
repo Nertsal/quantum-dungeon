@@ -100,8 +100,8 @@ impl GameRender {
         }
 
         // Entities
-        for (_, entity) in &model.entities {
-            self.draw_entity(entity, model, framebuffer);
+        for (id, entity) in &model.entities {
+            self.draw_entity(id, entity, model, framebuffer);
         }
 
         // Items
@@ -151,7 +151,7 @@ impl GameRender {
                 0.0
             };
 
-            self.draw_item(item, resolution_t, model, framebuffer);
+            self.draw_item(i, item, resolution_t, model, framebuffer);
         }
 
         self.draw_animations(model, framebuffer);
@@ -780,6 +780,7 @@ impl GameRender {
 
     fn draw_item(
         &self,
+        id: Id,
         board_item: &BoardItem,
         resolution_t: f32,
         model: &Model,
@@ -792,20 +793,31 @@ impl GameRender {
         let mut color = Color::WHITE;
         color.a = alpha;
 
+        let mut position = board_item.position.as_f32();
+        let target = model
+            .animations
+            .iter()
+            .find_map(|(_, anim)| match anim.kind {
+                AnimationKind::MoveItem {
+                    item_id,
+                    target_pos,
+                } if item_id == id => Some((target_pos, 1.0 - anim.time.get_ratio().as_f32())),
+                _ => None,
+            });
+        if let Some((target, t)) = target {
+            let t = crate::util::smoothstep(t);
+            position = position + (target.as_f32() - position) * t;
+        }
+
         let texture = self.assets.sprites.item_texture(item.kind);
         // TODO: place the shadow
         // self.draw_at(item.position, &self.assets.sprites.item_shadow, framebuffer);
         let offset = vec2(0.0, crate::util::smoothstep(resolution_t) * 0.2);
-        self.draw_at_grid(
-            board_item.position.as_f32() + offset,
-            texture,
-            color,
-            framebuffer,
-        );
+        self.draw_at_grid(position + offset, texture, color, framebuffer);
 
         // Damage value
         if let Some(damage) = item.current_stats().damage {
-            let pos = (board_item.position.as_f32() + vec2(0.3, 0.3)) * self.cell_size;
+            let pos = (position + vec2(0.3, 0.3)) * self.cell_size;
             let target = Aabb2::point(pos).extend_uniform(0.06);
             self.geng.draw2d().draw2d(
                 framebuffer,
@@ -871,16 +883,38 @@ impl GameRender {
         );
     }
 
-    fn draw_entity(&self, entity: &Entity, model: &Model, framebuffer: &mut ugli::Framebuffer) {
+    fn draw_entity(
+        &self,
+        id: Id,
+        entity: &Entity,
+        model: &Model,
+        framebuffer: &mut ugli::Framebuffer,
+    ) {
         let alpha = model.get_light_level(entity.position);
         let alpha = crate::util::smoothstep(alpha);
         let mut color = Color::WHITE;
         color.a = alpha;
 
+        let mut position = entity.position.as_f32();
+        let target = model
+            .animations
+            .iter()
+            .find_map(|(_, anim)| match anim.kind {
+                AnimationKind::MoveEntity {
+                    entity_id,
+                    target_pos,
+                } if entity_id == id => Some((target_pos, 1.0 - anim.time.get_ratio().as_f32())),
+                _ => None,
+            });
+        if let Some((target, t)) = target {
+            let t = crate::util::smoothstep(t);
+            position = position + (target.as_f32() - position) * t;
+        }
+
         let texture = match entity.fraction {
             Fraction::Player => &self.assets.sprites.player,
             Fraction::Enemy => {
-                let pos = (entity.position.as_f32() + vec2(0.3, 0.3)) * self.cell_size;
+                let pos = (position + vec2(0.3, 0.3)) * self.cell_size;
                 let target = Aabb2::point(pos).extend_uniform(0.06);
                 self.geng.draw2d().draw2d(
                     framebuffer,
@@ -908,14 +942,14 @@ impl GameRender {
             }
         };
 
-        self.draw_at_grid(entity.position.as_f32(), texture, color, framebuffer);
+        self.draw_at_grid(position, texture, color, framebuffer);
 
         if let EntityKind::Player = entity.kind {
             // Draw the remaining moves as circles
             let moves = model.player.moves_left.min(6);
             let offset = (moves as f32 - 1.0) / 2.0;
             for i in 0..moves {
-                let pos = (entity.position.as_f32() + vec2(0.0, -0.27)) * self.cell_size
+                let pos = (position + vec2(0.0, -0.27)) * self.cell_size
                     + vec2(i as f32 - offset, 0.0) * 0.1;
                 self.geng.draw2d().draw2d(
                     framebuffer,

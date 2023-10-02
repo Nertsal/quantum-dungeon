@@ -155,19 +155,12 @@ impl Model {
             // Fracture tiles as we walk
             if self.grid.check_pos(target) && self.grid.fractured.insert(target) {
                 self.move_entity_swap(i, target);
-                self.update_vision();
                 moved = true;
             }
         }
 
         if moved {
             self.player.moves_left = self.player.moves_left.saturating_sub(1);
-            // Phase could have changed when collecting an item
-            if let Phase::Player = self.phase {
-                if self.player.moves_left == 0 {
-                    self.vision_phase();
-                }
-            }
         }
     }
 
