@@ -141,7 +141,7 @@ impl GameRender {
 
         // Hearts
         for i in 0..model.player.hearts {
-            let pos = self.ui_camera.center + vec2(-3.0, 2.5) + vec2(i, 0).as_f32() * 0.6;
+            let pos = self.ui_camera.center + vec2(-6.7, 1.7) + vec2(i, 0).as_f32() * 0.6;
             let size = vec2::splat(1.5);
             let target = Aabb2::point(pos).extend_symmetric(size / 2.0);
             self.draw_at_ui(target, &self.assets.sprites.heart, framebuffer);
@@ -149,7 +149,7 @@ impl GameRender {
 
         {
             // Timer
-            let pos = vec2(2.5, 2.5);
+            let pos = vec2(-6.5, 1.0);
             let size = vec2::splat(1.5);
             let icon_target = Aabb2::point(pos).extend_symmetric(size / 2.0);
             self.draw_at_ui(icon_target, &self.assets.sprites.turn_time, framebuffer);
