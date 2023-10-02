@@ -29,7 +29,11 @@ fn main() {
 
     Geng::run_with(&geng_options, |geng| async move {
         let manager = geng.asset_manager();
+
         let assets = assets::Assets::load(manager).await.unwrap();
+        let mut music = assets.music.play();
+        music.set_volume(0.2);
+
         let config_path = opts.config.unwrap_or_else(|| "assets/config.ron".into());
         let config = config::Config::load(config_path).await.unwrap();
         let state = main_menu::MainMenu::new(&geng, &Rc::new(assets), config);
