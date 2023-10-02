@@ -53,7 +53,14 @@ impl GameRender {
         // Tiles
         for &pos in &model.grid.tiles {
             let light = match model.phase {
-                Phase::Vision | Phase::Select { .. } | Phase::Night { .. } => {
+                Phase::Vision | Phase::Select { .. } => {
+                    if model.visible_tiles.contains(&pos) {
+                        TileLight::Light
+                    } else {
+                        TileLight::Normal
+                    }
+                }
+                Phase::Night { .. } => {
                     if model.visible_tiles.contains(&pos) {
                         TileLight::Light
                     } else {
@@ -74,6 +81,8 @@ impl GameRender {
                         } else {
                             TileLight::Normal
                         }
+                    } else if model.grid.lights.contains_key(&pos) {
+                        TileLight::Light
                     } else {
                         TileLight::Normal
                     }
