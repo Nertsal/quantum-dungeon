@@ -1,2 +1,2 @@
-On turn start :
+On use :
 If there’s a spooky item nearby, duplicates it and destroys itself after.
