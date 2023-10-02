@@ -303,6 +303,9 @@ impl Model {
                 }
 
                 if rng.gen_bool(0.2) {
+                    let mut damage_anim = None;
+
+                    // Deal 5 damage
                     let enemies: Vec<usize> = self
                         .entities
                         .iter()
@@ -311,19 +314,27 @@ impl Model {
                         .map(|(i, _)| i)
                         .collect();
                     if let Some(&enemy) = enemies.choose(&mut rng) {
-                        self.animations.insert(Animation::new(
+                        damage_anim = Some(self.animations.insert(Animation::new(
                             self.config.animation_time,
                             AnimationKind::Damage {
                                 from: board_item.position,
                                 target: enemy,
                                 damage: 5,
                             },
-                        ));
+                        )));
                     }
 
                     // Destroy self
-                    self.player.items.remove(board_item.item_id);
-                    self.items.remove(item_id);
+                    self.animations.insert(
+                        Animation::new(
+                            self.config.animation_time,
+                            AnimationKind::ItemDeath {
+                                item: item_id,
+                                pos: board_item.position,
+                            },
+                        )
+                        .after(damage_anim),
+                    );
                 }
             }
             ItemKind::Chest => {

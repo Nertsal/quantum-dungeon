@@ -311,6 +311,10 @@ impl GameRender {
 
     fn draw_animations(&self, model: &Model, framebuffer: &mut ugli::Framebuffer) {
         for (_, animation) in &model.animations {
+            if animation.time.is_max() {
+                // Not started yet
+                continue;
+            }
             self.draw_animation(
                 animation,
                 1.0 - animation.time.get_ratio().as_f32(),
@@ -338,11 +342,6 @@ impl GameRender {
         model: &Model,
         framebuffer: &mut ugli::Framebuffer,
     ) {
-        if end_t == 1.0 && start_t == 0.0 {
-            // Not even started yet
-            return;
-        }
-
         match &animation.kind {
             AnimationKind::ItemDeath { pos, .. } if start_t == 1.0 => {
                 let mut color = Color::WHITE;

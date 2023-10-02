@@ -38,9 +38,9 @@ pub enum AnimationKind {
 }
 
 impl Animation {
-    pub fn new(time: Time, kind: AnimationKind) -> Self {
+    pub fn new(time: impl Float, kind: AnimationKind) -> Self {
         Self {
-            time: Lifetime::new_max(time),
+            time: Lifetime::new_max(time.as_r32()),
             kind,
             dependent_on: Vec::new(),
         }
