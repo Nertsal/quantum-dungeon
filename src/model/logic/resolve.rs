@@ -117,16 +117,30 @@ impl Model {
             return; // false
         };
 
-        let item = &self.player.items[board_item.item_id];
-        if let ItemKind::Ghost = item.kind {
-            if self.visible_tiles.contains(&board_item.position) {
-                // Death
-                self.animations.push(Animation {
-                    time: Lifetime::new_max(r32(0.5)),
-                    kind: AnimationKind::Death { item: item_id },
-                });
+        let item = &mut self.player.items[board_item.item_id];
+        match item.kind {
+            ItemKind::Ghost => {
+                if self.visible_tiles.contains(&board_item.position) {
+                    // Death
+                    self.animations.push(Animation {
+                        time: Lifetime::new_max(r32(0.5)),
+                        kind: AnimationKind::Death { item: item_id },
+                    });
+                }
+                // true
             }
-            // true
+            ItemKind::CharmingStaff => {
+                // Change damage
+                let delta = if self.visible_tiles.contains(&board_item.position) {
+                    2
+                } else {
+                    -2
+                };
+                item.perm_stats.damage =
+                    Some((item.perm_stats.damage.unwrap_or_default() + delta).max(0));
+                // true
+            }
+            _ => (), // false
         }
     }
 

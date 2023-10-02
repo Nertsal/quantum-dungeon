@@ -63,6 +63,7 @@ pub enum ItemKind {
     CursedSkull,
     KingSkull,
     GoldenLantern,
+    CharmingStaff,
 }
 
 impl InventoryItem {
@@ -81,7 +82,7 @@ impl ItemRef {
 }
 
 impl ItemKind {
-    pub fn all() -> [ItemKind; 20] {
+    pub fn all() -> [ItemKind; 21] {
         use ItemKind::*;
         [
             Boots,
@@ -104,6 +105,7 @@ impl ItemKind {
             CursedSkull,
             KingSkull,
             GoldenLantern,
+            CharmingStaff,
         ]
     }
 
@@ -130,6 +132,7 @@ impl ItemKind {
             ItemKind::CursedSkull => vec![Spooky],
             ItemKind::KingSkull => vec![Treasure, Weapon],
             ItemKind::GoldenLantern => vec![Treasure],
+            ItemKind::CharmingStaff => vec![Magic, Weapon],
         }
     }
 
@@ -155,6 +158,7 @@ impl ItemKind {
             ItemKind::CursedSkull => None,
             ItemKind::KingSkull => Some(3),
             ItemKind::GoldenLantern => None,
+            ItemKind::CharmingStaff => Some(0),
         };
         InventoryItem {
             on_board: None,
@@ -206,6 +210,7 @@ impl Display for ItemKind {
             ItemKind::CursedSkull => "Cursed skull",
             ItemKind::KingSkull => "King's skull",
             ItemKind::GoldenLantern => "Golden lantern",
+            ItemKind::CharmingStaff => "Charming staff",
         };
         write!(f, "{}", name)
     }
