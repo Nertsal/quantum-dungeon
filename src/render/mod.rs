@@ -772,7 +772,7 @@ impl GameRender {
                     line += word;
                     continue;
                 }
-                if line.len() + word.len() > 20 {
+                if line.len() + word.len() > 30 {
                     lines.push(line);
                     line = word.to_string();
                 } else {
