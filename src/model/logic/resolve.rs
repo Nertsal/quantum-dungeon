@@ -12,6 +12,7 @@ impl Model {
             Phase::PostVision { timer } => {
                 timer.change(-delta_time);
                 if timer.is_min() {
+                    self.player.refreshes = 2;
                     self.select_phase(self.player.extra_items);
                 }
             }

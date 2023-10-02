@@ -7,6 +7,8 @@ pub struct Player {
     pub hearts: usize,
     /// Extra items player can choose at the end of the turn.
     pub extra_items: usize,
+    /// Number of refreshes available in the select menu.
+    pub refreshes: usize,
     pub items: Arena<InventoryItem>,
 }
 
@@ -28,6 +30,7 @@ impl Player {
             turns_left: 0,
             hearts: 0,
             extra_items: 0,
+            refreshes: 0,
             items: [ItemKind::Sword, ItemKind::Map]
                 .into_iter()
                 .map(ItemKind::instantiate)

@@ -339,12 +339,14 @@ impl GameRender {
                 self.draw_at_ui(target, texture, framebuffer);
             }
 
-            self.draw_button(
-                self.reroll_button,
-                &self.assets.sprites.reroll_button,
-                cursor_ui_pos,
-                framebuffer,
-            );
+            if model.player.refreshes > 0 {
+                self.draw_button(
+                    self.reroll_button,
+                    &self.assets.sprites.reroll_button,
+                    cursor_ui_pos,
+                    framebuffer,
+                )
+            };
             self.draw_button(
                 self.skip_item_button,
                 &self.assets.sprites.skip_button,
