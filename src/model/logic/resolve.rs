@@ -266,24 +266,11 @@ impl Model {
                 }
 
                 let board_item = self.items.get(item_id).unwrap();
-                let enemies: Vec<Id> = self
-                    .entities
-                    .iter()
-                    .filter(|(_, e)| matches!(e.fraction, Fraction::Enemy))
-                    .map(|(i, _)| i)
-                    .collect();
-                if let Some(&enemy) = enemies.choose(&mut rng) {
-                    let animation = Animation::new(
-                        self.config.animation_time,
-                        AnimationKind::Damage {
-                            from: board_item.position,
-                            target: enemy,
-                            damage: stats.damage.unwrap_or_default(),
-                        },
-                    )
-                    .after(bonus_animation);
-                    self.animations.insert(animation);
-                }
+                self.deal_damage_random(
+                    board_item.position,
+                    stats.damage.unwrap_or_default(),
+                    bonus_animation.into_iter().collect(),
+                );
             }
             ItemKind::SpiritCoin => {
                 // Duplicate if near a chest
@@ -303,6 +290,8 @@ impl Model {
                     let mut damage_anim = None;
 
                     // Deal 5 damage
+                    let position = board_item.position;
+                    self.deal_damage_random(position, 5, vec![]);
                     let enemies: Vec<Id> = self
                         .entities
                         .iter()
@@ -313,7 +302,7 @@ impl Model {
                         damage_anim = Some(self.animations.insert(Animation::new(
                             self.config.animation_time,
                             AnimationKind::Damage {
-                                from: board_item.position,
+                                from: position,
                                 target: enemy,
                                 damage: 5,
                             },
@@ -326,7 +315,7 @@ impl Model {
                             self.config.animation_time,
                             AnimationKind::ItemDeath {
                                 item: item_id,
-                                pos: board_item.position,
+                                pos: position,
                             },
                         )
                         .after(damage_anim),
@@ -539,8 +528,7 @@ impl Model {
         match item.kind {
             ItemKind::Sword => {
                 let damage = item.current_stats().damage.unwrap_or_default();
-                let range = 1;
-                self.deal_damage_around(board_item.position, fraction, damage, range, vec![]);
+                self.deal_damage_nearest(board_item.position, damage, vec![]);
             }
             ItemKind::Map => {
                 self.phase = Phase::Map { tiles_left: 2 };

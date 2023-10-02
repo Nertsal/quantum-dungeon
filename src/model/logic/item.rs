@@ -62,6 +62,61 @@ impl Model {
         }
     }
 
+    pub(super) fn deal_damage_nearest(
+        &mut self,
+        position: vec2<Coord>,
+        damage: Hp,
+        after: Vec<Id>,
+    ) -> Option<Id> {
+        let source_fraction = Fraction::Player;
+        let nearest = self
+            .entities
+            .iter()
+            .filter(|(_, entity)| source_fraction != entity.fraction)
+            .min_by_key(|(_, entity)| distance(entity.position, position));
+        nearest.map(|(target, _)| {
+            self.animations.insert(
+                Animation::new(
+                    self.config.animation_time,
+                    AnimationKind::Damage {
+                        from: position,
+                        target,
+                        damage,
+                    },
+                )
+                .after(after),
+            )
+        })
+    }
+
+    pub(super) fn deal_damage_random(
+        &mut self,
+        position: vec2<Coord>,
+        damage: Hp,
+        after: Vec<Id>,
+    ) -> Option<Id> {
+        let source_fraction = Fraction::Player;
+        let mut rng = thread_rng();
+        let target = self
+            .entities
+            .iter()
+            .filter(|(_, entity)| source_fraction != entity.fraction)
+            .choose(&mut rng);
+        target.map(|(target, _)| {
+            self.animations.insert(
+                Animation::new(
+                    self.config.animation_time,
+                    AnimationKind::Damage {
+                        from: position,
+                        target,
+                        damage,
+                    },
+                )
+                .after(after),
+            )
+        })
+    }
+
     pub(super) fn count_items_near(&self, position: vec2<Coord>, item_ref: ItemRef) -> Vec<Id> {
         self.items
             .iter()
