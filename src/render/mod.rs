@@ -235,9 +235,10 @@ impl GameRender {
             Phase::Night { .. } => "Night",
             Phase::Player => {
                 // Skip button
-                self.draw_at_ui(
+                self.draw_button(
                     self.skip_turn_button,
                     &self.assets.sprites.skip_button,
+                    cursor_ui_pos,
                     framebuffer,
                 );
 
@@ -338,14 +339,16 @@ impl GameRender {
                 self.draw_at_ui(target, texture, framebuffer);
             }
 
-            self.draw_at_ui(
+            self.draw_button(
                 self.reroll_button,
                 &self.assets.sprites.reroll_button,
+                cursor_ui_pos,
                 framebuffer,
             );
-            self.draw_at_ui(
+            self.draw_button(
                 self.skip_item_button,
                 &self.assets.sprites.skip_button,
+                cursor_ui_pos,
                 framebuffer,
             );
 
@@ -363,9 +366,10 @@ impl GameRender {
         }
 
         // Inventory button
-        self.draw_at_ui(
+        self.draw_button(
             self.inventory_button,
             &self.assets.sprites.inventory,
+            cursor_ui_pos,
             framebuffer,
         );
     }
@@ -442,9 +446,10 @@ impl GameRender {
 
         {
             // Retry
-            self.draw_at_ui(
+            self.draw_button(
                 self.retry_button,
                 &self.assets.sprites.reroll_button,
+                cursor_ui_pos,
                 framebuffer,
             );
 
@@ -1054,6 +1059,28 @@ impl GameRender {
             Angle::ZERO,
             texture,
             Color::WHITE,
+            framebuffer,
+        )
+    }
+
+    fn draw_button(
+        &self,
+        button: Aabb2<f32>,
+        texture: &ugli::Texture,
+        cursor_ui_pos: vec2<f32>,
+        framebuffer: &mut ugli::Framebuffer,
+    ) {
+        let color = if button.contains(cursor_ui_pos) {
+            Color::WHITE.map_rgb(|x| x * 1.2)
+        } else {
+            Color::WHITE
+        };
+        self.draw_at(
+            button,
+            Angle::ZERO,
+            texture,
+            color,
+            &self.ui_camera,
             framebuffer,
         )
     }

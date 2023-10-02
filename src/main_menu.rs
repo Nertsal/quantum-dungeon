@@ -41,10 +41,10 @@ impl MainMenu {
         &self,
         target: Aabb2<f32>,
         texture: &ugli::Texture,
+        color: Color,
         camera: &Camera2d,
         framebuffer: &mut ugli::Framebuffer,
     ) {
-        let color = Color::WHITE;
         let size =
             texture.size().as_f32() * target.size() / self.assets.sprites.cell.size().as_f32();
         let target = Aabb2::point(target.center()).extend_symmetric(size / 2.0);
@@ -136,6 +136,7 @@ impl geng::State for MainMenu {
             self.draw_at(
                 target,
                 &self.assets.sprites.player,
+                Color::WHITE,
                 &self.camera,
                 framebuffer,
             );
@@ -144,6 +145,7 @@ impl geng::State for MainMenu {
             self.draw_at(
                 target,
                 &self.assets.sprites.player_vision,
+                Color::WHITE,
                 &self.camera,
                 framebuffer,
             );
@@ -160,14 +162,20 @@ impl geng::State for MainMenu {
                 } else {
                     &self.assets.sprites.cell
                 };
-                self.draw_at(target, texture, &self.camera, framebuffer);
+                self.draw_at(target, texture, Color::WHITE, &self.camera, framebuffer);
             }
 
             // Play
             self.play_button = Aabb2::point(vec2(4.0, -0.5)).extend_uniform(size / 2.0);
+            let color = if self.play_button.contains(self.cursor_ui_pos) {
+                Color::WHITE.map_rgb(|x| x * 1.2)
+            } else {
+                Color::WHITE
+            };
             self.draw_at(
                 self.play_button,
                 &self.assets.sprites.play_button,
+                color,
                 &self.camera,
                 framebuffer,
             );
