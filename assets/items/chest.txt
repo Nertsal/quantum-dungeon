@@ -1,0 +1,2 @@
+if there’s 3 chests on the board, destroy them and
+select 1 new item
