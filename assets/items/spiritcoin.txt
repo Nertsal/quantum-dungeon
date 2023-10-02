@@ -1,3 +1,5 @@
-duplicate itself when it’s near chest
+On turn start :
+Duplicates itself when it’s near a chest. Has 20% chance to destroy itself.
 
-has a 20% chance to destroy self and deal 5 dmg to a random enemy
+On destroy :
+Deals 5 damage to a random enemy.

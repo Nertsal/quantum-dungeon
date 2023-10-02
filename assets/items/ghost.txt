@@ -1,3 +1,5 @@
-On start of the turn, use a nearby random weapon
+On turn start :
+Use a random nearby weapon.
 
-Get destroy when being observe at night (player vision or torch)
+At night :
+Destroys itself when observed.

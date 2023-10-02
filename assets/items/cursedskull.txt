@@ -1,4 +1,8 @@
-Emit light at night
-(just this tile)
+On use :
+Swap position with a random spooky item.
 
-Turn into <King’s skull> if it’s on the top of the row when a turn start
+On turn start : 
+Turns into King’s skull if it’s on the top row.
+
+At night :
+Emits light on itself.

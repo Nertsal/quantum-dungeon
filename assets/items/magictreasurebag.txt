@@ -1,2 +1,5 @@
-destroy self after 5 turn.
-Turns into a random treasure item when destroyed
+On turn start :
+Destroys itself after 5 turns.
+
+On destroy :
+Turns into a random treasure item.

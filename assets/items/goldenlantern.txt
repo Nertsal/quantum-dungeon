@@ -1,1 +1,5 @@
-destroy self and light up adjacent tile for 3 turns when use
+On use :
+Destroys itself.
+
+On destroy:
+Light up adjacent tiles for 3 turns.

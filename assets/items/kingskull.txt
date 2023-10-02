@@ -1,1 +1,2 @@
-deal 3 dmg to all enemies on use
+On use :
+Deals 3 damage to all enemies on the board.

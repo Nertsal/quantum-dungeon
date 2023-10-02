@@ -1,1 +1,2 @@
-if there’s a (spooky) item nearby, duplicate it and destroy self after
+On turn start :
+If there’s a spooky item nearby, duplicates it and destroys itself after.
