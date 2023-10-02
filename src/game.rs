@@ -87,6 +87,8 @@ impl geng::State for Game {
                         .position(|(_, button)| button.contains(self.cursor_ui_pos))
                     {
                         self.model.player_action(PlayerInput::SelectItem(i));
+                    } else if self.render.reroll_button.contains(self.cursor_ui_pos) {
+                        self.model.player_action(PlayerInput::Reroll);
                     }
                 }
                 _ if self.render.inventory_button.contains(self.cursor_ui_pos) => {

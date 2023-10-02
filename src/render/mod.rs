@@ -7,6 +7,7 @@ pub struct GameRender {
     pub world_camera: Camera2d,
     pub cell_size: vec2<f32>,
     pub buttons: Vec<(ItemKind, Aabb2<f32>)>,
+    pub reroll_button: Aabb2<f32>,
     pub inventory_button: Aabb2<f32>,
     pub show_inventory: bool,
 }
@@ -35,6 +36,7 @@ impl GameRender {
             },
             cell_size: vec2(1.0, 1.0),
             buttons: Vec::new(),
+            reroll_button: Aabb2::point(vec2(5.0, 3.0)).extend_symmetric(vec2::splat(1.5) / 2.0),
             inventory_button: Aabb2::point(vec2(0.0, -4.0))
                 .extend_symmetric(vec2::splat(1.5) / 2.0),
             show_inventory: false,
@@ -230,6 +232,12 @@ impl GameRender {
                     self.draw_at_ui(target, background, framebuffer);
                     self.draw_at_ui(target, texture, framebuffer);
                 }
+
+                self.draw_at_ui(
+                    self.reroll_button,
+                    &self.assets.sprites.reroll_button,
+                    framebuffer,
+                );
 
                 if let Some(item) = hint {
                     self.draw_item_hint(item, cursor_ui_pos, framebuffer);

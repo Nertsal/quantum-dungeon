@@ -12,13 +12,16 @@ impl Model {
             Phase::Vision => self.player_vision(player_input),
             Phase::Map { .. } => self.map_action(player_input),
             Phase::Portal => self.portal_action(player_input),
-            Phase::Select { options, .. } => {
-                if let PlayerInput::SelectItem(i) = player_input {
-                    self.select_item(options[i]);
-                } else {
-                    log::error!("invalid input during phase Select, expected an item selection");
+            Phase::Select {
+                options,
+                extra_items,
+            } => match player_input {
+                PlayerInput::SelectItem(i) => self.select_item(options[i]),
+                PlayerInput::Reroll => self.select_phase(extra_items + 1),
+                _ => {
+                    log::error!("invalid input during phase Select, expected an item selection")
                 }
-            }
+            },
             _ => {}
         }
     }
