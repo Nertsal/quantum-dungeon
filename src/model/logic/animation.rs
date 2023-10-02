@@ -12,7 +12,7 @@ impl Model {
 
         let ids: Vec<Id> = self.animations.iter().map(|(i, _)| i).collect();
         for i in ids {
-            if let Some(id) = self.animations[i].dependent_on {
+            for &id in &self.animations[i].dependent_on {
                 if self.animations.contains(id) {
                     // Wait for the animation to finish
                     continue;

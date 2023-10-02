@@ -204,7 +204,7 @@ impl Model {
             }
             ItemKind::RadiationCore => {
                 let damage = item.current_stats().damage.unwrap_or_default();
-                self.deal_damage_around(board_item.position, Fraction::Player, damage, 1);
+                self.deal_damage_around(board_item.position, Fraction::Player, damage, 1, vec![]);
             }
             ItemKind::GreedyPot => {
                 let mut bonus_animation = None;
@@ -245,15 +245,15 @@ impl Model {
                     .map(|(i, _)| i)
                     .collect();
                 if let Some(&enemy) = enemies.choose(&mut rng) {
-                    let mut animation = Animation::new(
+                    let animation = Animation::new(
                         self.config.animation_time,
                         AnimationKind::Damage {
                             from: board_item.position,
                             target: enemy,
                             damage: stats.damage.unwrap_or_default(),
                         },
-                    );
-                    animation.dependent_on = bonus_animation;
+                    )
+                    .after(bonus_animation);
                     self.animations.insert(animation);
                 }
             }
@@ -333,21 +333,35 @@ impl Model {
             ItemKind::ElectricRod => {
                 let damage = item.current_stats().damage.unwrap_or_default();
                 let position = board_item.position;
+
                 let item_ref = ItemRef::Category(ItemCategory::Tech);
-                let tech: Vec<_> = self
-                    .items
-                    .iter()
-                    .filter(|(_, board_item)| {
-                        let d = position - board_item.position;
-                        let d = d.x.abs() + d.y.abs();
-                        let item = &self.player.items[board_item.item_id];
-                        item_ref.check(item.kind) && d > 0 && d <= 1
-                    })
-                    .map(|(i, _)| i)
-                    .collect();
-                let bonus = tech.len();
+                let mut bonus = 0;
+                let mut animations = Vec::new();
+                for (_, board_item) in &self.items {
+                    let d = position - board_item.position;
+                    let d = d.x.abs() + d.y.abs();
+                    let item = &self.player.items[board_item.item_id];
+                    if item_ref.check(item.kind) && d > 0 && d <= 1 {
+                        animations.push(self.animations.insert(Animation::new(
+                            self.config.animation_time,
+                            AnimationKind::Bonus {
+                                from: board_item.position,
+                                target: item_id,
+                                bonus: ItemStats { damage: Some(2) },
+                                permanent: false,
+                            },
+                        )));
+                        bonus += 1;
+                    }
+                }
                 let damage = damage + bonus as i64 * 2;
-                self.deal_damage_around(board_item.position, Fraction::Player, damage, 1);
+                self.deal_damage_around(
+                    board_item.position,
+                    Fraction::Player,
+                    damage,
+                    1,
+                    animations,
+                );
             }
             ItemKind::MagicWire => {
                 // Duplicate
@@ -486,7 +500,7 @@ impl Model {
             ItemKind::Sword => {
                 let damage = item.current_stats().damage.unwrap_or_default();
                 let range = 1;
-                self.deal_damage_around(board_item.position, fraction, damage, range);
+                self.deal_damage_around(board_item.position, fraction, damage, range, vec![]);
             }
             ItemKind::Map => self.phase = Phase::Map { tiles_left: 2 },
             ItemKind::Boots => {
@@ -541,7 +555,7 @@ impl Model {
             ItemKind::Phantom => {
                 let damage = item.current_stats().damage.unwrap_or_default();
                 item.perm_stats.damage = Some(item.perm_stats.damage.unwrap_or_default() + 1);
-                self.deal_damage_around(board_item.position, Fraction::Player, damage, 1);
+                self.deal_damage_around(board_item.position, Fraction::Player, damage, 1, vec![]);
             }
             ItemKind::KingSkull => {
                 // deal damage to all enemies
@@ -566,7 +580,7 @@ impl Model {
             }
             ItemKind::CharmingStaff => {
                 let damage = item.current_stats().damage.unwrap_or_default();
-                self.deal_damage_around(board_item.position, Fraction::Player, damage, 1);
+                self.deal_damage_around(board_item.position, Fraction::Player, damage, 1, vec![]);
             }
             ItemKind::WarpPortal => {
                 if self.items.iter().any(|(_, i)| {

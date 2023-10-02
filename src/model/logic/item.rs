@@ -43,17 +43,21 @@ impl Model {
         source_fraction: Fraction,
         damage: Hp,
         range: Coord,
+        after: Vec<Id>,
     ) {
         for (target, entity) in self.entities.iter().enumerate() {
             if source_fraction != entity.fraction && distance(entity.position, position) <= range {
-                self.animations.insert(Animation::new(
-                    self.config.animation_time,
-                    AnimationKind::Damage {
-                        from: position,
-                        target,
-                        damage,
-                    },
-                ));
+                self.animations.insert(
+                    Animation::new(
+                        self.config.animation_time,
+                        AnimationKind::Damage {
+                            from: position,
+                            target,
+                            damage,
+                        },
+                    )
+                    .after(after.clone()),
+                );
             }
         }
     }
