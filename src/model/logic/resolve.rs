@@ -151,6 +151,7 @@ impl Model {
             ItemKind::ElectricRod => Some(0),
             ItemKind::MagicWire if rng.gen_bool(0.1) => Some(0),
             ItemKind::Melter if rng.gen_bool(0.2) => Some(0),
+            ItemKind::CursedSkull if board_item.position.y == self.grid.bounds().max.y => Some(0),
             _ => None,
         }
     }
@@ -338,6 +339,20 @@ impl Model {
                     }
                 }
             }
+            ItemKind::CursedSkull => {
+                // Turn into a king's skull
+                let board_item = self.items.remove(item_id).unwrap();
+                self.player.items.remove(board_item.item_id);
+
+                let item_id = self.player.items.insert(ItemKind::KingSkull.instantiate());
+                let item = &mut self.player.items[item_id];
+                let on_board = self.items.insert(BoardItem {
+                    position: board_item.position,
+                    item_id,
+                    turns_alive: 0,
+                });
+                item.on_board = Some(on_board);
+            }
             _ => {}
         }
     }
@@ -384,6 +399,7 @@ impl Model {
             ItemKind::FireScroll => Some(true),
             ItemKind::SoulCrystal => Some(true),
             ItemKind::Phantom => Some(true),
+            ItemKind::KingSkull => Some(true),
             _ => None,
         };
 
@@ -475,6 +491,15 @@ impl Model {
                 let damage = item.current_stats().damage.unwrap_or_default();
                 item.perm_stats.damage = Some(item.perm_stats.damage.unwrap_or_default() + 1);
                 self.deal_damage_around(board_item.position, Fraction::Player, damage, 1);
+            }
+            ItemKind::KingSkull => {
+                // deal damage to all enemies
+                let damage = item.current_stats().damage.unwrap_or_default();
+                for entity in &mut self.entities {
+                    if let Fraction::Enemy = entity.fraction {
+                        entity.health.change(-damage);
+                    }
+                }
             }
             _ => {}
         }

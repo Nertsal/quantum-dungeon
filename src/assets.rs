@@ -80,6 +80,8 @@ impl Sprites {
             ItemKind::MagicWire => &self.magic_wire,
             ItemKind::Melter => &self.melter,
             ItemKind::Phantom => &self.phantom,
+            ItemKind::CursedSkull => &self.cursed_skull,
+            ItemKind::KingSkull => &self.kings_skull,
         }
     }
 }

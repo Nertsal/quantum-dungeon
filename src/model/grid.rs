@@ -16,6 +16,17 @@ impl Grid {
         }
     }
 
+    pub fn bounds(&self) -> Aabb2<Coord> {
+        let mut bounds = Aabb2::<Coord>::ZERO;
+        for &pos in &self.tiles {
+            bounds = Aabb2 {
+                min: vec2(bounds.min.x.min(pos.x), bounds.min.y.min(pos.y)),
+                max: vec2(bounds.max.x.max(pos.x), bounds.max.y.max(pos.y)),
+            };
+        }
+        bounds
+    }
+
     pub fn check_pos(&self, pos: vec2<Coord>) -> bool {
         self.tiles.contains(&pos)
     }
