@@ -77,6 +77,7 @@ impl Sprites {
             ItemKind::Chest => &self.chest,
             ItemKind::MagicTreasureBag => &self.magic_treasure_bag,
             ItemKind::ElectricRod => &self.electric_rod,
+            ItemKind::MagicWire => &self.magic_wire,
         }
     }
 }

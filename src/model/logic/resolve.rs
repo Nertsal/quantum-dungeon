@@ -137,6 +137,7 @@ impl Model {
             return None;
         };
 
+        let mut rng = thread_rng();
         let item = &self.player.items[board_item.item_id];
         match item.kind {
             ItemKind::Forge => Some(10),
@@ -148,6 +149,7 @@ impl Model {
             ItemKind::Chest => Some(0),
             ItemKind::MagicTreasureBag if board_item.turns_alive >= 5 => Some(0),
             ItemKind::ElectricRod => Some(0),
+            ItemKind::MagicWire if rng.gen_bool(0.1) => Some(0),
             _ => None,
         }
     }
@@ -158,6 +160,7 @@ impl Model {
             return;
         };
 
+        let mut rng = thread_rng();
         let item = &mut self.player.items[board_item.item_id];
         match item.kind {
             ItemKind::Forge => {
@@ -171,7 +174,6 @@ impl Model {
             ItemKind::Ghost => {
                 let mut weapons = self
                     .count_items_near(board_item.position, ItemRef::Category(ItemCategory::Weapon));
-                let mut rng = thread_rng();
                 while !weapons.is_empty() {
                     // Find a weapon with an active effect
                     let i = rng.gen_range(0..weapons.len());
@@ -189,7 +191,6 @@ impl Model {
                 self.deal_damage_around(board_item.position, Fraction::Player, damage, 1);
             }
             ItemKind::GreedyPot => {
-                let mut rng = thread_rng();
                 if rng.gen_bool(0.1) {
                     // Destroy nearby treasure and gain +2 dmg
                     let treasures = self.count_items_near(
@@ -237,7 +238,6 @@ impl Model {
                     });
                 }
 
-                let mut rng = thread_rng();
                 if rng.gen_bool(0.2) {
                     let enemies: Vec<usize> = self
                         .entities
@@ -280,7 +280,6 @@ impl Model {
                 let options = ItemKind::all()
                     .into_iter()
                     .filter(|kind| ItemRef::Category(ItemCategory::Treasure).check(*kind));
-                let mut rng = thread_rng();
                 if let Some(new_item) = options.choose(&mut rng) {
                     let item_id = self.player.items.insert(new_item.instantiate());
                     let item = &mut self.player.items[item_id];
@@ -310,6 +309,15 @@ impl Model {
                 let bonus = tech.len();
                 let damage = damage + bonus as i64 * 2;
                 self.deal_damage_around(board_item.position, Fraction::Player, damage, 1);
+            }
+            ItemKind::MagicWire => {
+                // Duplicate
+                self.animations.push(Animation {
+                    time: Lifetime::new_max(r32(0.5)),
+                    kind: AnimationKind::Dupe {
+                        kind: ItemKind::MagicWire,
+                    },
+                });
             }
             _ => {}
         }
