@@ -43,12 +43,17 @@ impl Model {
         let things = items.chain(entities);
 
         let mut rng = thread_rng();
-        let moves: Vec<(Thing, vec2<Coord>, vec2<Coord>)> = things
+        let moves: Vec<(Thing, vec2<Coord>)> = things
             .filter(|(_, pos)| !self.visible_tiles.contains(pos))
-            .map(|(i, pos)| (i, pos, *available.iter().choose(&mut rng).unwrap()))
+            .map(|(i, _)| (i, *available.iter().choose(&mut rng).unwrap()))
             .collect();
 
-        for (thing, from, target) in moves {
+        for (thing, target) in moves {
+            let from = match thing {
+                Thing::Entity(i) => self.entities[i].position,
+                Thing::Item(i) => self.items[i].position,
+            };
+
             // Swap
             for (_, item) in &mut self.items {
                 if item.position == target {
