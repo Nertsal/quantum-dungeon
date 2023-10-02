@@ -22,20 +22,21 @@ impl Model {
     }
 
     pub fn get_light_level(&self, position: vec2<Coord>) -> f32 {
-        if let Phase::Night {
-            fade_time,
-            light_time,
-        } = self.phase
-        {
-            if self.visible_tiles.contains(&position) {
-                1.0
-            } else if fade_time.is_above_min() {
-                fade_time.get_ratio().as_f32()
-            } else {
-                1.0 - light_time.get_ratio().as_f32()
+        match self.phase {
+            Phase::LevelStarting { .. } => 0.0,
+            Phase::Night {
+                fade_time,
+                light_time,
+            } => {
+                if self.visible_tiles.contains(&position) {
+                    1.0
+                } else if fade_time.is_above_min() {
+                    fade_time.get_ratio().as_f32()
+                } else {
+                    1.0 - light_time.get_ratio().as_f32()
+                }
             }
-        } else {
-            1.0
+            _ => 1.0,
         }
     }
 

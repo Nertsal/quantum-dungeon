@@ -72,7 +72,7 @@ impl GameRender {
                         TileLight::Normal
                     }
                 }
-                Phase::Night { .. } => {
+                Phase::LevelStarting { .. } | Phase::Night { .. } => {
                     // Crossfade
                     let t = model.get_light_level(pos);
                     let t = crate::util::smoothstep(t);
