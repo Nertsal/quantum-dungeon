@@ -385,13 +385,42 @@ impl GameRender {
         let mut icon_target = target.extend_uniform(-target.height() * 0.1);
         icon_target = icon_target.extend_up(-target.height() * 0.09);
         icon_target = icon_target.extend_down(-target.height() * 0.4);
-        icon_target =
-            geng_utils::layout::fit_aabb(icon.size().as_f32(), icon_target, vec2::splat(0.5));
         self.geng.draw2d().draw2d(
             framebuffer,
             &self.ui_camera,
-            &draw2d::TexturedQuad::new(icon_target, icon),
+            &draw2d::TexturedQuad::new(
+                geng_utils::layout::fit_aabb(icon.size().as_f32(), icon_target, vec2::splat(0.5)),
+                icon,
+            ),
         );
+
+        {
+            // Categories
+            let positions = [vec2(0.0, 0.0), vec2(1.0, 0.0)];
+            let size = icon_target.height() / 12.0;
+            let icon_target = icon_target.extend_uniform(-size / 2.0);
+            for (i, category) in item
+                .categories()
+                .into_iter()
+                .enumerate()
+                .take(positions.len())
+            {
+                let alignment = positions[i];
+                let target = geng_utils::layout::aabb_pos(icon_target, alignment);
+                self.geng.draw2d().draw2d(
+                    framebuffer,
+                    &self.ui_camera,
+                    &draw2d::Text::unit(
+                        self.geng.default_font().clone(),
+                        format!("{:?}", category),
+                        self.assets.get_category_color(category),
+                    )
+                    .align_bounding_box(alignment)
+                    .scale_uniform(size)
+                    .translate(target),
+                );
+            }
+        }
 
         // Description
         let mut desc_target = target.extend_uniform(-target.height() * 0.1);

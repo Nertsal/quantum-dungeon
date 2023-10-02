@@ -58,6 +58,16 @@ impl Assets {
             .await
             .context("failed to load assets")
     }
+
+    pub fn get_category_color(&self, category: ItemCategory) -> Color {
+        match category {
+            ItemCategory::Weapon => Color::try_from("#ffe7cd").unwrap(),
+            ItemCategory::Tech => Color::try_from("#6467b6").unwrap(),
+            ItemCategory::Treasure => Color::try_from("#cd8c66").unwrap(),
+            ItemCategory::Spooky => Color::try_from("#469fe1").unwrap(),
+            ItemCategory::Magic => Color::try_from("#d083c3").unwrap(),
+        }
+    }
 }
 
 impl Sprites {
