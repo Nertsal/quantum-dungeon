@@ -176,7 +176,6 @@ impl Model {
             ItemKind::SpiritCoin => Some(0),
             ItemKind::Chest => Some(0),
             ItemKind::MagicTreasureBag if board_item.turns_alive >= 5 => Some(0),
-            ItemKind::ElectricRod => Some(0),
             ItemKind::MagicWire if rng.gen_bool(0.1) => Some(0),
             ItemKind::Melter if rng.gen_bool(0.2) => Some(0),
             ItemKind::CursedSkull if board_item.position.y == self.grid.bounds().max.y => Some(0),
@@ -369,27 +368,6 @@ impl Model {
                     item.on_board = Some(on_board);
                 }
             }
-            ItemKind::ElectricRod => {
-                let position = board_item.position;
-                let item_ref = ItemRef::Category(ItemCategory::Tech);
-                let mut animations = Vec::new();
-                for (_, board_item) in &self.items {
-                    let d = position - board_item.position;
-                    let d = d.x.abs() + d.y.abs();
-                    let item = &self.player.items[board_item.item_id];
-                    if item_ref.check(item.kind) && d > 0 && d <= 1 {
-                        animations.push(self.animations.insert(Animation::new(
-                            self.config.animation_time,
-                            AnimationKind::Bonus {
-                                from: board_item.position,
-                                target: item_id,
-                                bonus: ItemStats { damage: Some(2) },
-                                permanent: false,
-                            },
-                        )));
-                    }
-                }
-            }
             ItemKind::MagicWire => {
                 // Duplicate
                 self.animations.insert(Animation::new(
@@ -464,6 +442,7 @@ impl Model {
         let item = &self.player.items[board_item.item_id];
         let resolution = match item.kind {
             ItemKind::Sword => {
+                // TODO: animation
                 let bonus = self
                     .count_items_near(board_item.position, ItemRef::Specific(ItemKind::Sword))
                     .len() as i64;
@@ -500,7 +479,28 @@ impl Model {
             ItemKind::GoldenLantern => Some(true),
             ItemKind::WarpPortal => Some(true),
             ItemKind::Solitude => Some(true),
-            ItemKind::ElectricRod => Some(true),
+            ItemKind::ElectricRod => {
+                let position = board_item.position;
+                let item_ref = ItemRef::Category(ItemCategory::Tech);
+                let mut animations = Vec::new();
+                for (_, board_item) in &self.items {
+                    let d = position - board_item.position;
+                    let d = d.x.abs() + d.y.abs();
+                    let item = &self.player.items[board_item.item_id];
+                    if item_ref.check(item.kind) && d > 0 && d <= 1 {
+                        animations.push(self.animations.insert(Animation::new(
+                            self.config.animation_time,
+                            AnimationKind::Bonus {
+                                from: board_item.position,
+                                target: item_id,
+                                bonus: ItemStats { damage: Some(2) },
+                                permanent: false,
+                            },
+                        )));
+                    }
+                }
+                Some(true)
+            }
             _ => None,
         };
 

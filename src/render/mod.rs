@@ -116,7 +116,7 @@ impl GameRender {
                     model.animations.iter().find_map(|(_, anim)| {
                         if let AnimationKind::UseActive { item_id, .. } = anim.kind {
                             if item_id == i {
-                                return Some((anim.time, Lifetime::new_max(R32::ZERO)));
+                                return Some((anim.time, Lifetime::new_max(R32::ONE)));
                             }
                         }
                         None
@@ -126,7 +126,7 @@ impl GameRender {
                     model.ending_animations.iter().find_map(|anim| {
                         if let AnimationKind::UseActive { item_id, .. } = anim.kind {
                             if item_id == i {
-                                return Some((Lifetime::new_max(R32::ZERO), anim.time));
+                                return Some((Lifetime::new_max(R32::ONE), anim.time));
                             }
                         }
                         None

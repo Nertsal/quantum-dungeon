@@ -22,6 +22,12 @@ impl Model {
             let animation = &mut self.animations[i];
             animation.time.change(-delta_time);
             if animation.time.is_min() {
+                if let AnimationKind::UseActive { .. } = animation.kind {
+                    if self.animations.len() > 1 {
+                        // Wait for other animations
+                        continue;
+                    }
+                }
                 finished.push(i);
             }
         }
