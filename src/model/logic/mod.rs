@@ -87,7 +87,6 @@ impl Model {
 
     fn select_phase(&mut self, items: usize) {
         log::debug!("Select phase");
-        // TODO
         self.update_vision();
 
         if items > 0 {

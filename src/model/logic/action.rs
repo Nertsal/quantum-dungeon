@@ -17,6 +17,7 @@ impl Model {
                 extra_items,
             } => match player_input {
                 PlayerInput::SelectItem(i) => self.select_item(options[i]),
+                PlayerInput::Skip => self.select_phase(0),
                 PlayerInput::Reroll => self.select_phase(extra_items + 1),
                 _ => {
                     log::error!("invalid input during phase Select, expected an item selection")

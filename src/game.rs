@@ -95,7 +95,7 @@ impl geng::State for Game {
                         self.model.player_action(PlayerInput::Retry);
                     }
                 }
-                Phase::Player if self.render.skip_button.contains(self.cursor_ui_pos) => {
+                Phase::Player if self.render.skip_turn_button.contains(self.cursor_ui_pos) => {
                     self.model.player_action(PlayerInput::Skip);
                 }
                 Phase::Select { .. } => {
@@ -108,6 +108,8 @@ impl geng::State for Game {
                         self.model.player_action(PlayerInput::SelectItem(i));
                     } else if self.render.reroll_button.contains(self.cursor_ui_pos) {
                         self.model.player_action(PlayerInput::Reroll);
+                    } else if self.render.skip_item_button.contains(self.cursor_ui_pos) {
+                        self.model.player_action(PlayerInput::Skip);
                     }
                 }
                 Phase::Vision => {
