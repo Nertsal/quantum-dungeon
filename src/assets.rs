@@ -98,6 +98,7 @@ impl Sprites {
             ItemKind::GoldenLantern => &self.lantern,
             ItemKind::CharmingStaff => &self.charming_staff,
             ItemKind::WarpPortal => &self.warp_portal,
+            ItemKind::Solitude => &self.solitude,
         }
     }
 }

@@ -10,10 +10,9 @@ impl Model {
     pub fn update(&mut self, delta_time: Time) {
         self.update_animations(delta_time);
         self.resolve_animations(delta_time);
-        if let Phase::Player = self.phase {
-            if self.animations.is_empty() && self.ending_animations.is_empty() {
-                self.check_deaths();
-            }
+        if let Phase::LevelFinished { .. } = self.phase {
+        } else if self.animations.is_empty() && self.ending_animations.is_empty() {
+            self.check_deaths();
         }
     }
 
