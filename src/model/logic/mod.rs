@@ -78,23 +78,7 @@ impl Model {
         self.update_vision();
 
         if items > 0 {
-            let options = {
-                use ItemKind::*;
-                [
-                    Sword,
-                    Forge,
-                    Boots,
-                    Map,
-                    Camera,
-                    Ghost,
-                    FireScroll,
-                    SoulCrystal,
-                    RadiationCore,
-                    GreedyPot,
-                    SpiritCoin,
-                    Chest,
-                ]
-            };
+            let options = ItemKind::all();
             let mut rng = thread_rng();
             let options = (0..3).map(|_| *options.choose(&mut rng).unwrap()).collect();
             self.phase = Phase::Select {

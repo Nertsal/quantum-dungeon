@@ -46,7 +46,11 @@ impl Model {
             let &position = available.iter().choose(&mut rng).unwrap();
 
             let item = &mut self.player.items[item_id];
-            let on_board = self.items.insert(BoardItem { position, item_id });
+            let on_board = self.items.insert(BoardItem {
+                position,
+                item_id,
+                turns_alive: 0,
+            });
             item.on_board = Some(on_board);
         }
     }

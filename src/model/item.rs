@@ -4,6 +4,7 @@ use super::*;
 pub struct BoardItem {
     pub position: vec2<Coord>,
     pub item_id: Id,
+    pub turns_alive: usize,
 }
 
 #[derive(Debug, Clone)]
@@ -54,6 +55,7 @@ pub enum ItemKind {
     GreedyPot,
     SpiritCoin,
     Chest,
+    MagicTreasureBag,
 }
 
 impl InventoryItem {
@@ -72,6 +74,25 @@ impl ItemRef {
 }
 
 impl ItemKind {
+    pub fn all() -> [ItemKind; 13] {
+        use ItemKind::*;
+        [
+            Boots,
+            Forge,
+            Sword,
+            Map,
+            Camera,
+            Ghost,
+            FireScroll,
+            SoulCrystal,
+            RadiationCore,
+            GreedyPot,
+            SpiritCoin,
+            Chest,
+            MagicTreasureBag,
+        ]
+    }
+
     pub fn categories(&self) -> Vec<ItemCategory> {
         use ItemCategory::*;
         match self {
@@ -87,6 +108,7 @@ impl ItemKind {
             ItemKind::GreedyPot => vec![Treasure],
             ItemKind::SpiritCoin => vec![Spooky, Treasure],
             ItemKind::Chest => vec![Treasure],
+            ItemKind::MagicTreasureBag => vec![Treasure, Magic],
         }
     }
 
@@ -104,6 +126,7 @@ impl ItemKind {
             ItemKind::GreedyPot => Some(1),
             ItemKind::SpiritCoin => None,
             ItemKind::Chest => None,
+            ItemKind::MagicTreasureBag => None,
         };
         InventoryItem {
             on_board: None,
@@ -147,6 +170,7 @@ impl Display for ItemKind {
             ItemKind::GreedyPot => "Greedy pot",
             ItemKind::SpiritCoin => "Spirit coin",
             ItemKind::Chest => "Chest",
+            ItemKind::MagicTreasureBag => "Magic treasure bag",
         };
         write!(f, "{}", name)
     }

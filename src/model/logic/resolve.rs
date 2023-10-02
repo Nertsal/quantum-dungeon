@@ -71,9 +71,16 @@ impl Model {
             start_delay: Lifetime::new_max(r32(0.2)),
             end_delay: Lifetime::new_max(r32(0.2)),
         };
+
+        // Clear temp stats
         for (_, item) in &mut self.player.items {
             item.temp_stats = ItemStats::default();
         }
+        // Update turn counter
+        for (_, item) in &mut self.items {
+            item.turns_alive += 1;
+        }
+
         self.resolve_current();
     }
 
@@ -139,6 +146,7 @@ impl Model {
             ItemKind::GreedyPot => Some(0),
             ItemKind::SpiritCoin => Some(0),
             ItemKind::Chest => Some(0),
+            ItemKind::MagicTreasureBag if board_item.turns_alive >= 5 => Some(0),
             _ => None,
         }
     }
@@ -261,6 +269,27 @@ impl Model {
                         self.player.items.remove(board_item.item_id);
                     }
                     self.player.extra_items += 1;
+                }
+            }
+            ItemKind::MagicTreasureBag => {
+                // Turn into a random treasure
+
+                let board_item = self.items.remove(item_id).unwrap();
+                self.player.items.remove(board_item.item_id);
+
+                let options = ItemKind::all()
+                    .into_iter()
+                    .filter(|kind| ItemRef::Category(ItemCategory::Treasure).check(*kind));
+                let mut rng = thread_rng();
+                if let Some(new_item) = options.choose(&mut rng) {
+                    let item_id = self.player.items.insert(new_item.instantiate());
+                    let item = &mut self.player.items[item_id];
+                    let on_board = self.items.insert(BoardItem {
+                        position: board_item.position,
+                        item_id,
+                        turns_alive: 0,
+                    });
+                    item.on_board = Some(on_board);
                 }
             }
             _ => {}

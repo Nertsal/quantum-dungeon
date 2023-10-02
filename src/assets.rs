@@ -63,6 +63,7 @@ impl Sprites {
             ItemKind::GreedyPot => &self.greedy_pot,
             ItemKind::SpiritCoin => &self.spirit_coin,
             ItemKind::Chest => &self.chest,
+            ItemKind::MagicTreasureBag => &self.magic_treasure_bag,
         }
     }
 }
