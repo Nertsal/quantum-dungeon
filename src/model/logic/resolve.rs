@@ -383,6 +383,7 @@ impl Model {
             }
             ItemKind::FireScroll => Some(true),
             ItemKind::SoulCrystal => Some(true),
+            ItemKind::Phantom => Some(true),
             _ => None,
         };
 
@@ -417,7 +418,7 @@ impl Model {
 
     fn use_item(&mut self, fraction: Fraction, board_item: BoardItem) {
         log::debug!("Use item by fraction {:?}: {:?}", fraction, board_item);
-        let item = &self.player.items[board_item.item_id];
+        let item = &mut self.player.items[board_item.item_id];
         match item.kind {
             ItemKind::Sword => {
                 let damage = item.current_stats().damage.unwrap_or_default();
@@ -469,6 +470,11 @@ impl Model {
                         .change(-item.current_stats().damage.unwrap_or_default());
                     self.player.items.remove(board_item.item_id);
                 }
+            }
+            ItemKind::Phantom => {
+                let damage = item.current_stats().damage.unwrap_or_default();
+                item.perm_stats.damage = Some(item.perm_stats.damage.unwrap_or_default() + 1);
+                self.deal_damage_around(board_item.position, Fraction::Player, damage, 1);
             }
             _ => {}
         }

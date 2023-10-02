@@ -79,6 +79,7 @@ impl Sprites {
             ItemKind::ElectricRod => &self.electric_rod,
             ItemKind::MagicWire => &self.magic_wire,
             ItemKind::Melter => &self.melter,
+            ItemKind::Phantom => &self.phantom,
         }
     }
 }
