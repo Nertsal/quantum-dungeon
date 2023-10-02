@@ -370,11 +370,8 @@ impl Model {
                 }
             }
             ItemKind::ElectricRod => {
-                let damage = item.current_stats().damage.unwrap_or_default();
                 let position = board_item.position;
-
                 let item_ref = ItemRef::Category(ItemCategory::Tech);
-                let mut bonus = 0;
                 let mut animations = Vec::new();
                 for (_, board_item) in &self.items {
                     let d = position - board_item.position;
@@ -390,17 +387,8 @@ impl Model {
                                 permanent: false,
                             },
                         )));
-                        bonus += 1;
                     }
                 }
-                let damage = damage + bonus as i64 * 2;
-                self.deal_damage_around(
-                    board_item.position,
-                    Fraction::Player,
-                    damage,
-                    1,
-                    animations,
-                );
             }
             ItemKind::MagicWire => {
                 // Duplicate
@@ -512,6 +500,7 @@ impl Model {
             ItemKind::GoldenLantern => Some(true),
             ItemKind::WarpPortal => Some(true),
             ItemKind::Solitude => Some(true),
+            ItemKind::ElectricRod => Some(true),
             _ => None,
         };
 
@@ -642,6 +631,10 @@ impl Model {
                 }
             }
             ItemKind::Solitude => {
+                let damage = item.current_stats().damage.unwrap_or_default();
+                self.deal_damage_around(board_item.position, Fraction::Player, damage, 1, vec![]);
+            }
+            ItemKind::ElectricRod => {
                 let damage = item.current_stats().damage.unwrap_or_default();
                 self.deal_damage_around(board_item.position, Fraction::Player, damage, 1, vec![]);
             }
