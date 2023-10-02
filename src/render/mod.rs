@@ -248,8 +248,12 @@ impl GameRender {
             self.geng.draw2d().draw2d(
                 framebuffer,
                 &self.ui_camera,
-                &draw2d::Text::unit(self.geng.default_font().clone(), text, Color::BLACK)
-                    .fit_into(Aabb2::point(target.center()).extend_symmetric(vec2(3.0, 0.5) / 2.0)),
+                &draw2d::Text::unit(
+                    self.geng.default_font().clone(),
+                    text,
+                    Color::try_from("#ffe7cd").unwrap(),
+                )
+                .fit_into(Aabb2::point(target.center()).extend_symmetric(vec2(3.0, 0.5) / 2.0)),
             );
         }
 
