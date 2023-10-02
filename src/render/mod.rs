@@ -560,7 +560,7 @@ impl GameRender {
         {
             // Categories
             let positions = [vec2(0.0, 0.0), vec2(1.0, 0.0)];
-            let size = icon_target.height() / 12.0;
+            let size = icon_target.height() / 5.0; // / 12.0;
             let icon_target = icon_target.extend_uniform(-size / 2.0);
             for (i, category) in item
                 .categories()
@@ -570,18 +570,28 @@ impl GameRender {
             {
                 let alignment = positions[i];
                 let target = geng_utils::layout::aabb_pos(icon_target, alignment);
-                self.geng.draw2d().draw2d(
+                self.geng.default_font().draw(
                     framebuffer,
                     &self.ui_camera,
-                    &draw2d::Text::unit(
-                        self.geng.default_font().clone(),
-                        format!("{:?}", category),
-                        self.assets.get_category_color(category),
-                    )
-                    .align_bounding_box(alignment)
-                    .scale_uniform(size)
-                    .translate(target),
+                    &format!("{:?}", category),
+                    alignment.map(geng::TextAlign),
+                    mat3::translate(target)
+                        * mat3::scale_uniform(size)
+                        * mat3::translate(vec2(0.0, -0.25)),
+                    self.assets.get_category_color(category),
                 );
+                // self.geng.draw2d().draw2d(
+                //     framebuffer,
+                //     &self.ui_camera,
+                //     &draw2d::Text::unit(
+                //         self.geng.default_font().clone(),
+                //         format!("{:?}", category),
+                //         self.assets.get_category_color(category),
+                //     )
+                //     .align_bounding_box(alignment)
+                //     .scale_uniform(size)
+                //     .translate(target),
+                // );
             }
         }
 
