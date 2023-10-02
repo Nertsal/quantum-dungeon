@@ -147,6 +147,7 @@ impl Model {
             ItemKind::SpiritCoin => Some(0),
             ItemKind::Chest => Some(0),
             ItemKind::MagicTreasureBag if board_item.turns_alive >= 5 => Some(0),
+            ItemKind::ElectricRod => Some(0),
             _ => None,
         }
     }
@@ -273,7 +274,6 @@ impl Model {
             }
             ItemKind::MagicTreasureBag => {
                 // Turn into a random treasure
-
                 let board_item = self.items.remove(item_id).unwrap();
                 self.player.items.remove(board_item.item_id);
 
@@ -291,6 +291,25 @@ impl Model {
                     });
                     item.on_board = Some(on_board);
                 }
+            }
+            ItemKind::ElectricRod => {
+                let damage = item.current_stats().damage.unwrap_or_default();
+                let position = board_item.position;
+                let item_ref = ItemRef::Category(ItemCategory::Tech);
+                let tech: Vec<_> = self
+                    .items
+                    .iter()
+                    .filter(|(_, board_item)| {
+                        let d = position - board_item.position;
+                        let d = d.x.abs() + d.y.abs();
+                        let item = &self.player.items[board_item.item_id];
+                        item_ref.check(item.kind) && d > 0 && d <= 1
+                    })
+                    .map(|(i, _)| i)
+                    .collect();
+                let bonus = tech.len();
+                let damage = damage + bonus as i64 * 2;
+                self.deal_damage_around(board_item.position, Fraction::Player, damage, 1);
             }
             _ => {}
         }
