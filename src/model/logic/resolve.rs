@@ -72,7 +72,7 @@ impl Model {
             end_delay: Lifetime::new_max(r32(0.2)),
         };
         for (_, item) in &mut self.player.items {
-            item.temp_stats = item.perm_stats.clone();
+            item.temp_stats = ItemStats::default();
         }
         self.resolve_current();
     }
@@ -135,6 +135,7 @@ impl Model {
         match item.kind {
             ItemKind::Forge => Some(10),
             ItemKind::Ghost => Some(-10),
+            ItemKind::SoulCrystal => Some(0),
             _ => None,
         }
     }
@@ -145,7 +146,7 @@ impl Model {
             return;
         };
 
-        let item = &self.player.items[board_item.item_id];
+        let item = &mut self.player.items[board_item.item_id];
         match item.kind {
             ItemKind::Forge => {
                 self.bonus_near_temporary(
@@ -161,6 +162,9 @@ impl Model {
                 if let Some(&weapon) = weapons.choose(&mut thread_rng()) {
                     self.resolve_item_active(Fraction::Player, weapon);
                 }
+            }
+            ItemKind::SoulCrystal => {
+                item.perm_stats.damage = Some(item.perm_stats.damage.unwrap_or_default() + 1);
             }
             _ => {}
         }
@@ -205,6 +209,7 @@ impl Model {
             }
             ItemKind::Ghost => None,
             ItemKind::FireScroll => Some(true),
+            ItemKind::SoulCrystal => Some(true),
         };
 
         match resolution {
@@ -238,7 +243,7 @@ impl Model {
         let item = &self.player.items[board_item.item_id];
         match item.kind {
             ItemKind::Sword => {
-                let damage = item.temp_stats.damage.unwrap_or_default();
+                let damage = item.current_stats().damage.unwrap_or_default();
                 let range = 1;
                 self.deal_damage_around(board_item.position, fraction, damage, range);
             }
@@ -258,7 +263,6 @@ impl Model {
             }
             ItemKind::Ghost => {}
             ItemKind::FireScroll => {
-                // TODO: move to resolve to have animation
                 let enemies: Vec<usize> = self
                     .entities
                     .iter()
@@ -270,7 +274,23 @@ impl Model {
                     let enemy = &mut self.entities[enemy];
                     enemy
                         .health
-                        .change(-item.temp_stats.damage.unwrap_or_default());
+                        .change(-item.current_stats().damage.unwrap_or_default());
+                    self.player.items.remove(board_item.item_id);
+                }
+            }
+            ItemKind::SoulCrystal => {
+                let enemies: Vec<usize> = self
+                    .entities
+                    .iter()
+                    .enumerate()
+                    .filter(|(_, e)| matches!(e.fraction, Fraction::Enemy))
+                    .map(|(i, _)| i)
+                    .collect();
+                if let Some(&enemy) = enemies.choose(&mut thread_rng()) {
+                    let enemy = &mut self.entities[enemy];
+                    enemy
+                        .health
+                        .change(-item.current_stats().damage.unwrap_or_default());
                     self.player.items.remove(board_item.item_id);
                 }
             }

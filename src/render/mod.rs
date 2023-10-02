@@ -426,7 +426,7 @@ impl GameRender {
         );
 
         // Damage value
-        if let Some(damage) = item.temp_stats.damage {
+        if let Some(damage) = item.current_stats().damage {
             let pos = (board_item.position.as_f32() + vec2(0.3, 0.3)) * self.cell_size;
             let target = Aabb2::point(pos).extend_uniform(0.06);
             self.geng.draw2d().draw2d(

@@ -13,7 +13,8 @@ pub struct InventoryItem {
     pub kind: ItemKind,
     /// Permanent stats that persist through turns.
     pub perm_stats: ItemStats,
-    /// Resolution stats that reset every turn.
+    /// Resolution stats that reset every turn, act as a modifier on the perm_stats.
+    /// Call `current_stats()` to get relevant stats for the time.
     pub temp_stats: ItemStats,
 }
 
@@ -48,6 +49,13 @@ pub enum ItemKind {
     Camera,
     Ghost,
     FireScroll,
+    SoulCrystal,
+}
+
+impl InventoryItem {
+    pub fn current_stats(&self) -> ItemStats {
+        self.temp_stats.combine(&self.perm_stats)
+    }
 }
 
 impl ItemRef {
@@ -70,6 +78,7 @@ impl ItemKind {
             ItemKind::Camera => vec![Tech],
             ItemKind::Ghost => vec![Spooky],
             ItemKind::FireScroll => vec![Magic, Weapon],
+            ItemKind::SoulCrystal => vec![Spooky],
         }
     }
 
@@ -82,6 +91,7 @@ impl ItemKind {
             ItemKind::Camera => None,
             ItemKind::Ghost => None,
             ItemKind::FireScroll => Some(5),
+            ItemKind::SoulCrystal => Some(0),
         };
         InventoryItem {
             on_board: None,
@@ -120,6 +130,7 @@ impl Display for ItemKind {
             ItemKind::Camera => "Camera",
             ItemKind::Ghost => "Ghost",
             ItemKind::FireScroll => "Fire scroll",
+            ItemKind::SoulCrystal => "Soul crystal",
         };
         write!(f, "{}", name)
     }

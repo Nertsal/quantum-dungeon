@@ -58,6 +58,7 @@ impl Sprites {
             ItemKind::Camera => &self.camera,
             ItemKind::Ghost => &self.ghost,
             ItemKind::FireScroll => &self.fire_scroll,
+            ItemKind::SoulCrystal => &self.item_shadow,
         }
     }
 }

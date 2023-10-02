@@ -76,15 +76,19 @@ impl Model {
         // TODO
         self.update_vision();
 
-        let options = [
-            ItemKind::Sword,
-            ItemKind::Forge,
-            ItemKind::Boots,
-            ItemKind::Map,
-            ItemKind::Camera,
-            ItemKind::Ghost,
-            ItemKind::FireScroll,
-        ];
+        let options = {
+            use ItemKind::*;
+            [
+                Sword,
+                Forge,
+                Boots,
+                Map,
+                Camera,
+                Ghost,
+                FireScroll,
+                SoulCrystal,
+            ]
+        };
         let mut rng = thread_rng();
         let options = (0..3).map(|_| *options.choose(&mut rng).unwrap()).collect();
         self.phase = Phase::Select { options };
