@@ -673,7 +673,7 @@ impl GameRender {
         framebuffer: &mut ugli::Framebuffer,
     ) {
         let mut target =
-            Aabb2::point(cursor_ui_pos).extend_positive(self.cell_size * vec2(0.0, 3.5));
+            Aabb2::point(cursor_ui_pos).extend_positive(self.cell_size * vec2(0.0, 4.5));
         if target.max.y > self.ui_camera.fov / 2.0 {
             target = target.translate(vec2(0.0, self.ui_camera.fov / 2.0 - target.max.y));
         }
