@@ -44,7 +44,7 @@ impl Model {
             light_time: Lifetime::new_max(r32(1.0)),
         };
 
-        self.player.extra_items = 1;
+        self.player.extra_items = self.turn % 2;
         self.grid.fractured.clear();
         for (_, entity) in &self.entities {
             if let EntityKind::Player = entity.kind {
@@ -106,6 +106,7 @@ impl Model {
     }
 
     fn next_turn(&mut self) {
+        self.turn += 1;
         self.player.turns_left = self.player.turns_left.saturating_sub(1);
         if self.player.turns_left == 0 {
             // Damage for every enemy left on the board

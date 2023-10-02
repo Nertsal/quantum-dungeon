@@ -15,6 +15,7 @@ pub type Coord = i64;
 pub struct Model {
     pub config: Config,
     pub level: usize,
+    pub turn: usize,
     pub phase: Phase,
     pub grid: Grid,
     pub player: Player,
@@ -61,6 +62,7 @@ impl Model {
     pub fn new(config: Config) -> Self {
         let mut model = Self {
             level: 0,
+            turn: 0,
             config,
             phase: Phase::Night {
                 fade_time: Lifetime::new_zero(r32(0.5)),
