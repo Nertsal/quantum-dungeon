@@ -30,6 +30,7 @@ pub struct Sprites {
     pub destroy_effect: ugli::Texture,
     pub enemy_death: ugli::Texture,
     pub play_button: ugli::Texture,
+    pub outer_square: ugli::Texture,
 
     pub camera: ugli::Texture,
     pub charming_staff: ugli::Texture,

@@ -155,7 +155,12 @@ impl geng::State for MainMenu {
             for i in 0..3 {
                 let pos = vec2(i as f32 - 1.0, 0.0) * size + vec2(0.0, -0.5);
                 let target = Aabb2::point(pos).extend_uniform(size / 2.0);
-                self.draw_at(target, &self.assets.sprites.cell, &self.camera, framebuffer);
+                let texture = if target.contains(self.cursor_ui_pos) {
+                    &self.assets.sprites.cell_light
+                } else {
+                    &self.assets.sprites.cell
+                };
+                self.draw_at(target, texture, &self.camera, framebuffer);
             }
 
             // Play
@@ -165,6 +170,28 @@ impl geng::State for MainMenu {
                 &self.assets.sprites.play_button,
                 &self.camera,
                 framebuffer,
+            );
+        }
+
+        {
+            // Overlay
+            let overlay_texture = &self.assets.sprites.overlay;
+            let size = overlay_texture.size().as_f32();
+            let size = size * self.camera.fov / size.y;
+            let overlay = Aabb2::point(self.camera.center).extend_symmetric(size / 2.0);
+
+            self.geng.draw2d().draw2d(
+                framebuffer,
+                &self.camera,
+                &draw2d::TexturedQuad::new(overlay, &self.assets.sprites.outer_square),
+            );
+
+            let mut color = Color::WHITE;
+            color.a = 0.5;
+            self.geng.draw2d().draw2d(
+                framebuffer,
+                &self.camera,
+                &draw2d::TexturedQuad::colored(overlay, overlay_texture, color),
             );
         }
     }
