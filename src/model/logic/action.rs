@@ -74,10 +74,10 @@ impl Model {
             {
                 let item = &self.player.items[target.item_id];
                 if ItemRef::Category(ItemCategory::Magic).check(item.kind) {
-                    let Some(player) = self
+                    let Some((_, player)) = self
                         .entities
                         .iter_mut()
-                        .find(|e| matches!(e.kind, EntityKind::Player))
+                        .find(|(_, e)| matches!(e.kind, EntityKind::Player))
                     else {
                         log::error!("Player not found");
                         return;
@@ -110,7 +110,7 @@ impl Model {
 
         let mut moves = Vec::new();
         let mut move_dir = vec2::ZERO;
-        for (i, entity) in self.entities.iter_mut().enumerate() {
+        for (i, entity) in &mut self.entities {
             if let EntityKind::Player = entity.kind {
                 // TODO: if there are multiple players, resolve conflicting movement
                 move_dir = match player_input {
@@ -174,7 +174,7 @@ impl Model {
     }
 
     fn player_vision(&mut self, player_input: PlayerInput) {
-        for entity in &mut self.entities {
+        for (_, entity) in &mut self.entities {
             if let EntityKind::Player = entity.kind {
                 let dir = match player_input {
                     PlayerInput::Dir(dir) => dir,

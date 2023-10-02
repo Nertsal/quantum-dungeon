@@ -268,10 +268,9 @@ impl Model {
                 }
 
                 let board_item = self.items.get(item_id).unwrap();
-                let enemies: Vec<usize> = self
+                let enemies: Vec<Id> = self
                     .entities
                     .iter()
-                    .enumerate()
                     .filter(|(_, e)| matches!(e.fraction, Fraction::Enemy))
                     .map(|(i, _)| i)
                     .collect();
@@ -306,10 +305,9 @@ impl Model {
                     let mut damage_anim = None;
 
                     // Deal 5 damage
-                    let enemies: Vec<usize> = self
+                    let enemies: Vec<Id> = self
                         .entities
                         .iter()
-                        .enumerate()
                         .filter(|(_, e)| matches!(e.fraction, Fraction::Enemy))
                         .map(|(i, _)| i)
                         .collect();
@@ -565,10 +563,9 @@ impl Model {
                 self.player.items.remove(board_item.item_id);
             }
             ItemKind::FireScroll => {
-                let enemies: Vec<usize> = self
+                let enemies: Vec<Id> = self
                     .entities
                     .iter()
-                    .enumerate()
                     .filter(|(_, e)| matches!(e.fraction, Fraction::Enemy))
                     .map(|(i, _)| i)
                     .collect();
@@ -586,10 +583,9 @@ impl Model {
                 }
             }
             ItemKind::SoulCrystal => {
-                let enemies: Vec<usize> = self
+                let enemies: Vec<Id> = self
                     .entities
                     .iter()
-                    .enumerate()
                     .filter(|(_, e)| matches!(e.fraction, Fraction::Enemy))
                     .map(|(i, _)| i)
                     .collect();
@@ -614,7 +610,7 @@ impl Model {
             ItemKind::KingSkull => {
                 // deal damage to all enemies
                 let damage = item.current_stats().damage.unwrap_or_default();
-                for (target, entity) in self.entities.iter().enumerate() {
+                for (target, entity) in &self.entities {
                     if let Fraction::Enemy = entity.fraction {
                         self.animations.insert(Animation::new(
                             self.config.animation_time,

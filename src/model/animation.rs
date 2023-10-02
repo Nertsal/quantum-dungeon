@@ -16,6 +16,10 @@ pub enum AnimationKind {
         fraction: Fraction,
         item_id: Id,
     },
+    EntityDeath {
+        entity: Id,
+        pos: vec2<Coord>,
+    },
     ItemDeath {
         item: Id,
         pos: vec2<Coord>,
@@ -25,7 +29,7 @@ pub enum AnimationKind {
     },
     Damage {
         from: vec2<Coord>,
-        target: usize,
+        target: Id,
         damage: Hp,
     },
     Bonus {

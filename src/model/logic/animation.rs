@@ -35,6 +35,9 @@ impl Model {
                     let item_id = *item_id;
                     self.active_effect(fraction, item_id);
                 }
+                AnimationKind::EntityDeath { entity, .. } => {
+                    self.entities.remove(*entity);
+                }
                 AnimationKind::ItemDeath { item, .. } => {
                     let item = self.items.remove(*item).unwrap();
                     self.player.items.remove(item.item_id);

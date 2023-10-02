@@ -45,7 +45,7 @@ impl Model {
         range: Coord,
         after: Vec<Id>,
     ) {
-        for (target, entity) in self.entities.iter().enumerate() {
+        for (target, entity) in &self.entities {
             if source_fraction != entity.fraction && distance(entity.position, position) <= range {
                 self.animations.insert(
                     Animation::new(

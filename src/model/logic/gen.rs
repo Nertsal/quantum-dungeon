@@ -10,7 +10,7 @@ impl Model {
         // TODO: animation
         self.items.clear();
         if self.entities.len() == 1 {
-            for entity in &mut self.entities {
+            for (_, entity) in &mut self.entities {
                 entity.position = vec2::ZERO;
             }
         }
@@ -27,7 +27,7 @@ impl Model {
         }
 
         enum Thing {
-            Entity(usize),
+            Entity(Id),
             Item(Id),
         }
 
@@ -38,7 +38,6 @@ impl Model {
         let entities = self
             .entities
             .iter()
-            .enumerate()
             .map(|(i, e)| (Thing::Entity(i), e.position));
         let things = items.chain(entities);
 
@@ -60,7 +59,7 @@ impl Model {
                     item.position = from;
                 }
             }
-            for entity in &mut self.entities {
+            for (_, entity) in &mut self.entities {
                 if entity.position == target {
                     entity.position = from;
                 }
@@ -87,7 +86,7 @@ impl Model {
             let kind = options.choose(&mut rng).unwrap();
             let position = *available.iter().choose(&mut rng).unwrap();
 
-            self.entities.push(Entity {
+            self.entities.insert(Entity {
                 position,
                 fraction: Fraction::Enemy,
                 health: Health::new_max(5),

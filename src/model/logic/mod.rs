@@ -46,7 +46,7 @@ impl Model {
 
         self.player.extra_items = 1;
         self.grid.fractured.clear();
-        for entity in &self.entities {
+        for (_, entity) in &self.entities {
             if let EntityKind::Player = entity.kind {
                 self.grid.fractured.insert(entity.position);
             }
@@ -78,7 +78,7 @@ impl Model {
     fn vision_phase(&mut self) {
         log::debug!("Vision phase");
         self.phase = Phase::Vision;
-        for entity in &mut self.entities {
+        for (_, entity) in &mut self.entities {
             entity.look_dir = vec2::ZERO;
         }
         self.update_vision();
@@ -109,7 +109,7 @@ impl Model {
             let damage = self
                 .entities
                 .iter()
-                .filter(|e| e.fraction == Fraction::Enemy)
+                .filter(|(_, e)| e.fraction == Fraction::Enemy)
                 .count();
             self.player.hearts = self.player.hearts.saturating_sub(damage);
             if self.player.hearts == 0 {
@@ -138,7 +138,7 @@ impl Model {
     fn calculate_empty_space(&self) -> HashSet<vec2<Coord>> {
         let mut available: HashSet<_> = self.grid.tiles.clone();
 
-        for entity in &self.entities {
+        for (_, entity) in &self.entities {
             available.remove(&entity.position);
         }
         for (_, item) in &self.items {
@@ -151,7 +151,7 @@ impl Model {
     pub fn update_vision(&mut self) {
         log::debug!("Updating vision");
         let mut visible: HashSet<_> = self.grid.lights.keys().copied().collect();
-        for entity in &self.entities {
+        for (_, entity) in &self.entities {
             if let EntityKind::Player = entity.kind {
                 if entity.look_dir == vec2::ZERO {
                     continue;
@@ -180,17 +180,21 @@ impl Model {
     }
 
     fn check_deaths(&mut self) {
-        self.entities.retain(|e| e.health.is_above_min());
-        if !self.entities.iter().any(|e| e.fraction == Fraction::Enemy) {
+        self.entities.retain(|_, e| e.health.is_above_min());
+        if !self
+            .entities
+            .iter()
+            .any(|(_, e)| e.fraction == Fraction::Enemy)
+        {
             // All enemies died -> next level
             self.finish_level(true);
         }
     }
 
     /// Move the entity to the target position and swap with the entity occupying the target (if any).
-    fn move_entity_swap(&mut self, entity_id: usize, target_pos: vec2<Coord>) {
+    fn move_entity_swap(&mut self, entity_id: Id, target_pos: vec2<Coord>) {
         let Some(entity) = self.entities.get_mut(entity_id) else {
-            log::error!("entity does not exist: {}", entity_id);
+            log::error!("entity does not exist: {:?}", entity_id);
             return;
         };
 
@@ -201,7 +205,11 @@ impl Model {
             log::error!("tried to move to an invalid position: {}", target_pos);
             return;
         };
-        if let Some(target) = self.entities.iter_mut().find(|e| e.position == target_pos) {
+        if let Some((_, target)) = self
+            .entities
+            .iter_mut()
+            .find(|(_, e)| e.position == target_pos)
+        {
             target.position = from_pos;
         }
 

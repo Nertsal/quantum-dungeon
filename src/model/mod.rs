@@ -20,7 +20,7 @@ pub struct Model {
     pub player: Player,
     pub visible_tiles: HashSet<vec2<Coord>>,
     pub items: Arena<BoardItem>,
-    pub entities: Vec<Entity>,
+    pub entities: Arena<Entity>,
     pub animations: Arena<Animation>,
     pub ending_animations: Vec<Animation>,
 }
@@ -70,13 +70,15 @@ impl Model {
             player: Player::new(),
             visible_tiles: HashSet::new(),
             items: Arena::new(),
-            entities: vec![Entity {
+            entities: [Entity {
                 position: vec2(0, 0),
                 fraction: Fraction::Player,
                 health: Health::new_max(100),
                 look_dir: vec2(0, 0),
                 kind: EntityKind::Player,
-            }],
+            }]
+            .into_iter()
+            .collect(),
             animations: Arena::new(),
             ending_animations: Vec::new(),
         };

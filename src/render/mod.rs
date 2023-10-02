@@ -92,7 +92,7 @@ impl GameRender {
         }
 
         // Entities
-        for entity in &model.entities {
+        for (_, entity) in &model.entities {
             self.draw_entity(entity, model, framebuffer);
         }
 
