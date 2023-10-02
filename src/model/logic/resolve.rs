@@ -3,6 +3,12 @@ use super::*;
 impl Model {
     pub(super) fn resolve_animations(&mut self, delta_time: Time) {
         match &mut self.phase {
+            Phase::LevelFinished { timer, .. } => {
+                timer.change(-delta_time);
+                if timer.is_min() {
+                    self.next_level();
+                }
+            }
             Phase::Night {
                 fade_time,
                 light_time,

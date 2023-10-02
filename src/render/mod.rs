@@ -195,6 +195,13 @@ impl GameRender {
             Phase::Player | Phase::Passive { .. } => "Day",
             Phase::Portal => "Select a magic item",
             Phase::Vision => "Select a direction to look at",
+            Phase::LevelFinished { win, .. } => {
+                if *win {
+                    "Level completed"
+                } else {
+                    "You ran out of turns"
+                }
+            }
             Phase::Map { .. } => {
                 // Tile plus
                 for pos in model.grid.outside_tiles() {
