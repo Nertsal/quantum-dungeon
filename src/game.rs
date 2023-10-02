@@ -83,6 +83,11 @@ impl geng::State for Game {
                 return;
             }
             match self.model.phase {
+                Phase::GameOver => {
+                    if self.render.retry_button.contains(self.cursor_ui_pos) {
+                        self.model.player_action(PlayerInput::Retry);
+                    }
+                }
                 Phase::Player if self.render.skip_button.contains(self.cursor_ui_pos) => {
                     self.model.player_action(PlayerInput::Skip);
                 }

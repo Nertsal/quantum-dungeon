@@ -136,7 +136,11 @@ impl Model {
 
     fn game_over(&mut self) {
         log::info!("Game over");
-        // TODO
+        self.phase = Phase::GameOver;
+    }
+
+    fn retry(&mut self) {
+        *self = Self::new(self.config.clone());
     }
 
     fn calculate_empty_space(&self) -> HashSet<vec2<Coord>> {

@@ -11,6 +11,7 @@ pub struct GameRender {
     pub reroll_button: Aabb2<f32>,
     pub inventory_button: Aabb2<f32>,
     pub show_inventory: bool,
+    pub retry_button: Aabb2<f32>,
 }
 
 #[derive(Debug)]
@@ -40,6 +41,7 @@ impl GameRender {
             skip_button: Aabb2::point(vec2(7.0, -1.0)).extend_symmetric(vec2::splat(1.5) / 2.0),
             reroll_button: Aabb2::point(vec2(5.0, 3.0)).extend_symmetric(vec2::splat(1.5) / 2.0),
             inventory_button: Aabb2::point(vec2(7.0, 1.0)).extend_symmetric(vec2::splat(1.5) / 2.0),
+            retry_button: Aabb2::point(vec2(0.0, -3.0)).extend_symmetric(vec2::splat(1.5) / 2.0),
             show_inventory: false,
         }
     }
@@ -51,6 +53,11 @@ impl GameRender {
         cursor_cell_pos: vec2<Coord>,
         framebuffer: &mut ugli::Framebuffer,
     ) {
+        if let Phase::GameOver = model.phase {
+            self.draw_game_over(model, cursor_ui_pos, framebuffer);
+            return;
+        }
+
         // Tiles
         for &pos in &model.grid.tiles {
             let light = match model.phase {
@@ -192,6 +199,7 @@ impl GameRender {
 
         self.buttons.clear();
         let text = match &model.phase {
+            Phase::GameOver => "Game over",
             Phase::Night { .. } => "Night",
             Phase::Player => {
                 // Skip button
@@ -322,6 +330,108 @@ impl GameRender {
             &self.assets.sprites.inventory,
             framebuffer,
         );
+    }
+
+    fn draw_game_over(
+        &self,
+        model: &Model,
+        cursor_ui_pos: vec2<f32>,
+        framebuffer: &mut ugli::Framebuffer,
+    ) {
+        {
+            // Text
+            let pos = self.ui_camera.center + vec2(0.0, 2.5);
+            let size = vec2(
+                3.0 * self.assets.sprites.panel.size().as_f32().aspect(),
+                3.0,
+            );
+            let target = Aabb2::point(pos).extend_symmetric(size / 2.0);
+            self.geng.draw2d().draw2d(
+                framebuffer,
+                &self.ui_camera,
+                &draw2d::TexturedQuad::new(target, &self.assets.sprites.panel),
+            );
+            self.geng.draw2d().draw2d(
+                framebuffer,
+                &self.ui_camera,
+                &draw2d::Text::unit(
+                    self.assets.font.clone(),
+                    "Game over",
+                    Color::try_from("#ffe7cd").unwrap(),
+                )
+                .fit_into(Aabb2::point(target.center()).extend_symmetric(vec2(3.0, 0.5) / 2.0)),
+            );
+        }
+
+        {
+            let x = -1.5;
+            let height = 0.8;
+
+            // Level
+            let y = 0.5;
+            let target = Aabb2::point(vec2(x, y)).extend_uniform(1.0);
+            self.draw_at_ui(target, &self.assets.sprites.enemy, framebuffer);
+
+            let target = vec2(x + 0.8, y);
+            self.assets.font.draw(
+                framebuffer,
+                &self.ui_camera,
+                &format!("Level  {}", model.level),
+                vec2::splat(geng::TextAlign::LEFT),
+                mat3::translate(target)
+                    * mat3::scale_uniform(height)
+                    * mat3::translate(vec2(0.0, -0.25)),
+                Color::try_from("#c9464b").unwrap(),
+            );
+
+            // Score
+            let y = y - 1.5;
+            let target = Aabb2::point(vec2(x, y)).extend_uniform(1.0);
+            self.draw_at_ui(target, &self.assets.sprites.player, framebuffer);
+
+            let target = vec2(x + 0.8, y);
+            self.assets.font.draw(
+                framebuffer,
+                &self.ui_camera,
+                &format!("Score {}", model.score),
+                vec2::splat(geng::TextAlign::LEFT),
+                mat3::translate(target)
+                    * mat3::scale_uniform(height)
+                    * mat3::translate(vec2(0.0, -0.25)),
+                Color::try_from("#ffcd6c").unwrap(),
+            );
+        }
+
+        {
+            // Retry
+            self.draw_at_ui(
+                self.retry_button,
+                &self.assets.sprites.reroll_button,
+                framebuffer,
+            );
+
+            // Exit
+            // self.draw_at_ui(
+            //     self.exit_button,
+            //     &self.assets.sprites.exit_button,
+            //     framebuffer,
+            // );
+        }
+
+        {
+            // Overlay
+            let overlay_texture = &self.assets.sprites.overlay;
+            let size = overlay_texture.size().as_f32();
+            let size = size * self.ui_camera.fov / size.y;
+            let overlay = Aabb2::point(self.ui_camera.center).extend_symmetric(size / 2.0);
+            let mut color = Color::WHITE;
+            color.a = 0.5;
+            self.geng.draw2d().draw2d(
+                framebuffer,
+                &self.ui_camera,
+                &draw2d::TexturedQuad::colored(overlay, overlay_texture, color),
+            );
+        }
     }
 
     fn draw_animations(&self, model: &Model, framebuffer: &mut ugli::Framebuffer) {

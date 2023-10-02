@@ -16,6 +16,7 @@ pub struct Model {
     pub config: Config,
     pub level: usize,
     pub turn: usize,
+    pub score: u64,
     pub phase: Phase,
     pub grid: Grid,
     pub player: Player,
@@ -56,6 +57,8 @@ pub enum Phase {
     },
     /// Level has completed: either all enemies were killed (win) or player ran out of turns.
     LevelFinished { win: bool, timer: Lifetime },
+    /// Game over, you lost.
+    GameOver,
 }
 
 impl Model {
@@ -63,6 +66,7 @@ impl Model {
         let mut model = Self {
             level: 0,
             turn: 0,
+            score: 69,
             config,
             phase: Phase::Night {
                 fade_time: Lifetime::new_zero(r32(0.5)),

@@ -17,6 +17,7 @@ pub enum PlayerInput {
     SelectItem(usize),
     Reroll,
     Skip,
+    Retry,
 }
 
 impl Player {

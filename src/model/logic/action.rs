@@ -22,6 +22,11 @@ impl Model {
                     log::error!("invalid input during phase Select, expected an item selection")
                 }
             },
+            Phase::GameOver => {
+                if let PlayerInput::Retry = player_input {
+                    self.retry();
+                }
+            }
             _ => {}
         }
     }
