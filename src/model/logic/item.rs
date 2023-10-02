@@ -21,10 +21,18 @@ impl Model {
         item_ref: ItemRef,
         bonus: ItemStats,
     ) {
-        for (_, board_item) in &mut self.items {
+        for (target, board_item) in &self.items {
             let item = &mut self.player.items[board_item.item_id];
             if distance(board_item.position, position) <= range && item_ref.check(item.kind) {
-                item.temp_stats = item.temp_stats.combine(&bonus);
+                self.animations.push(Animation::new(
+                    self.config.animation_time,
+                    AnimationKind::Bonus {
+                        from: position,
+                        target,
+                        bonus: bonus.clone(),
+                        permanent: false,
+                    },
+                ));
             }
         }
     }

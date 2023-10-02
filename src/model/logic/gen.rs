@@ -107,7 +107,7 @@ impl Model {
 
         // For testing
         // if self.items.is_empty() {
-        //     for kind in [ItemKind::ElectricRod, ItemKind::Boots] {
+        //     for kind in [ItemKind::Forge, ItemKind::Sword] {
         //         let position = *available.iter().choose(&mut rng).unwrap();
         //         let item_id = self.player.items.insert(kind.instantiate());
         //         let item = &mut self.player.items[item_id];

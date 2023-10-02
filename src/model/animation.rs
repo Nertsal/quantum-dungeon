@@ -25,6 +25,13 @@ pub enum AnimationKind {
         target: usize,
         damage: Hp,
     },
+    Bonus {
+        from: vec2<Coord>,
+        /// Id of the item on the board.
+        target: Id,
+        bonus: ItemStats,
+        permanent: bool,
+    },
 }
 
 impl Animation {

@@ -34,6 +34,20 @@ impl Model {
                 AnimationKind::Damage { target, damage, .. } => {
                     self.entities[*target].health.change(-damage);
                 }
+                AnimationKind::Bonus {
+                    target,
+                    bonus,
+                    permanent,
+                    ..
+                } => {
+                    let board_item = &self.items[*target];
+                    let item = &mut self.player.items[board_item.item_id];
+                    if *permanent {
+                        item.perm_stats = item.perm_stats.combine(bonus);
+                    } else {
+                        item.temp_stats = item.temp_stats.combine(bonus);
+                    }
+                }
             }
             animation.time.set_ratio(R32::ONE);
             self.ending_animations.push(animation);

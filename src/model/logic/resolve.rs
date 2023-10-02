@@ -347,6 +347,7 @@ impl Model {
             }
             ItemKind::Melter => {
                 // Destroy nearby tech item
+                let from_position = board_item.position;
                 let tech = self
                     .count_items_near(board_item.position, ItemRef::Category(ItemCategory::Tech));
                 if let Some(&item) = tech.choose(&mut rng) {
@@ -354,11 +355,18 @@ impl Model {
                     self.player.items.remove(item.item_id);
 
                     // +1 dmg permanent to all weapons
-                    for (_, item) in &self.items {
+                    for (target, item) in &self.items {
                         let item = &mut self.player.items[item.item_id];
                         if ItemRef::Category(ItemCategory::Weapon).check(item.kind) {
-                            item.perm_stats.damage =
-                                Some(item.perm_stats.damage.unwrap_or_default() + 1);
+                            self.animations.push(Animation::new(
+                                self.config.animation_time,
+                                AnimationKind::Bonus {
+                                    from: from_position,
+                                    target,
+                                    bonus: ItemStats { damage: Some(1) },
+                                    permanent: true,
+                                },
+                            ));
                         }
                     }
                 }
@@ -467,12 +475,6 @@ impl Model {
                 let range = 1;
                 self.deal_damage_around(board_item.position, fraction, damage, range);
             }
-            ItemKind::Forge => self.bonus_near_temporary(
-                board_item.position,
-                1,
-                ItemRef::Category(ItemCategory::Weapon),
-                ItemStats { damage: Some(2) },
-            ),
             ItemKind::Map => self.phase = Phase::Map { tiles_left: 2 },
             ItemKind::Boots => {
                 self.player.items.remove(board_item.item_id);
