@@ -414,6 +414,7 @@ impl Model {
             ItemKind::SoulCrystal => Some(true),
             ItemKind::Phantom => Some(true),
             ItemKind::KingSkull => Some(true),
+            ItemKind::WarpPortal => Some(true),
             _ => None,
         };
 

@@ -58,6 +58,10 @@ impl Model {
             log::error!("position {} is not valid, select a valid tile", target_pos);
             return;
         }
+        if self.grid.fractured.contains(&target_pos) {
+            log::error!("cannot move to a fractured position");
+            return;
+        }
 
         if let Phase::Portal = self.phase {
             if let Some((_, target)) = self
@@ -67,16 +71,19 @@ impl Model {
             {
                 let item = &self.player.items[target.item_id];
                 if ItemRef::Category(ItemCategory::Magic).check(item.kind) {
-                    let Some((player, _)) = self
+                    let Some(player) = self
                         .entities
-                        .iter()
-                        .enumerate()
-                        .find(|(_, e)| matches!(e.kind, EntityKind::Player))
+                        .iter_mut()
+                        .find(|e| matches!(e.kind, EntityKind::Player))
                     else {
                         log::error!("Player not found");
                         return;
                     };
-                    self.move_entity_swap(player, target_pos);
+                    // Swap
+                    target.position = player.position;
+                    player.position = target_pos;
+                    self.grid.fractured.insert(target_pos);
+                    self.player_phase();
                 } else {
                     log::error!(
                         "invalid input during phase Portal, expected a magic item position, found a non-magic item"

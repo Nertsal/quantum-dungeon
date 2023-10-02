@@ -50,16 +50,32 @@ impl GameRender {
     ) {
         // Tiles
         for &pos in &model.grid.tiles {
-            let light = if let Phase::Vision | Phase::Night { .. } = model.phase {
-                if model.visible_tiles.contains(&pos) {
-                    TileLight::Light
-                } else {
-                    TileLight::Dark
+            let light = match model.phase {
+                Phase::Vision | Phase::Select { .. } | Phase::Night { .. } => {
+                    if model.visible_tiles.contains(&pos) {
+                        TileLight::Light
+                    } else {
+                        TileLight::Dark
+                    }
                 }
-            } else if model.grid.fractured.contains(&pos) {
-                TileLight::Dark
-            } else {
-                TileLight::Normal
+                _ => {
+                    if model.grid.fractured.contains(&pos) {
+                        TileLight::Dark
+                    } else if let Phase::Portal = model.phase {
+                        // Highlight magic items
+                        if model.items.iter().any(|(_, item)| {
+                            item.position == pos
+                                && ItemRef::Category(ItemCategory::Magic)
+                                    .check(model.player.items[item.item_id].kind)
+                        }) {
+                            TileLight::Light
+                        } else {
+                            TileLight::Normal
+                        }
+                    } else {
+                        TileLight::Normal
+                    }
+                }
             };
             self.draw_cell(pos, light, framebuffer);
         }
