@@ -25,7 +25,6 @@ impl Model {
                         // Night effects
                         self.resolve_night_effects();
                         self.shift_everything();
-                        // TODO: shift entities
                         self.spawn_items();
                     }
                 } else if self.animations.is_empty() {

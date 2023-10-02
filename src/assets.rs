@@ -25,6 +25,7 @@ pub struct Sprites {
     pub reroll_button: ugli::Texture,
     pub panel: ugli::Texture,
     pub destroy_effect: ugli::Texture,
+    pub enemy_death: ugli::Texture,
 
     pub camera: ugli::Texture,
     pub charming_staff: ugli::Texture,

@@ -180,7 +180,18 @@ impl Model {
     }
 
     fn check_deaths(&mut self) {
-        self.entities.retain(|_, e| e.health.is_above_min());
+        for (id, entity) in &self.entities {
+            if entity.health.is_min() {
+                self.animations.insert(Animation::new(
+                    self.config.animation_time,
+                    AnimationKind::EntityDeath {
+                        entity: id,
+                        pos: entity.position,
+                    },
+                ));
+            }
+        }
+
         if !self
             .entities
             .iter()
