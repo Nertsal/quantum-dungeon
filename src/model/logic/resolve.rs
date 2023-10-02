@@ -178,6 +178,19 @@ impl Model {
             ItemKind::MagicWire if rng.gen_bool(0.1) => Some(0),
             ItemKind::Melter if rng.gen_bool(0.2) => Some(0),
             ItemKind::CursedSkull if board_item.position.y == self.grid.bounds().max.y => Some(0),
+            ItemKind::Solitude
+                if self
+                    .items
+                    .iter()
+                    .filter(|(_, item)| {
+                        ItemRef::Category(ItemCategory::Weapon)
+                            .check(self.player.items[item.item_id].kind)
+                    })
+                    .count()
+                    == 1 =>
+            {
+                Some(0)
+            }
             _ => None,
         }
     }
@@ -424,6 +437,17 @@ impl Model {
                 });
                 item.on_board = Some(on_board);
             }
+            ItemKind::Solitude => {
+                self.animations.insert(Animation::new(
+                    self.config.animation_time,
+                    AnimationKind::Bonus {
+                        from: board_item.position,
+                        target: item_id,
+                        bonus: ItemStats { damage: Some(2) },
+                        permanent: true,
+                    },
+                ));
+            }
             _ => {}
         }
     }
@@ -473,6 +497,7 @@ impl Model {
             ItemKind::KingSkull => Some(true),
             ItemKind::GoldenLantern => Some(true),
             ItemKind::WarpPortal => Some(true),
+            ItemKind::Solitude => Some(true),
             _ => None,
         };
 
@@ -600,6 +625,10 @@ impl Model {
                 }) {
                     self.phase = Phase::Portal
                 }
+            }
+            ItemKind::Solitude => {
+                let damage = item.current_stats().damage.unwrap_or_default();
+                self.deal_damage_around(board_item.position, Fraction::Player, damage, 1, vec![]);
             }
             _ => {}
         }
