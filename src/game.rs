@@ -78,6 +78,9 @@ impl geng::State for Game {
         }
 
         if geng_utils::key::is_event_press(&event, [MouseButton::Left]) {
+            if self.render.inventory_button.contains(self.cursor_ui_pos) {
+                self.render.show_inventory = !self.render.show_inventory;
+            }
             match self.model.phase {
                 Phase::Select { .. } => {
                     if let Some(i) = self
@@ -90,9 +93,6 @@ impl geng::State for Game {
                     } else if self.render.reroll_button.contains(self.cursor_ui_pos) {
                         self.model.player_action(PlayerInput::Reroll);
                     }
-                }
-                _ if self.render.inventory_button.contains(self.cursor_ui_pos) => {
-                    self.render.show_inventory = !self.render.show_inventory;
                 }
                 _ => {
                     let target = self.cursor_grid_pos.map(|x| x.floor() as Coord);

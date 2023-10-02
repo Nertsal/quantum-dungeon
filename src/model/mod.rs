@@ -51,6 +51,8 @@ pub enum Phase {
         options: Vec<ItemKind>,
         extra_items: usize,
     },
+    /// Level has completed: either all enemies were killed (win) or player ran out of turns.
+    LevelFinished { win: bool, timer: Lifetime },
 }
 
 impl Model {

@@ -10,8 +10,10 @@ impl Model {
     pub fn update(&mut self, delta_time: Time) {
         self.update_animations(delta_time);
         self.resolve_animations(delta_time);
-        if self.animations.is_empty() {
-            self.check_deaths();
+        if let Phase::Player = self.phase {
+            if self.animations.is_empty() && self.ending_animations.is_empty() {
+                self.check_deaths();
+            }
         }
     }
 
@@ -111,11 +113,19 @@ impl Model {
             if self.player.hearts == 0 {
                 self.game_over();
             } else {
-                self.next_level();
+                self.finish_level(false);
             }
         } else {
             self.night_phase(false);
         }
+    }
+
+    fn finish_level(&mut self, win: bool) {
+        log::info!("Level finished, win: {}", win);
+        self.phase = Phase::LevelFinished {
+            win,
+            timer: Lifetime::new_max(r32(2.0)),
+        };
     }
 
     fn game_over(&mut self) {
@@ -172,7 +182,7 @@ impl Model {
         self.entities.retain(|e| e.health.is_above_min());
         if !self.entities.iter().any(|e| e.fraction == Fraction::Enemy) {
             // All enemies died -> next level
-            self.next_level();
+            self.finish_level(true);
         }
     }
 
