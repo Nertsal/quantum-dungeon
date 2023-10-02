@@ -175,7 +175,7 @@ impl Model {
             ItemKind::GreedyPot => Some(0),
             ItemKind::SpiritCoin => Some(0),
             ItemKind::Chest => Some(0),
-            ItemKind::MagicTreasureBag if board_item.turns_alive >= 5 => Some(0),
+            ItemKind::MagicTreasureBag if board_item.turns_alive >= 3 => Some(0),
             ItemKind::MagicWire if rng.gen_bool(0.1) => Some(0),
             ItemKind::Melter if rng.gen_bool(0.2) => Some(0),
             ItemKind::CursedSkull if board_item.position.y == self.grid.bounds().max.y => Some(0),
