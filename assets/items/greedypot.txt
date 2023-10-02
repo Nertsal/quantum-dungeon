@@ -1,0 +1,3 @@
+On start of the turn deal 1 dmg to a random enemy on board
+has 10% chance to destroy near by treasure and
+gain +2 dmg

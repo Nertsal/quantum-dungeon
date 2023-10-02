@@ -60,6 +60,7 @@ impl Sprites {
             ItemKind::FireScroll => &self.fire_scroll,
             ItemKind::SoulCrystal => &self.item_shadow,
             ItemKind::RadiationCore => &self.radiation_core,
+            ItemKind::GreedyPot => &self.greedy_pot,
         }
     }
 }

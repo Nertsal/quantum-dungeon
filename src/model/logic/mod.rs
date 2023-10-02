@@ -88,6 +88,7 @@ impl Model {
                 FireScroll,
                 SoulCrystal,
                 RadiationCore,
+                GreedyPot,
             ]
         };
         let mut rng = thread_rng();

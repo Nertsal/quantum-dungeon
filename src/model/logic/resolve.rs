@@ -137,6 +137,7 @@ impl Model {
             ItemKind::Ghost => Some(-10),
             ItemKind::SoulCrystal => Some(0),
             ItemKind::RadiationCore => Some(0),
+            ItemKind::GreedyPot => Some(10),
             _ => None,
         }
     }
@@ -176,6 +177,41 @@ impl Model {
             ItemKind::RadiationCore => {
                 let damage = item.current_stats().damage.unwrap_or_default();
                 self.deal_damage_around(board_item.position, Fraction::Player, damage, 1);
+            }
+            ItemKind::GreedyPot => {
+                let mut rng = thread_rng();
+                if rng.gen_bool(0.1) {
+                    // Destroy nearby treasure and gain +2 dmg
+                    let treasures = self.count_items_near(
+                        board_item.position,
+                        ItemRef::Category(ItemCategory::Treasure),
+                    );
+                    if let Some(&treasure) = treasures.choose(&mut rng) {
+                        let treasure = self.items.remove(treasure).unwrap();
+                        self.player.items.remove(treasure.item_id);
+
+                        let board_item = self.items.get(item_id).unwrap();
+                        let item = &mut self.player.items[board_item.item_id];
+                        item.perm_stats.damage =
+                            Some(item.perm_stats.damage.unwrap_or_default() + 2);
+                    }
+                }
+
+                let board_item = self.items.get(item_id).unwrap();
+                let item = &mut self.player.items[board_item.item_id];
+                let enemies: Vec<usize> = self
+                    .entities
+                    .iter()
+                    .enumerate()
+                    .filter(|(_, e)| matches!(e.fraction, Fraction::Enemy))
+                    .map(|(i, _)| i)
+                    .collect();
+                if let Some(&enemy) = enemies.choose(&mut rng) {
+                    let enemy = &mut self.entities[enemy];
+                    enemy
+                        .health
+                        .change(-item.current_stats().damage.unwrap_or_default());
+                }
             }
             _ => {}
         }
@@ -223,6 +259,7 @@ impl Model {
             ItemKind::FireScroll => Some(true),
             ItemKind::SoulCrystal => Some(true),
             ItemKind::RadiationCore => None,
+            ItemKind::GreedyPot => None,
         };
 
         match resolution {
@@ -311,6 +348,7 @@ impl Model {
                 }
             }
             ItemKind::RadiationCore => {}
+            ItemKind::GreedyPot => {}
         }
     }
 }
