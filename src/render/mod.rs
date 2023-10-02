@@ -236,12 +236,13 @@ impl GameRender {
                 Color::BLACK,
             );
 
-            // Item hint
-            if let Some((_, item)) = model
+            if let Phase::Select { .. } = model.phase {
+            } else if let Some((_, item)) = model
                 .items
                 .iter()
                 .find(|(_, item)| item.position == cursor_cell_pos)
             {
+                // Item hint
                 let item = &model.player.items[item.item_id];
                 self.draw_item_hint(item.kind, cursor_ui_pos, framebuffer);
             }

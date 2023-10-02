@@ -271,6 +271,7 @@ impl Model {
                     enemy
                         .health
                         .change(-item.temp_stats.damage.unwrap_or_default());
+                    self.player.items.remove(board_item.item_id);
                 }
             }
         }
