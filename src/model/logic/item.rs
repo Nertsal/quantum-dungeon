@@ -1,18 +1,6 @@
 use super::*;
 
 impl Model {
-    /// Collect an item at the given position.
-    pub(super) fn collect_item_at(&mut self, fraction: Fraction, position: vec2<Coord>) {
-        let ids: Vec<_> = self.items.iter().map(|(i, _)| i).collect();
-        for i in ids {
-            let item = &mut self.items[i];
-            if item.position == position {
-                self.resolve_item_active(fraction, i);
-                return;
-            }
-        }
-    }
-
     /// Give a temporary bonus to nearby items.
     pub(super) fn bonus_near_temporary(
         &mut self,

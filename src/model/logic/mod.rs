@@ -219,12 +219,25 @@ impl Model {
             log::error!("tried to move to an invalid position: {}", target_pos);
             return;
         };
+
+        let fraction = entity.fraction;
+
+        // Swap with entities
         if let Some((_, target)) = self
             .entities
             .iter_mut()
             .find(|(_, e)| e.position == target_pos)
         {
             target.position = from_pos;
+        }
+
+        // Activate or swap items
+        let ids: Vec<_> = self.items.iter().map(|(i, _)| i).collect();
+        for i in ids {
+            if self.items[i].position == target_pos && !self.resolve_item_active(fraction, i) {
+                // Swap
+                self.items[i].position = from_pos;
+            }
         }
 
         let entity = self.entities.get_mut(entity_id).unwrap();

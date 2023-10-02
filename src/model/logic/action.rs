@@ -143,9 +143,7 @@ impl Model {
             let target = entity.position + move_dir;
             // Fracture tiles as we walk
             if self.grid.check_pos(target) && self.grid.fractured.insert(target) {
-                let fraction = entity.fraction;
                 self.move_entity_swap(i, target);
-                self.collect_item_at(fraction, target);
                 self.update_vision();
                 moved = true;
             }
