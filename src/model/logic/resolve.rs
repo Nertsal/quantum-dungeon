@@ -243,15 +243,19 @@ impl Model {
                         board_item.position,
                         ItemRef::Category(ItemCategory::Treasure),
                     );
-                    if let Some(&treasure) = treasures.choose(&mut rng) {
-                        // TODO: animation
-                        let treasure = self.items.remove(treasure).unwrap();
-                        self.player.items.remove(treasure.item_id);
+                    if let Some(&treasure_id) = treasures.choose(&mut rng) {
+                        let treasure = &self.items[treasure_id];
+                        self.animations.insert(Animation::new(
+                            self.config.animation_time,
+                            AnimationKind::ItemDeath {
+                                item: treasure_id,
+                                pos: treasure.position,
+                            },
+                        ));
 
                         let bonus = ItemStats { damage: Some(2) };
                         stats = stats.combine(&bonus);
-
-                        let id = self.animations.insert(Animation::new(
+                        bonus_animation = Some(self.animations.insert(Animation::new(
                             self.config.animation_time,
                             AnimationKind::Bonus {
                                 from: treasure.position,
@@ -259,8 +263,7 @@ impl Model {
                                 bonus,
                                 permanent: true,
                             },
-                        ));
-                        bonus_animation = Some(id);
+                        )));
                     }
                 }
 

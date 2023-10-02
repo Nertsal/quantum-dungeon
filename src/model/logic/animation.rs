@@ -11,11 +11,11 @@ impl Model {
         let mut finished = Vec::new();
 
         let ids: Vec<Id> = self.animations.iter().map(|(i, _)| i).collect();
-        for i in ids {
+        'anim: for i in ids {
             for &id in &self.animations[i].dependent_on {
                 if self.animations.contains(id) {
                     // Wait for the animation to finish
-                    continue;
+                    continue 'anim;
                 }
             }
 
@@ -36,7 +36,8 @@ impl Model {
                     self.active_effect(fraction, item_id);
                 }
                 AnimationKind::ItemDeath { item, .. } => {
-                    self.items.remove(*item);
+                    let item = self.items.remove(*item).unwrap();
+                    self.player.items.remove(item.item_id);
                 }
                 AnimationKind::Dupe { kind } => {
                     self.new_item_and_spawn(*kind);
