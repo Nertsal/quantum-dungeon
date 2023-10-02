@@ -35,7 +35,7 @@ impl Model {
                     let item_id = *item_id;
                     self.active_effect(fraction, item_id);
                 }
-                AnimationKind::Death { item } => {
+                AnimationKind::ItemDeath { item, .. } => {
                     self.items.remove(*item);
                 }
                 AnimationKind::Dupe { kind } => {

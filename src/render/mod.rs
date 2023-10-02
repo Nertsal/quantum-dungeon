@@ -344,6 +344,16 @@ impl GameRender {
         }
 
         match &animation.kind {
+            AnimationKind::ItemDeath { pos, .. } if start_t == 1.0 => {
+                let mut color = Color::WHITE;
+                color.a = crate::util::smoothstep(end_t);
+                self.draw_at_grid(
+                    pos.as_f32(),
+                    &self.assets.sprites.destroy_effect,
+                    color,
+                    framebuffer,
+                );
+            }
             AnimationKind::Damage {
                 from,
                 target,

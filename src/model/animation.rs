@@ -16,8 +16,9 @@ pub enum AnimationKind {
         fraction: Fraction,
         item_id: Id,
     },
-    Death {
+    ItemDeath {
         item: Id,
+        pos: vec2<Coord>,
     },
     Dupe {
         kind: ItemKind,

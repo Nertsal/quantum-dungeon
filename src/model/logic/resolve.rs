@@ -136,7 +136,10 @@ impl Model {
                     // Death
                     self.animations.insert(Animation::new(
                         self.config.animation_time,
-                        AnimationKind::Death { item: item_id },
+                        AnimationKind::ItemDeath {
+                            item: item_id,
+                            pos: board_item.position,
+                        },
                     ));
                 }
                 // true
