@@ -19,37 +19,52 @@ impl Model {
         self.night_phase(true);
     }
 
-    pub(super) fn shift_items(&mut self) {
-        let mut available: HashSet<_> = self.grid.tiles.sub(&self.visible_tiles);
-        for entity in &self.entities {
-            available.remove(&entity.position);
-        }
+    pub(super) fn shift_everything(&mut self) {
+        let available: HashSet<_> = self.grid.tiles.sub(&self.visible_tiles);
         if available.is_empty() {
-            // Cannot shift items
+            // Cannot shift
             return;
         }
 
-        let mut rng = thread_rng();
-        let moves: Vec<_> = self
+        enum Thing {
+            Entity(usize),
+            Item(Id),
+        }
+
+        let items = self
             .items
             .iter()
-            .filter(|(_, item)| !self.visible_tiles.contains(&item.position))
-            .map(|(i, _)| (i, *available.iter().choose(&mut rng).unwrap()))
+            .map(|(i, item)| (Thing::Item(i), item.position));
+        let entities = self
+            .entities
+            .iter()
+            .enumerate()
+            .map(|(i, e)| (Thing::Entity(i), e.position));
+        let things = items.chain(entities);
+
+        let mut rng = thread_rng();
+        let moves: Vec<(Thing, vec2<Coord>, vec2<Coord>)> = things
+            .filter(|(_, pos)| !self.visible_tiles.contains(pos))
+            .map(|(i, pos)| (i, pos, *available.iter().choose(&mut rng).unwrap()))
             .collect();
 
-        for (item_id, target) in moves {
-            let item = &self.items[item_id];
-            let from = item.position;
-
+        for (thing, from, target) in moves {
             // Swap
             for (_, item) in &mut self.items {
                 if item.position == target {
                     item.position = from;
                 }
             }
+            for entity in &mut self.entities {
+                if entity.position == target {
+                    entity.position = from;
+                }
+            }
 
-            let item = &mut self.items[item_id];
-            item.position = target;
+            match thing {
+                Thing::Entity(i) => self.entities[i].position = target,
+                Thing::Item(i) => self.items[i].position = target,
+            }
         }
     }
 

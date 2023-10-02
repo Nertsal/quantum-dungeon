@@ -12,7 +12,7 @@ impl Model {
                     if fade_time.is_min() {
                         // Night effects
                         self.resolve_night_effects();
-                        self.shift_items();
+                        self.shift_everything();
                         // TODO: shift entities
                         self.spawn_items();
                     }
