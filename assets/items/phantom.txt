@@ -1,2 +1,2 @@
 On use :
-Deals 1 damage to all nearby enemies and gains +1 damage permanently.
+Deals 1 damage to the nearest enemy and gains +1 damage permanently.
