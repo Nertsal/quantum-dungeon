@@ -424,6 +424,13 @@ impl GameRender {
             let size = overlay_texture.size().as_f32();
             let size = size * self.ui_camera.fov / size.y;
             let overlay = Aabb2::point(self.ui_camera.center).extend_symmetric(size / 2.0);
+
+            self.geng.draw2d().draw2d(
+                framebuffer,
+                &self.ui_camera,
+                &draw2d::TexturedQuad::new(overlay, &self.assets.sprites.outer_square),
+            );
+
             let mut color = Color::WHITE;
             color.a = 0.5;
             self.geng.draw2d().draw2d(
