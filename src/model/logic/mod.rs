@@ -149,6 +149,14 @@ impl Model {
                 }
             }
         }
+
+        for (_, board_item) in &self.items {
+            let item = &self.player.items[board_item.item_id];
+            if let ItemKind::CursedSkull = item.kind {
+                visible.insert(board_item.position);
+            }
+        }
+
         self.visible_tiles = visible;
     }
 
