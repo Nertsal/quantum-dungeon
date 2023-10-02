@@ -166,7 +166,7 @@ impl GameRender {
                 framebuffer,
                 &self.ui_camera,
                 &draw2d::Text::unit(
-                    self.geng.default_font().clone(),
+                    self.assets.font.clone(),
                     format!("{}", model.player.turns_left),
                     Color::try_from("#c9464b").unwrap(),
                 )
@@ -249,7 +249,7 @@ impl GameRender {
                 framebuffer,
                 &self.ui_camera,
                 &draw2d::Text::unit(
-                    self.geng.default_font().clone(),
+                    self.assets.font.clone(),
                     text,
                     Color::try_from("#ffe7cd").unwrap(),
                 )
@@ -392,7 +392,7 @@ impl GameRender {
                     framebuffer,
                     &self.world_camera,
                     &draw2d::Text::unit(
-                        self.geng.default_font().clone(),
+                        self.assets.font.clone(),
                         format!("{}", damage),
                         Color::try_from("#424242").unwrap(),
                     )
@@ -424,7 +424,7 @@ impl GameRender {
                     framebuffer,
                     &self.world_camera,
                     &draw2d::Text::unit(
-                        self.geng.default_font().clone(),
+                        self.assets.font.clone(),
                         format!("{}", bonus.damage.unwrap_or_default()),
                         Color::try_from("#424242").unwrap(),
                     )
@@ -539,7 +539,7 @@ impl GameRender {
             framebuffer,
             &self.ui_camera,
             &draw2d::Text::unit(
-                self.geng.default_font().clone(),
+                self.assets.font.clone(),
                 format!("{}", item),
                 Color::try_from("#333").unwrap(),
             )
@@ -574,7 +574,7 @@ impl GameRender {
             {
                 let alignment = positions[i];
                 let target = geng_utils::layout::aabb_pos(icon_target, alignment);
-                self.geng.default_font().draw(
+                self.assets.font.draw(
                     framebuffer,
                     &self.ui_camera,
                     &format!("{:?}", category),
@@ -616,7 +616,7 @@ impl GameRender {
         self.geng.draw2d().draw2d(
             framebuffer,
             &self.ui_camera,
-            &draw2d::Text::unit(self.geng.default_font().clone(), description, color)
+            &draw2d::Text::unit(self.assets.font.clone(), description, color)
                 .align_bounding_box(vec2(0.0, 1.0))
                 .fit_into(desc_target),
         );
@@ -665,12 +665,8 @@ impl GameRender {
             self.geng.draw2d().draw2d(
                 framebuffer,
                 &self.world_camera,
-                &draw2d::Text::unit(
-                    self.geng.default_font().clone(),
-                    format!("{}", damage),
-                    color,
-                )
-                .fit_into(target),
+                &draw2d::Text::unit(self.assets.font.clone(), format!("{}", damage), color)
+                    .fit_into(target),
             );
         }
     }
@@ -745,7 +741,7 @@ impl GameRender {
                     framebuffer,
                     &self.world_camera,
                     &draw2d::Text::unit(
-                        self.geng.default_font().clone(),
+                        self.assets.font.clone(),
                         format!("{}", entity.health.value()),
                         color,
                     )

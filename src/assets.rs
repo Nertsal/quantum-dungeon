@@ -4,6 +4,8 @@ use crate::prelude::*;
 pub struct Assets {
     pub sprites: Sprites,
     pub items: ItemAssets,
+    #[load(path = "font/Bodo Amat.ttf")]
+    pub font: Rc<geng::Font>,
 }
 
 #[derive(geng::asset::Load)]
