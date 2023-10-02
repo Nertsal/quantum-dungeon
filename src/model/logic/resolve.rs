@@ -150,6 +150,7 @@ impl Model {
             ItemKind::MagicTreasureBag if board_item.turns_alive >= 5 => Some(0),
             ItemKind::ElectricRod => Some(0),
             ItemKind::MagicWire if rng.gen_bool(0.1) => Some(0),
+            ItemKind::Melter if rng.gen_bool(0.2) => Some(0),
             _ => None,
         }
     }
@@ -318,6 +319,24 @@ impl Model {
                         kind: ItemKind::MagicWire,
                     },
                 });
+            }
+            ItemKind::Melter => {
+                // Destroy nearby tech item
+                let tech = self
+                    .count_items_near(board_item.position, ItemRef::Category(ItemCategory::Tech));
+                if let Some(&item) = tech.choose(&mut rng) {
+                    let item = self.items.remove(item).unwrap();
+                    self.player.items.remove(item.item_id);
+
+                    // +1 dmg permanent to all weapons
+                    for (_, item) in &self.items {
+                        let item = &mut self.player.items[item.item_id];
+                        if ItemRef::Category(ItemCategory::Weapon).check(item.kind) {
+                            item.perm_stats.damage =
+                                Some(item.perm_stats.damage.unwrap_or_default() + 1);
+                        }
+                    }
+                }
             }
             _ => {}
         }
