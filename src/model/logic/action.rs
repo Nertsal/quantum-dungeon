@@ -108,6 +108,12 @@ impl Model {
             return;
         }
 
+        if let PlayerInput::Skip = player_input {
+            log::debug!("Skipping turn");
+            self.vision_phase();
+            return;
+        }
+
         let mut moves = Vec::new();
         let mut move_dir = vec2::ZERO;
         for (i, entity) in &mut self.entities {

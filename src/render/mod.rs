@@ -7,6 +7,7 @@ pub struct GameRender {
     pub world_camera: Camera2d,
     pub cell_size: vec2<f32>,
     pub buttons: Vec<(ItemKind, Aabb2<f32>)>,
+    pub skip_button: Aabb2<f32>,
     pub reroll_button: Aabb2<f32>,
     pub inventory_button: Aabb2<f32>,
     pub show_inventory: bool,
@@ -36,9 +37,9 @@ impl GameRender {
             },
             cell_size: vec2(1.0, 1.0),
             buttons: Vec::new(),
+            skip_button: Aabb2::point(vec2(7.0, -1.0)).extend_symmetric(vec2::splat(1.5) / 2.0),
             reroll_button: Aabb2::point(vec2(5.0, 3.0)).extend_symmetric(vec2::splat(1.5) / 2.0),
-            inventory_button: Aabb2::point(vec2(0.0, -4.0))
-                .extend_symmetric(vec2::splat(1.5) / 2.0),
+            inventory_button: Aabb2::point(vec2(7.0, 1.0)).extend_symmetric(vec2::splat(1.5) / 2.0),
             show_inventory: false,
         }
     }
@@ -192,7 +193,17 @@ impl GameRender {
         self.buttons.clear();
         let text = match &model.phase {
             Phase::Night { .. } => "Night",
-            Phase::Player | Phase::Passive { .. } => "Day",
+            Phase::Player => {
+                // Skip button
+                self.draw_at_ui(
+                    self.skip_button,
+                    &self.assets.sprites.skip_button,
+                    framebuffer,
+                );
+
+                "Day"
+            }
+            Phase::Passive { .. } => "Day",
             Phase::Portal => "Select a magic item",
             Phase::Vision => "Select a direction to look at",
             Phase::PostVision { .. } => "Night",

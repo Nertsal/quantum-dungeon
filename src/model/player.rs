@@ -16,6 +16,7 @@ pub enum PlayerInput {
     Tile(vec2<Coord>),
     SelectItem(usize),
     Reroll,
+    Skip,
 }
 
 impl Player {

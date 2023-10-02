@@ -80,8 +80,12 @@ impl geng::State for Game {
         if geng_utils::key::is_event_press(&event, [MouseButton::Left]) {
             if self.render.inventory_button.contains(self.cursor_ui_pos) {
                 self.render.show_inventory = !self.render.show_inventory;
+                return;
             }
             match self.model.phase {
+                Phase::Player if self.render.skip_button.contains(self.cursor_ui_pos) => {
+                    self.model.player_action(PlayerInput::Skip);
+                }
                 Phase::Select { .. } => {
                     if let Some(i) = self
                         .render
