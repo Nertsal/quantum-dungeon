@@ -136,6 +136,7 @@ impl Model {
             ItemKind::Forge => Some(10),
             ItemKind::Ghost => Some(-10),
             ItemKind::SoulCrystal => Some(0),
+            ItemKind::RadiationCore => Some(0),
             _ => None,
         }
     }
@@ -165,6 +166,10 @@ impl Model {
             }
             ItemKind::SoulCrystal => {
                 item.perm_stats.damage = Some(item.perm_stats.damage.unwrap_or_default() + 1);
+            }
+            ItemKind::RadiationCore => {
+                let damage = item.current_stats().damage.unwrap_or_default();
+                self.deal_damage_around(board_item.position, Fraction::Player, damage, 1);
             }
             _ => {}
         }
@@ -210,6 +215,7 @@ impl Model {
             ItemKind::Ghost => None,
             ItemKind::FireScroll => Some(true),
             ItemKind::SoulCrystal => Some(true),
+            ItemKind::RadiationCore => None,
         };
 
         match resolution {
@@ -294,6 +300,7 @@ impl Model {
                     self.player.items.remove(board_item.item_id);
                 }
             }
+            ItemKind::RadiationCore => {}
         }
     }
 }

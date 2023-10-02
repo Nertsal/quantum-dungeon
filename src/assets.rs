@@ -59,6 +59,7 @@ impl Sprites {
             ItemKind::Ghost => &self.ghost,
             ItemKind::FireScroll => &self.fire_scroll,
             ItemKind::SoulCrystal => &self.item_shadow,
+            ItemKind::RadiationCore => &self.radiation_core,
         }
     }
 }
