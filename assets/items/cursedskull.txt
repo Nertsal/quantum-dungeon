@@ -1,0 +1,4 @@
+Emit light at night
+(just this tile)
+
+Turn into <King’s skull> if it’s on the top of the row when a turn start
