@@ -46,6 +46,8 @@ pub enum Phase {
     Portal,
     /// Player sets their look direction.
     Vision,
+    /// Vision has beet set, visualize.
+    PostVision { timer: Lifetime },
     /// Select a new item.
     Select {
         options: Vec<ItemKind>,
@@ -72,7 +74,7 @@ impl Model {
                 position: vec2(0, 0),
                 fraction: Fraction::Player,
                 health: Health::new_max(100),
-                look_dir: vec2(0, 1),
+                look_dir: vec2(0, 0),
                 kind: EntityKind::Player,
             }],
             animations: Arena::new(),

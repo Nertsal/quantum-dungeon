@@ -9,6 +9,12 @@ impl Model {
                     self.next_level();
                 }
             }
+            Phase::PostVision { timer } => {
+                timer.change(-delta_time);
+                if timer.is_min() {
+                    self.select_phase(self.player.extra_items);
+                }
+            }
             Phase::Night {
                 fade_time,
                 light_time,
