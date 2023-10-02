@@ -546,13 +546,23 @@ impl Model {
                 self.phase = Phase::Map { tiles_left: 1 };
             }
             ItemKind::Boots => {
-                // TODO: animation
-                self.player.items.remove(board_item.item_id);
                 self.player.moves_left += 3;
+                self.animations.insert(Animation::new(
+                    self.config.animation_time,
+                    AnimationKind::ItemDeath {
+                        item: item_id,
+                        pos: board_item.position,
+                    },
+                ));
             }
             ItemKind::Camera => {
-                // TODO: animation
-                self.player.items.remove(board_item.item_id);
+                self.animations.insert(Animation::new(
+                    self.config.animation_time,
+                    AnimationKind::ItemDeath {
+                        item: item_id,
+                        pos: board_item.position,
+                    },
+                ));
             }
             ItemKind::FireScroll => {
                 let enemies: Vec<Id> = self
@@ -562,7 +572,7 @@ impl Model {
                     .map(|(i, _)| i)
                     .collect();
                 if let Some(&enemy) = enemies.choose(&mut thread_rng()) {
-                    self.animations.insert(Animation::new(
+                    let damage_animation = self.animations.insert(Animation::new(
                         self.config.animation_time,
                         AnimationKind::Damage {
                             from: board_item.position,
@@ -570,18 +580,32 @@ impl Model {
                             damage: item.current_stats().damage.unwrap_or_default(),
                         },
                     ));
-                    // TODO: after the animation
-                    self.player.items.remove(board_item.item_id);
+                    self.animations.insert(
+                        Animation::new(
+                            self.config.animation_time,
+                            AnimationKind::ItemDeath {
+                                item: item_id,
+                                pos: board_item.position,
+                            },
+                        )
+                        .after([damage_animation]),
+                    );
                 }
             }
             ItemKind::SoulCrystal => {
-                let inv_id = board_item.item_id;
                 let damage = item.current_stats().damage.unwrap_or_default();
                 let position = board_item.position;
-                self.deal_damage_nearest(position, damage, vec![]);
-                // TODO: after the animation
-                // TODO: animation
-                self.player.items.remove(inv_id);
+                let damage_animation = self.deal_damage_nearest(position, damage, vec![]);
+                self.animations.insert(
+                    Animation::new(
+                        self.config.animation_time,
+                        AnimationKind::ItemDeath {
+                            item: item_id,
+                            pos: position,
+                        },
+                    )
+                    .after(damage_animation),
+                );
             }
             ItemKind::Phantom => {
                 let damage = item.current_stats().damage.unwrap_or_default();
@@ -607,9 +631,14 @@ impl Model {
             }
             ItemKind::GoldenLantern => {
                 // Destroy and light up for 3 turns
-                // TODO: animation
-                self.player.items.remove(board_item.item_id);
                 self.grid.light_up(board_item.position, 1, 3);
+                self.animations.insert(Animation::new(
+                    self.config.animation_time,
+                    AnimationKind::ItemDeath {
+                        item: item_id,
+                        pos: board_item.position,
+                    },
+                ));
             }
             ItemKind::CharmingStaff => {
                 let damage = item.current_stats().damage.unwrap_or_default();

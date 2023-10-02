@@ -91,7 +91,9 @@ impl Model {
                     item_id,
                     target_pos,
                 } => {
-                    self.items[*item_id].position = *target_pos;
+                    if let Some(item) = self.items.get_mut(*item_id) {
+                        item.position = *target_pos;
+                    }
                 }
                 AnimationKind::UseActive { fraction, item_id } => {
                     // Activate item
