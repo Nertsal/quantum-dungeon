@@ -3,6 +3,8 @@ use super::*;
 pub struct Grid {
     pub tiles: HashSet<vec2<Coord>>,
     pub fractured: HashSet<vec2<Coord>>,
+    /// Positions that are lit up, and the duration (in turns).
+    pub lights: HashMap<vec2<Coord>, usize>,
 }
 
 impl Grid {
@@ -13,6 +15,7 @@ impl Grid {
                 .flat_map(|x| (0..size).map(move |y| vec2(x, y) + vec2::splat(offset)))
                 .collect(),
             fractured: HashSet::new(),
+            lights: HashMap::new(),
         }
     }
 
@@ -62,5 +65,16 @@ impl Grid {
             }
         }
         outside
+    }
+
+    pub fn light_up(&mut self, position: vec2<Coord>, radius: Coord, duration: usize) {
+        for dx in -radius..=radius {
+            for dy in -radius..=radius {
+                let pos = position + vec2(dx, dy);
+                if self.check_pos(pos) {
+                    self.lights.insert(pos, duration);
+                }
+            }
+        }
     }
 }

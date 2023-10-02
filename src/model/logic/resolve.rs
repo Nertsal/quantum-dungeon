@@ -501,6 +501,11 @@ impl Model {
                     }
                 }
             }
+            ItemKind::GoldenLantern => {
+                // Destroy and light up for 3 turns
+                self.player.items.remove(board_item.item_id);
+                self.grid.light_up(board_item.position, 1, 3);
+            }
             _ => {}
         }
     }

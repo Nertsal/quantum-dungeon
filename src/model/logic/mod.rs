@@ -42,6 +42,7 @@ impl Model {
             },
             light_time: Lifetime::new_max(r32(1.0)),
         };
+
         self.player.extra_items = 1;
         self.grid.fractured.clear();
         for entity in &self.entities {
@@ -49,6 +50,13 @@ impl Model {
                 self.grid.fractured.insert(entity.position);
             }
         }
+
+        // Update light duration
+        for duration in self.grid.lights.values_mut() {
+            *duration = duration.saturating_sub(1);
+        }
+        self.grid.lights.retain(|_, duration| *duration > 0);
+
         self.update_vision();
     }
 
@@ -130,7 +138,7 @@ impl Model {
 
     pub fn update_vision(&mut self) {
         log::debug!("Updating vision");
-        let mut visible = HashSet::new();
+        let mut visible: HashSet<_> = self.grid.lights.keys().copied().collect();
         for entity in &self.entities {
             if let EntityKind::Player = entity.kind {
                 if entity.look_dir == vec2::ZERO {

@@ -82,6 +82,7 @@ impl Sprites {
             ItemKind::Phantom => &self.phantom,
             ItemKind::CursedSkull => &self.cursed_skull,
             ItemKind::KingSkull => &self.kings_skull,
+            ItemKind::GoldenLantern => &self.lantern,
         }
     }
 }
