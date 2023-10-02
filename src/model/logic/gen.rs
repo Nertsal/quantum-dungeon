@@ -15,7 +15,6 @@ impl Model {
         self.player.turns_left = turns;
         // self.player.hearts = 3;
 
-        // TODO: animation
         self.items.clear();
         if self.entities.len() == 1 {
             for (_, entity) in &mut self.entities {
@@ -24,7 +23,9 @@ impl Model {
         }
         self.spawn_enemies();
         self.spawn_items(); // First spawn has to be done manually
-        self.night_phase(true);
+        self.phase = Phase::LevelStarting {
+            timer: Lifetime::new_max(r32(0.5)),
+        };
     }
 
     pub(super) fn shift_everything(&mut self) {

@@ -248,7 +248,7 @@ impl GameRender {
         self.buttons.clear();
         let text = match &model.phase {
             Phase::GameOver => "Game over",
-            Phase::Night { .. } => "Night",
+            Phase::Night { .. } | Phase::LevelStarting { .. } => "Night",
             Phase::Player => {
                 // Skip button
                 self.draw_button(
@@ -389,6 +389,22 @@ impl GameRender {
             &self.assets.sprites.inventory,
             cursor_ui_pos,
             framebuffer,
+        );
+
+        let transition_t = match model.phase {
+            Phase::LevelStarting { timer } => timer.get_ratio().as_f32(),
+            Phase::LevelFinished { timer, .. } => {
+                let t = 0.8;
+                1.0 - (timer.get_ratio().as_f32().max(t) - t) / (1.0 - t)
+            }
+            _ => 0.0,
+        };
+        let mut color = Color::BLACK;
+        color.a = crate::util::smoothstep(transition_t);
+        self.geng.draw2d().draw2d(
+            framebuffer,
+            &self.ui_camera,
+            &draw2d::Quad::new(overlay, color),
         );
     }
 

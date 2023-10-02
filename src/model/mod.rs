@@ -30,6 +30,8 @@ pub struct Model {
 
 #[derive(Debug, Clone)]
 pub enum Phase {
+    /// Level transition.
+    LevelStarting { timer: Lifetime },
     /// Shift and spawn items and enemies.
     Night {
         fade_time: Lifetime,
