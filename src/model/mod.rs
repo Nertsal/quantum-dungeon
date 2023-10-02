@@ -11,12 +11,13 @@ use crate::prelude::*;
 
 pub type Time = R32;
 pub type Coord = i64;
+pub type Score = u64;
 
 pub struct Model {
     pub config: Config,
     pub level: usize,
     pub turn: usize,
-    pub score: u64,
+    pub score: Score,
     pub phase: Phase,
     pub grid: Grid,
     pub player: Player,
@@ -66,7 +67,7 @@ impl Model {
         let mut model = Self {
             level: 0,
             turn: 0,
-            score: 69,
+            score: 0,
             config,
             phase: Phase::Night {
                 fade_time: Lifetime::new_zero(r32(0.5)),

@@ -166,7 +166,7 @@ impl GameRender {
 
         {
             // Timer
-            let pos = vec2(-6.5, 1.0);
+            let pos = vec2(-6.3, 0.1);
             let size = vec2::splat(1.5);
             let icon_target = Aabb2::point(pos).extend_symmetric(size / 2.0);
             self.draw_at_ui(icon_target, &self.assets.sprites.turn_time, framebuffer);
@@ -178,9 +178,37 @@ impl GameRender {
                     format!("{}", model.player.turns_left),
                     Color::try_from("#c9464b").unwrap(),
                 )
-                .scale_uniform(0.13)
+                .scale_uniform(0.15)
                 .align_bounding_box(vec2(0.0, 0.5))
                 .translate(pos + vec2(0.3, 0.0)),
+            );
+        }
+
+        {
+            let height = 0.4;
+
+            // Level
+            self.assets.font.draw(
+                framebuffer,
+                &self.ui_camera,
+                &format!("LEVEL {}", model.level),
+                vec2::splat(geng::TextAlign::LEFT),
+                mat3::translate(vec2(-6.8, 0.7))
+                    * mat3::scale_uniform(height)
+                    * mat3::translate(vec2(0.0, -0.25)),
+                Color::try_from("#c03d43").unwrap(),
+            );
+
+            // Score
+            self.assets.font.draw(
+                framebuffer,
+                &self.ui_camera,
+                &format!("SCORE {}", model.score),
+                vec2::splat(geng::TextAlign::RIGHT),
+                mat3::translate(vec2(7.5, -3.0))
+                    * mat3::scale_uniform(height)
+                    * mat3::translate(vec2(0.0, -0.25)),
+                Color::try_from("#7a7a7a").unwrap(),
             );
         }
 

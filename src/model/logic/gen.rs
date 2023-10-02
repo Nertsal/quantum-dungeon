@@ -2,6 +2,11 @@ use super::*;
 
 impl Model {
     pub fn next_level(&mut self) {
+        if self.level > 0 {
+            self.score += self.config.score_per_level;
+            self.score += self.config.score_per_turn_left * self.player.turns_left as Score;
+        }
+
         self.level += 1;
         self.player.turns_left = 10;
         self.player.hearts = 3;

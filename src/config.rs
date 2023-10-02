@@ -5,6 +5,8 @@ pub struct Config {
     pub animation_time: Time,
     /// The time before and after the effect.
     pub effect_padding_time: Time,
+    pub score_per_level: Score,
+    pub score_per_turn_left: Score,
 }
 
 impl Config {

@@ -49,6 +49,13 @@ impl geng::State for Game {
     }
 
     fn handle_event(&mut self, event: geng::Event) {
+        if let geng::Event::KeyPress {
+            key: geng::Key::Space,
+        } = event
+        {
+            println!("{}", self.cursor_ui_pos);
+        }
+
         if let geng::Event::CursorMove { position } = event {
             self.cursor_pos = position;
         }
