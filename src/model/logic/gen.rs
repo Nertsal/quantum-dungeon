@@ -160,6 +160,7 @@ impl Model {
                 position,
                 item_id,
                 turns_alive: 0,
+                used: false,
             });
             item.on_board = Some(on_board);
 

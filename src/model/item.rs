@@ -5,6 +5,8 @@ pub struct BoardItem {
     pub position: vec2<Coord>,
     pub item_id: Id,
     pub turns_alive: usize,
+    /// Whether the item was used this turn.
+    pub used: bool,
 }
 
 #[derive(Debug, Clone)]

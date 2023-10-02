@@ -97,6 +97,7 @@ impl Model {
         // Update turn counter
         for (_, item) in &mut self.items {
             item.turns_alive += 1;
+            item.used = false;
         }
 
         self.resolve_current();
@@ -360,6 +361,7 @@ impl Model {
                         position: board_item.position,
                         item_id,
                         turns_alive: 0,
+                        used: false,
                     });
                     item.on_board = Some(on_board);
                 }
@@ -410,6 +412,7 @@ impl Model {
                     position: board_item.position,
                     item_id,
                     turns_alive: 0,
+                    used: false,
                 });
                 item.on_board = Some(on_board);
             }
@@ -434,6 +437,9 @@ impl Model {
         let Some(board_item) = self.items.get(item_id) else {
             return false;
         };
+        if board_item.used {
+            return false;
+        }
 
         let item = &self.player.items[board_item.item_id];
         let resolution = match item.kind {
@@ -527,6 +533,7 @@ impl Model {
             return;
         };
         log::debug!("Use item by fraction {:?}: {:?}", fraction, board_item);
+        board_item.used = true;
 
         let item = &mut self.player.items[board_item.item_id];
         match item.kind {
