@@ -52,6 +52,8 @@ pub enum ItemKind {
     SoulCrystal,
     RadiationCore,
     GreedyPot,
+    SpiritCoin,
+    Chest,
 }
 
 impl InventoryItem {
@@ -83,6 +85,8 @@ impl ItemKind {
             ItemKind::SoulCrystal => vec![Spooky],
             ItemKind::RadiationCore => vec![Tech, Weapon],
             ItemKind::GreedyPot => vec![Treasure],
+            ItemKind::SpiritCoin => vec![Spooky, Treasure],
+            ItemKind::Chest => vec![Treasure],
         }
     }
 
@@ -98,6 +102,8 @@ impl ItemKind {
             ItemKind::SoulCrystal => Some(0),
             ItemKind::RadiationCore => Some(1),
             ItemKind::GreedyPot => Some(1),
+            ItemKind::SpiritCoin => None,
+            ItemKind::Chest => None,
         };
         InventoryItem {
             on_board: None,
@@ -139,6 +145,8 @@ impl Display for ItemKind {
             ItemKind::SoulCrystal => "Soul crystal",
             ItemKind::RadiationCore => "Radiation core",
             ItemKind::GreedyPot => "Greedy pot",
+            ItemKind::SpiritCoin => "Spirit coin",
+            ItemKind::Chest => "Chest",
         };
         write!(f, "{}", name)
     }

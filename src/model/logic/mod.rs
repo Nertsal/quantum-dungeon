@@ -89,6 +89,8 @@ impl Model {
                 SoulCrystal,
                 RadiationCore,
                 GreedyPot,
+                SpiritCoin,
+                Chest,
             ]
         };
         let mut rng = thread_rng();

@@ -61,6 +61,8 @@ impl Sprites {
             ItemKind::SoulCrystal => &self.item_shadow,
             ItemKind::RadiationCore => &self.radiation_core,
             ItemKind::GreedyPot => &self.greedy_pot,
+            ItemKind::SpiritCoin => &self.spirit_coin,
+            ItemKind::Chest => &self.chest,
         }
     }
 }

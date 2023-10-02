@@ -28,11 +28,8 @@ impl Model {
                 AnimationKind::Death { item } => {
                     self.items.remove(*item);
                 }
-                AnimationKind::CameraDupe { item } => {
-                    // Duplicate an item
-                    let item = self.items.get(*item).unwrap();
-                    let item = &self.player.items[item.item_id];
-                    self.new_item_and_spawn(item.kind);
+                AnimationKind::Dupe { kind } => {
+                    self.new_item_and_spawn(*kind);
                 }
             }
             animation.time.set_ratio(R32::ONE);

@@ -137,7 +137,8 @@ impl Model {
             ItemKind::Ghost => Some(-10),
             ItemKind::SoulCrystal => Some(0),
             ItemKind::RadiationCore => Some(0),
-            ItemKind::GreedyPot => Some(10),
+            ItemKind::GreedyPot => Some(0),
+            ItemKind::SpiritCoin => Some(0),
             _ => None,
         }
     }
@@ -213,6 +214,39 @@ impl Model {
                         .change(-item.current_stats().damage.unwrap_or_default());
                 }
             }
+            ItemKind::SpiritCoin => {
+                // Duplicate if near a chest
+                if !self
+                    .count_items_near(board_item.position, ItemRef::Specific(ItemKind::Chest))
+                    .is_empty()
+                {
+                    self.animations.push(Animation {
+                        time: Lifetime::new_max(r32(0.5)),
+                        kind: AnimationKind::Dupe {
+                            kind: ItemKind::SpiritCoin,
+                        },
+                    });
+                }
+
+                let mut rng = thread_rng();
+                if rng.gen_bool(0.2) {
+                    let enemies: Vec<usize> = self
+                        .entities
+                        .iter()
+                        .enumerate()
+                        .filter(|(_, e)| matches!(e.fraction, Fraction::Enemy))
+                        .map(|(i, _)| i)
+                        .collect();
+                    if let Some(&enemy) = enemies.choose(&mut rng) {
+                        let enemy = &mut self.entities[enemy];
+                        enemy.health.change(-5);
+                    }
+
+                    // Destroy self
+                    self.player.items.remove(board_item.item_id);
+                    self.items.remove(item_id);
+                }
+            }
             _ => {}
         }
     }
@@ -237,7 +271,6 @@ impl Model {
                 item.temp_stats = item.temp_stats.combine(&bonus);
                 Some(true)
             }
-            ItemKind::Forge => None,
             ItemKind::Boots => Some(false),
             ItemKind::Map => Some(false),
             ItemKind::Camera => {
@@ -249,17 +282,17 @@ impl Model {
                     Some(&item) => {
                         self.animations.push(Animation {
                             time: Lifetime::new_max(r32(0.5)),
-                            kind: AnimationKind::CameraDupe { item },
+                            kind: AnimationKind::Dupe {
+                                kind: self.player.items[self.items[item].item_id].kind,
+                            },
                         });
                         Some(true)
                     }
                 }
             }
-            ItemKind::Ghost => None,
             ItemKind::FireScroll => Some(true),
             ItemKind::SoulCrystal => Some(true),
-            ItemKind::RadiationCore => None,
-            ItemKind::GreedyPot => None,
+            _ => None,
         };
 
         match resolution {
@@ -314,7 +347,6 @@ impl Model {
             ItemKind::Camera => {
                 self.player.items.remove(board_item.item_id);
             }
-            ItemKind::Ghost => {}
             ItemKind::FireScroll => {
                 let enemies: Vec<usize> = self
                     .entities
@@ -347,8 +379,7 @@ impl Model {
                     self.player.items.remove(board_item.item_id);
                 }
             }
-            ItemKind::RadiationCore => {}
-            ItemKind::GreedyPot => {}
+            _ => {}
         }
     }
 }
