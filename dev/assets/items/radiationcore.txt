@@ -1,0 +1,2 @@
+On turn start :
+Deals 1 damage to all nearby enemies.
