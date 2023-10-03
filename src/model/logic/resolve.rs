@@ -479,6 +479,7 @@ impl Model {
             ItemKind::Phantom => Some(true),
             ItemKind::KingSkull => Some(true),
             ItemKind::GoldenLantern => Some(true),
+            ItemKind::CharmingStaff => Some(true),
             ItemKind::WarpPortal => Some(true),
             ItemKind::Solitude => Some(true),
             ItemKind::ElectricRod => {

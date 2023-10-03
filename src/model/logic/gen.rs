@@ -124,25 +124,26 @@ impl Model {
         let mut rng = thread_rng();
 
         // For testing
-        // if self.items.is_empty() {
-        //     for kind in [ItemKind::ElectricRod, ItemKind::ElectricRod] {
-        //         let position = *available.iter().choose(&mut rng).unwrap();
-        //         let item_id = self.player.items.insert(kind.instantiate());
-        //         let item = &mut self.player.items[item_id];
-        //         let on_board = self.items.insert(BoardItem {
-        //             position,
-        //             item_id,
-        //             turns_alive: 0,
-        //         });
-        //         item.on_board = Some(on_board);
+        if self.items.is_empty() {
+            for kind in [ItemKind::CharmingStaff] {
+                let position = *available.iter().choose(&mut rng).unwrap();
+                let item_id = self.player.items.insert(kind.instantiate());
+                let item = &mut self.player.items[item_id];
+                let on_board = self.items.insert(BoardItem {
+                    position,
+                    item_id,
+                    turns_alive: 0,
+                    used: false,
+                });
+                item.on_board = Some(on_board);
 
-        //         available.remove(&position);
-        //         if available.is_empty() {
-        //             break;
-        //         }
-        //     }
-        //     return;
-        // }
+                available.remove(&position);
+                if available.is_empty() {
+                    break;
+                }
+            }
+            return;
+        }
 
         for (item_id, item) in &mut self.player.items {
             if let Some(id) = item.on_board {
