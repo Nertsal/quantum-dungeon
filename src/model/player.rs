@@ -28,7 +28,7 @@ impl Player {
         Self {
             moves_left: 0,
             turns_left: 0,
-            hearts: 0,
+            hearts: 3,
             extra_items: 0,
             refreshes: 0,
             items: [ItemKind::Sword, ItemKind::Map]
