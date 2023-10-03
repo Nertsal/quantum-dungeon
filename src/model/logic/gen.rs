@@ -2,9 +2,6 @@ use super::*;
 
 impl Model {
     pub fn next_level(&mut self) {
-        self.game_over();
-        return;
-
         if self.level > 0 {
             self.score += self.config.score_per_level;
             self.score += self.config.score_per_turn_left * self.player.turns_left as Score;
