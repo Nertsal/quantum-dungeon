@@ -91,7 +91,8 @@ impl Model {
         let options = [EntityKind::Dummy];
         let mut rng = thread_rng();
 
-        let enemies = ((self.level + 1) % 4 + self.level / 4).saturating_sub(1);
+        let level = self.level.saturating_sub(1);
+        let enemies = level % 4 + level / 4 + 1;
         let enemies = enemies.min(5);
 
         let health = 5 * 2_usize.pow(self.level as u32 / 4);
