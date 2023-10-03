@@ -1,4 +1,4 @@
-use crate::prelude::*;
+use crate::{game::LeaderboardState, prelude::*};
 
 pub struct GameRender {
     geng: Geng,
@@ -13,6 +13,7 @@ pub struct GameRender {
     pub inventory_button: Aabb2<f32>,
     pub show_inventory: bool,
     pub retry_button: Aabb2<f32>,
+    pub submit_button: Aabb2<f32>,
 }
 
 #[derive(Debug)]
@@ -46,6 +47,7 @@ impl GameRender {
             reroll_button: Aabb2::point(vec2(-0.75, -3.0)).extend_symmetric(vec2::splat(1.5) / 2.0),
             inventory_button: Aabb2::point(vec2(7.0, 1.0)).extend_symmetric(vec2::splat(1.5) / 2.0),
             retry_button: Aabb2::point(vec2(0.0, -3.0)).extend_symmetric(vec2::splat(1.5) / 2.0),
+            submit_button: Aabb2::point(vec2(6.5, 1.0)).extend_symmetric(vec2::splat(0.5) / 2.0),
             show_inventory: false,
         }
     }
@@ -53,12 +55,14 @@ impl GameRender {
     pub fn draw(
         &mut self,
         model: &Model,
+        leaderboard: &LeaderboardState,
+        player_name: &str,
         cursor_ui_pos: vec2<f32>,
         cursor_cell_pos: vec2<Coord>,
         framebuffer: &mut ugli::Framebuffer,
     ) {
         if let Phase::GameOver = model.phase {
-            self.draw_game_over(model, cursor_ui_pos, framebuffer);
+            self.draw_game_over(model, leaderboard, player_name, cursor_ui_pos, framebuffer);
             return;
         }
 
@@ -411,6 +415,8 @@ impl GameRender {
     fn draw_game_over(
         &self,
         model: &Model,
+        leaderboard: &LeaderboardState,
+        player_name: &str,
         cursor_ui_pos: vec2<f32>,
         framebuffer: &mut ugli::Framebuffer,
     ) {
@@ -493,6 +499,99 @@ impl GameRender {
             //     &self.assets.sprites.exit_button,
             //     framebuffer,
             // );
+        }
+
+        {
+            // Leaderboard
+            let (message, top10) = match leaderboard {
+                LeaderboardState::None => ("Not available".to_string(), None),
+                LeaderboardState::Pending => ("Loading...".to_string(), None),
+                LeaderboardState::Ready(leaderboard) => (
+                    match leaderboard.my_position {
+                        Some(place) => format!("{} Place", place + 1),
+                        None => {
+                            if !player_name.is_empty() {
+                                self.draw_button(
+                                    self.submit_button,
+                                    &self.assets.sprites.cell,
+                                    cursor_ui_pos,
+                                    framebuffer,
+                                );
+                            }
+
+                            "Fix your name to submit".to_string()
+                        }
+                    },
+                    Some(&leaderboard.top10),
+                ),
+            };
+            let text_color = Color::try_from("#ffe7cd").unwrap();
+
+            self.assets.font.draw(
+                framebuffer,
+                &self.ui_camera,
+                "Leaderboard",
+                vec2(0.5, 0.5).map(geng::TextAlign),
+                mat3::translate(vec2(5.5, 1.5))
+                    * mat3::scale_uniform(0.5)
+                    * mat3::translate(vec2(0.0, -0.25)),
+                text_color,
+            );
+            {
+                let (text, color) = if player_name.is_empty() {
+                    let mut color = text_color;
+                    color.a = 0.7;
+                    ("<just type your name>", color)
+                } else {
+                    (player_name, text_color)
+                };
+                self.assets.font.draw(
+                    framebuffer,
+                    &self.ui_camera,
+                    text,
+                    vec2(0.5, 0.5).map(geng::TextAlign),
+                    mat3::translate(vec2(5.5, 1.0))
+                        * mat3::scale_uniform(0.2)
+                        * mat3::translate(vec2(0.0, -0.25)),
+                    color,
+                );
+            }
+            self.assets.font.draw(
+                framebuffer,
+                &self.ui_camera,
+                &message,
+                vec2(0.5, 0.5).map(geng::TextAlign),
+                mat3::translate(vec2(5.5, 0.6))
+                    * mat3::scale_uniform(0.2)
+                    * mat3::translate(vec2(0.0, -0.25)),
+                text_color,
+            );
+
+            let size = 0.2;
+            let mut pos = vec2(5.5, 0.5);
+            for entry in top10.into_iter().flatten() {
+                pos.y -= size * 2.0;
+                self.assets.font.draw(
+                    framebuffer,
+                    &self.ui_camera,
+                    &entry.player,
+                    vec2(1.0, 0.5).map(geng::TextAlign),
+                    mat3::translate(pos)
+                        * mat3::scale_uniform(size)
+                        * mat3::translate(vec2(0.0, -0.25)),
+                    text_color,
+                );
+                self.assets.font.draw(
+                    framebuffer,
+                    &self.ui_camera,
+                    &format!(" - {:.0}", entry.score),
+                    vec2(0.0, 0.5).map(geng::TextAlign),
+                    mat3::translate(pos)
+                        * mat3::scale_uniform(size)
+                        * mat3::translate(vec2(0.0, -0.25)),
+                    text_color,
+                );
+            }
         }
 
         {

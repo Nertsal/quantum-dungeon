@@ -1,8 +1,9 @@
-use crate::prelude::*;
+use crate::{prelude::*, Secrets};
 
 pub struct MainMenu {
     geng: Geng,
     assets: Rc<Assets>,
+    secrets: Option<Secrets>,
     config: Config,
     camera: Camera2d,
     framebuffer_size: vec2<usize>,
@@ -13,11 +14,12 @@ pub struct MainMenu {
 }
 
 impl MainMenu {
-    pub fn new(geng: &Geng, assets: &Rc<Assets>, config: Config) -> Self {
+    pub fn new(geng: &Geng, assets: &Rc<Assets>, secrets: Option<Secrets>, config: Config) -> Self {
         Self {
             geng: geng.clone(),
             assets: assets.clone(),
             transition: None,
+            secrets,
             config,
             camera: Camera2d {
                 center: vec2::ZERO,
@@ -33,7 +35,12 @@ impl MainMenu {
 
     fn play(&mut self) {
         self.transition = Some(geng::state::Transition::Push(Box::new(
-            crate::game::Game::new(&self.geng, &self.assets, self.config.clone()),
+            crate::game::Game::new(
+                &self.geng,
+                &self.assets,
+                self.secrets.clone(),
+                self.config.clone(),
+            ),
         )));
     }
 

@@ -11,3 +11,4 @@ generational-arena = "0.2.9"
 geng = "0.15.0"
 geng-utils = { git = "https://github.com/Nertsal/geng-utils" }
 serde = { version = "1.0.188", features = ["derive"] }
+jornet = { git = "https://github.com/kuviman/jornet" } # Leaderboard

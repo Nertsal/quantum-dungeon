@@ -1,7 +1,10 @@
 use geng::{Key, MouseButton};
 
-use crate::{prelude::*, render::GameRender};
+use crate::{leaderboard::Leaderboard, prelude::*, render::GameRender, Secrets};
 
+const PLAYER_NAME_STORAGE: &str = "quantum_dungeon_player_name";
+
+#[allow(dead_code)]
 pub struct Game {
     geng: Geng,
     assets: Rc<Assets>,
@@ -14,10 +17,20 @@ pub struct Game {
     cursor_grid_pos: vec2<f32>,
     // TODO
     // controls: Controls,
+    secrets: Option<Secrets>,
+    player_name: String,
+    leaderboard: LeaderboardState,
+    leaderboard_future: Option<Pin<Box<dyn Future<Output = Leaderboard>>>>,
+}
+
+pub enum LeaderboardState {
+    None,
+    Pending,
+    Ready(Leaderboard),
 }
 
 impl Game {
-    pub fn new(geng: &Geng, assets: &Rc<Assets>, config: Config) -> Self {
+    pub fn new(geng: &Geng, assets: &Rc<Assets>, secrets: Option<Secrets>, config: Config) -> Self {
         Self {
             geng: geng.clone(),
             assets: assets.clone(),
@@ -28,7 +41,29 @@ impl Game {
             cursor_ui_pos: vec2::ZERO,
             cursor_world_pos: vec2::ZERO,
             cursor_grid_pos: vec2::ZERO,
+            secrets,
+            player_name: batbox::preferences::load(PLAYER_NAME_STORAGE).unwrap_or("".to_string()),
+            leaderboard: LeaderboardState::None,
+            leaderboard_future: None,
         }
+    }
+
+    fn load_leaderboard(&mut self, submit_score: bool) {
+        if let Some(secrets) = &self.secrets {
+            self.leaderboard = LeaderboardState::Pending;
+            let player_name = self.player_name.clone();
+            let submit_score = submit_score && !player_name.trim().is_empty();
+            let score = submit_score.then_some(self.model.score as f32);
+            let secrets = secrets.clone();
+            self.leaderboard_future = Some(
+                crate::leaderboard::Leaderboard::submit(player_name, score, secrets.leaderboard)
+                    .boxed_local(),
+            );
+        }
+    }
+
+    fn verify_name(&self) -> bool {
+        !self.player_name.trim().is_empty()
     }
 }
 
@@ -43,6 +78,8 @@ impl geng::State for Game {
         );
         self.render.draw(
             &self.model,
+            &self.leaderboard,
+            &self.player_name,
             self.cursor_ui_pos,
             self.cursor_grid_pos.map(|x| x.floor() as Coord),
             framebuffer,
@@ -50,15 +87,20 @@ impl geng::State for Game {
     }
 
     fn handle_event(&mut self, event: geng::Event) {
-        if let geng::Event::KeyPress {
-            key: geng::Key::Space,
-        } = event
-        {
-            println!("{}", self.cursor_ui_pos);
-        }
-
-        if let geng::Event::CursorMove { position } = event {
-            self.cursor_pos = position;
+        match &event {
+            geng::Event::KeyPress {
+                key: geng::Key::Space,
+            } => {
+                println!("{}", self.cursor_ui_pos);
+            }
+            geng::Event::CursorMove { position } => {
+                self.cursor_pos = *position;
+            }
+            geng::Event::EditText(text) => {
+                self.player_name = fix_name(text);
+                self.geng.window().start_text_edit(&self.player_name);
+            }
+            _ => {}
         }
 
         let move_dir = if geng_utils::key::is_event_press(&event, [Key::ArrowLeft, Key::A]) {
@@ -86,7 +128,8 @@ impl geng::State for Game {
         }
 
         if geng_utils::key::is_event_press(&event, [MouseButton::Left]) {
-            if self.render.inventory_button.contains(self.cursor_ui_pos) {
+            if let Phase::GameOver = self.model.phase {
+            } else if self.render.inventory_button.contains(self.cursor_ui_pos) {
                 self.render.show_inventory = !self.render.show_inventory;
                 self.assets.sounds.step.play();
                 return;
@@ -95,6 +138,13 @@ impl geng::State for Game {
                 Phase::GameOver => {
                     if self.render.retry_button.contains(self.cursor_ui_pos) {
                         self.model.player_action(PlayerInput::Retry);
+                    } else if self.geng.window().is_editing_text()
+                        && self.render.submit_button.contains(self.cursor_ui_pos)
+                    {
+                        log::debug!("Submitting");
+                        self.geng.window().stop_text_edit();
+                        batbox::preferences::save(PLAYER_NAME_STORAGE, &self.player_name);
+                        self.load_leaderboard(true);
                     }
                 }
                 Phase::Player if self.render.skip_turn_button.contains(self.cursor_ui_pos) => {
@@ -136,6 +186,35 @@ impl geng::State for Game {
     fn update(&mut self, delta_time: f64) {
         let delta_time = Time::new(delta_time as _);
 
+        if let Some(future) = &mut self.leaderboard_future {
+            // Poll leaderboard
+            if let std::task::Poll::Ready(leaderboard) = future.as_mut().poll(
+                &mut std::task::Context::from_waker(futures::task::noop_waker_ref()),
+            ) {
+                self.leaderboard_future = None;
+                log::info!("Loaded leaderboard");
+                self.leaderboard = LeaderboardState::Ready(leaderboard);
+            }
+        } else if let Phase::GameOver = self.model.phase {
+            if let LeaderboardState::None = self.leaderboard {
+                let submit = self.verify_name();
+                self.load_leaderboard(submit);
+            }
+        }
+
+        if let LeaderboardState::Ready(leaderboard) = &self.leaderboard {
+            let editing = self.geng.window().is_editing_text();
+            if leaderboard.my_position.is_none() {
+                if !editing {
+                    log::debug!("Starting text edit");
+                    self.geng.window().start_text_edit(&self.player_name);
+                }
+            } else if editing {
+                log::debug!("Stopping text edit");
+                self.geng.window().stop_text_edit();
+            }
+        }
+
         self.cursor_world_pos = self
             .render
             .world_camera
@@ -156,4 +235,11 @@ impl geng::State for Game {
 
         self.model.update(delta_time);
     }
+}
+
+fn fix_name(name: &str) -> String {
+    let name = name.to_lowercase();
+    // self.name.retain(|c| self.assets.font.can_render(c));
+    let name = name.chars().take(10).collect();
+    name
 }
