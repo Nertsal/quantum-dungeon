@@ -61,6 +61,9 @@ jobs:
       - build-web
     permissions:
       contents: write
+    environment:
+      name: main
+      url: https://nertsal.github.io/quantum-dungeon
     steps:
       - name: Download artifacts
         uses: actions/download-artifact@v2
