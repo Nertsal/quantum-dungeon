@@ -1,8 +1,0 @@
-On use :
-Swap position with a random spooky item.
-
-On turn start : 
-Turns into King’s skull if it’s on the top row.
-
-At night :
-Emits light on itself.
