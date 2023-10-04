@@ -41,7 +41,7 @@ impl Grid {
     /// Whether the position is inside the possible extension limits.
     pub fn check_in_limits(&self, pos: vec2<Coord>) -> bool {
         // Limit to 5x5
-        pos.x.abs().max(pos.y.abs()) < 2
+        pos.x.abs().max(pos.y.abs()) < 3
     }
 
     /// Whether the position is empty, but there is a tile right next to it.
