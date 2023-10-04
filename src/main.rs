@@ -10,6 +10,8 @@ mod util;
 
 use geng::prelude::*;
 
+const PLAYER_NAME_STORAGE: &str = "quantum_dungeon_player_name";
+
 #[derive(clap::Parser)]
 struct Opts {
     #[clap(long)]
@@ -63,4 +65,12 @@ fn main() {
         let state = main_menu::MainMenu::new(&geng, &Rc::new(assets), secrets, config);
         geng.run_state(state).await;
     });
+}
+
+fn fix_name(name: &str) -> String {
+    let name = name.trim();
+    let name = name.to_lowercase();
+    // self.name.retain(|c| self.assets.font.can_render(c));
+    let name = name.chars().take(10).collect();
+    name
 }

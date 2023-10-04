@@ -1,4 +1,4 @@
-use crate::{prelude::*, Secrets};
+use crate::{prelude::*, Secrets, PLAYER_NAME_STORAGE};
 
 pub struct MainMenu {
     geng: Geng,
@@ -11,6 +11,7 @@ pub struct MainMenu {
     cursor_ui_pos: vec2<f32>,
     play_button: Aabb2<f32>,
     transition: Option<geng::state::Transition>,
+    player_name: String,
 }
 
 impl MainMenu {
@@ -30,6 +31,7 @@ impl MainMenu {
             cursor_pos: vec2::ZERO,
             cursor_ui_pos: vec2::ZERO,
             play_button: Aabb2::ZERO,
+            player_name: batbox::preferences::load(PLAYER_NAME_STORAGE).unwrap_or("".to_string()),
         }
     }
 
@@ -40,6 +42,7 @@ impl MainMenu {
                 &self.assets,
                 self.secrets.clone(),
                 self.config.clone(),
+                self.player_name.clone(),
             ),
         )));
     }
@@ -65,11 +68,20 @@ impl MainMenu {
 
 impl geng::State for MainMenu {
     fn transition(&mut self) -> Option<geng::state::Transition> {
-        self.transition.take()
+        let trans = self.transition.take();
+        if trans.is_some() {
+            self.geng.window().stop_text_edit();
+            batbox::preferences::save(PLAYER_NAME_STORAGE, &self.player_name);
+        }
+        trans
     }
 
     fn handle_event(&mut self, event: geng::Event) {
         match event {
+            geng::Event::EditText(text) => {
+                self.player_name = crate::fix_name(&text);
+                self.geng.window().start_text_edit(&self.player_name);
+            }
             geng::Event::CursorMove { position } => {
                 self.cursor_pos = position;
             }
@@ -88,6 +100,10 @@ impl geng::State for MainMenu {
         self.cursor_ui_pos = self
             .camera
             .screen_to_world(self.framebuffer_size.as_f32(), self.cursor_pos.as_f32());
+
+        if !self.geng.window().is_editing_text() {
+            self.geng.window().start_text_edit(&self.player_name);
+        }
     }
 
     fn draw(&mut self, framebuffer: &mut ugli::Framebuffer) {
@@ -185,6 +201,28 @@ impl geng::State for MainMenu {
                 color,
                 &self.camera,
                 framebuffer,
+            );
+        }
+
+        {
+            // Player name
+            let text_color = Color::try_from("#ffe7cd").unwrap();
+            let (text, color) = if self.player_name.is_empty() {
+                let mut color = text_color;
+                color.a = 0.7;
+                ("<just type your name>", color)
+            } else {
+                (self.player_name.as_str(), text_color)
+            };
+            self.assets.font.draw(
+                framebuffer,
+                &self.camera,
+                text,
+                vec2(0.5, 0.5).map(geng::TextAlign),
+                mat3::translate(vec2(0.0, -3.0))
+                    * mat3::scale_uniform(0.4)
+                    * mat3::translate(vec2(0.0, -0.25)),
+                color,
             );
         }
 

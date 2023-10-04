@@ -1,8 +1,8 @@
 use geng::{Key, MouseButton};
 
-use crate::{leaderboard::Leaderboard, prelude::*, render::GameRender, Secrets};
-
-const PLAYER_NAME_STORAGE: &str = "quantum_dungeon_player_name";
+use crate::{
+    leaderboard::Leaderboard, prelude::*, render::GameRender, Secrets, PLAYER_NAME_STORAGE,
+};
 
 #[allow(dead_code)]
 pub struct Game {
@@ -30,7 +30,13 @@ pub enum LeaderboardState {
 }
 
 impl Game {
-    pub fn new(geng: &Geng, assets: &Rc<Assets>, secrets: Option<Secrets>, config: Config) -> Self {
+    pub fn new(
+        geng: &Geng,
+        assets: &Rc<Assets>,
+        secrets: Option<Secrets>,
+        config: Config,
+        player_name: String,
+    ) -> Self {
         Self {
             geng: geng.clone(),
             assets: assets.clone(),
@@ -42,7 +48,7 @@ impl Game {
             cursor_world_pos: vec2::ZERO,
             cursor_grid_pos: vec2::ZERO,
             secrets,
-            player_name: batbox::preferences::load(PLAYER_NAME_STORAGE).unwrap_or("".to_string()),
+            player_name: crate::fix_name(&player_name),
             leaderboard: LeaderboardState::None,
             leaderboard_future: None,
         }
@@ -64,6 +70,16 @@ impl Game {
 
     fn verify_name(&self) -> bool {
         !self.player_name.trim().is_empty()
+    }
+
+    fn submit_score(&mut self) {
+        if !self.verify_name() {
+            return;
+        }
+        log::debug!("Submitting");
+        self.geng.window().stop_text_edit();
+        batbox::preferences::save(PLAYER_NAME_STORAGE, &self.player_name);
+        self.load_leaderboard(true);
     }
 }
 
@@ -88,16 +104,22 @@ impl geng::State for Game {
 
     fn handle_event(&mut self, event: geng::Event) {
         match &event {
-            geng::Event::KeyPress {
-                key: geng::Key::Space,
-            } => {
-                println!("{}", self.cursor_ui_pos);
-            }
+            geng::Event::KeyPress { key } => match key {
+                geng::Key::Space => println!("{}", self.cursor_ui_pos),
+                geng::Key::Enter => {
+                    if let Phase::GameOver = self.model.phase {
+                        if self.geng.window().is_editing_text() {
+                            self.submit_score();
+                        }
+                    }
+                }
+                _ => {}
+            },
             geng::Event::CursorMove { position } => {
                 self.cursor_pos = *position;
             }
             geng::Event::EditText(text) => {
-                self.player_name = fix_name(text);
+                self.player_name = crate::fix_name(text);
                 self.geng.window().start_text_edit(&self.player_name);
             }
             _ => {}
@@ -141,10 +163,7 @@ impl geng::State for Game {
                     } else if self.geng.window().is_editing_text()
                         && self.render.submit_button.contains(self.cursor_ui_pos)
                     {
-                        log::debug!("Submitting");
-                        self.geng.window().stop_text_edit();
-                        batbox::preferences::save(PLAYER_NAME_STORAGE, &self.player_name);
-                        self.load_leaderboard(true);
+                        self.submit_score();
                     }
                 }
                 Phase::Player if self.render.skip_turn_button.contains(self.cursor_ui_pos) => {
@@ -235,11 +254,4 @@ impl geng::State for Game {
 
         self.model.update(delta_time);
     }
-}
-
-fn fix_name(name: &str) -> String {
-    let name = name.to_lowercase();
-    // self.name.retain(|c| self.assets.font.can_render(c));
-    let name = name.chars().take(10).collect();
-    name
 }
