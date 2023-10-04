@@ -19,6 +19,10 @@ impl Grid {
         }
     }
 
+    pub fn is_max(&self) -> bool {
+        self.outside_tiles().is_empty()
+    }
+
     pub fn bounds(&self) -> Aabb2<Coord> {
         let mut bounds = Aabb2::<Coord>::ZERO;
         for &pos in &self.tiles {
@@ -37,7 +41,7 @@ impl Grid {
     /// Whether the position is inside the possible extension limits.
     pub fn check_in_limits(&self, pos: vec2<Coord>) -> bool {
         // Limit to 5x5
-        pos.x.abs() < 3 && pos.y.abs() < 3
+        pos.x.abs().max(pos.y.abs()) < 2
     }
 
     /// Whether the position is empty, but there is a tile right next to it.

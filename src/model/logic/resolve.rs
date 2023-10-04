@@ -544,7 +544,9 @@ impl Model {
                 self.deal_damage_nearest(position, damage, vec![]);
             }
             ItemKind::Map => {
-                self.phase = Phase::Map { tiles_left: 1 };
+                if !self.grid.is_max() {
+                    self.phase = Phase::Map { tiles_left: 1 };
+                }
             }
             ItemKind::Boots => {
                 self.player.moves_left += 3;
