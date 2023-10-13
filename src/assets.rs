@@ -114,11 +114,9 @@ impl ItemAssets {
             .unwrap_or_else(|| panic!("no assets found for item {}", item))
     }
 
-    pub fn get_texture(&self, item: &str) -> &ugli::Texture {
-        self.get(item)
-            .texture
-            .as_ref()
-            .unwrap_or_else(|| panic!("no texture found for item {}", item))
+    pub fn get_texture(&self, item: &str) -> Option<&ugli::Texture> {
+        self.get(item).texture.as_ref()
+        // .unwrap_or_else(|| panic!("no texture found for item {}", item))
     }
 }
 

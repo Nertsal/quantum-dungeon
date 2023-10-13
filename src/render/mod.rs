@@ -349,7 +349,10 @@ impl GameRender {
             let mut hint = None;
             for (item, target) in &self.buttons {
                 // TODO: default texture
-                let texture = self.items.get_texture(&item.config.name);
+                let texture = self
+                    .items
+                    .get_texture(&item.config.name)
+                    .unwrap_or(&self.assets.sprites.item_shadow);
                 let background = if target.contains(cursor_ui_pos) {
                     hint = Some(item);
                     &self.assets.sprites.cell
@@ -690,7 +693,10 @@ impl GameRender {
             }
 
             self.draw_at_ui(target, &self.assets.sprites.cell, framebuffer);
-            let texture = self.items.get_texture(&item.kind.config.name);
+            let texture = self
+                .items
+                .get_texture(&item.kind.config.name)
+                .unwrap_or(&self.assets.sprites.item_shadow);
             self.draw_at_ui(target, texture, framebuffer);
 
             // if count > 1 {
@@ -760,7 +766,10 @@ impl GameRender {
         );
 
         // Icon
-        let icon = self.items.get_texture(&item.config.name);
+        let icon = self
+            .items
+            .get_texture(&item.config.name)
+            .unwrap_or(&self.assets.sprites.item_shadow);
         let mut icon_target = target.extend_uniform(-target.height() * 0.1);
         icon_target = icon_target.extend_up(-target.height() * 0.09);
         icon_target = icon_target.extend_down(-target.height() * 0.4);
@@ -902,7 +911,10 @@ impl GameRender {
             position = position + (target.as_f32() - position) * t;
         }
 
-        let texture = self.items.get_texture(&item.kind.config.name);
+        let texture = self
+            .items
+            .get_texture(&item.kind.config.name)
+            .unwrap_or(&self.assets.sprites.item_shadow);
         // TODO: place the shadow
         // self.draw_at(item.position, &self.assets.sprites.item_shadow, framebuffer);
         let offset = vec2(0.0, crate::util::smoothstep(resolution_t) * 0.2);
