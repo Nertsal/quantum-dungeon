@@ -4,6 +4,7 @@ pub struct MainMenu {
     geng: Geng,
     assets: Rc<Assets>,
     config: Config,
+    all_items: Rc<ItemAssets>,
     camera: Camera2d,
     framebuffer_size: vec2<usize>,
     cursor_pos: vec2<f64>,
@@ -13,12 +14,18 @@ pub struct MainMenu {
 }
 
 impl MainMenu {
-    pub fn new(geng: &Geng, assets: &Rc<Assets>, config: Config) -> Self {
+    pub fn new(
+        geng: &Geng,
+        assets: &Rc<Assets>,
+        config: Config,
+        all_items: &Rc<ItemAssets>,
+    ) -> Self {
         Self {
             geng: geng.clone(),
             assets: assets.clone(),
             transition: None,
             config,
+            all_items: all_items.clone(),
             camera: Camera2d {
                 center: vec2::ZERO,
                 rotation: Angle::ZERO,
@@ -33,7 +40,12 @@ impl MainMenu {
 
     fn play(&mut self) {
         self.transition = Some(geng::state::Transition::Push(Box::new(
-            crate::game::Game::new(&self.geng, &self.assets, self.config.clone()),
+            crate::game::Game::new(
+                &self.geng,
+                &self.assets,
+                self.config.clone(),
+                &self.all_items,
+            ),
         )));
     }
 

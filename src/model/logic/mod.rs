@@ -1,5 +1,6 @@
 mod action;
 mod animation;
+pub mod effect;
 mod gen;
 mod item;
 mod resolve;
@@ -19,6 +20,13 @@ impl Model {
                 }
             }
         }
+    }
+
+    /// Returns `true` when all effects are processed and executed.
+    fn wait_for_effects(&self) -> bool {
+        self.state.borrow().effect_queue_stack.is_empty()
+            && self.animations.is_empty()
+            && self.ending_animations.is_empty()
     }
 
     pub fn get_light_level(&self, position: vec2<Coord>) -> f32 {
@@ -91,12 +99,18 @@ impl Model {
         self.update_vision();
 
         if items > 0 {
-            let options: Vec<_> = ItemKind::all()
-                .into_iter()
-                .filter(|item| *item != ItemKind::KingSkull)
+            let options: Vec<_> = self
+                .all_items
+                .iter()
+                .filter(|item| item.config.appears_in_shop)
                 .collect();
             let mut rng = thread_rng();
-            let options = (0..3).map(|_| *options.choose(&mut rng).unwrap()).collect();
+            let options = (0..3)
+                .map(|_| {
+                    let item = options.choose(&mut rng).unwrap();
+                    (*item).clone()
+                })
+                .collect();
             self.phase = Phase::Select {
                 options,
                 extra_items: items - 1,
@@ -141,7 +155,13 @@ impl Model {
     }
 
     fn retry(&mut self) {
-        *self = Self::new(self.assets.clone(), self.config.clone());
+        *self = Self::new_compiled(
+            self.assets.clone(),
+            self.config.clone(),
+            std::mem::replace(&mut self.engine, Engine::empty()),
+            self.all_items.clone(),
+            Rc::clone(&self.state),
+        );
     }
 
     fn calculate_empty_space(&self) -> HashSet<vec2<Coord>> {
@@ -175,13 +195,6 @@ impl Model {
                     visible.insert(target);
                     pos = target;
                 }
-            }
-        }
-
-        for (_, board_item) in &self.items {
-            let item = &self.player.items[board_item.item_id];
-            if let ItemKind::CursedSkull = item.kind {
-                visible.insert(board_item.position);
             }
         }
 
@@ -225,7 +238,7 @@ impl Model {
             return;
         };
 
-        let fraction = entity.fraction;
+        let _fraction = entity.fraction; // TODO: maybe
 
         // Swap with entities
         let mut move_entity = None;
@@ -243,7 +256,7 @@ impl Model {
         for i in ids {
             if self.items[i].position == target_pos {
                 // Activate
-                self.resolve_item_active(fraction, i);
+                self.resolve_trigger(Trigger::Active, None);
                 // Swap
                 move_item = Some(i);
             }

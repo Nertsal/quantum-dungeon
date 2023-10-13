@@ -17,12 +17,17 @@ pub struct Game {
 }
 
 impl Game {
-    pub fn new(geng: &Geng, assets: &Rc<Assets>, config: Config) -> Self {
+    pub fn new(
+        geng: &Geng,
+        assets: &Rc<Assets>,
+        config: Config,
+        all_items: &Rc<ItemAssets>,
+    ) -> Self {
         Self {
             geng: geng.clone(),
             assets: assets.clone(),
-            render: GameRender::new(geng, assets),
-            model: Model::new(assets.clone(), config),
+            render: GameRender::new(geng, assets, all_items),
+            model: Model::new(assets.clone(), config, all_items),
             framebuffer_size: vec2(1, 1),
             cursor_pos: vec2::ZERO,
             cursor_ui_pos: vec2::ZERO,

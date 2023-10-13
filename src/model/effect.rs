@@ -1,0 +1,42 @@
+use super::*;
+
+#[derive(Debug)]
+pub struct QueuedEffect {
+    /// The trigger that proc'ed the effect.
+    pub trigger: Trigger,
+    /// The id of the item that proc'ed the effect.
+    pub proc_item: Id,
+    pub effect: Effect,
+}
+
+#[derive(Debug, Clone, Copy)]
+pub enum Trigger {
+    Night,
+    Day,
+    Active,
+}
+
+#[derive(Debug, Clone)]
+pub enum Effect {
+    Damage { target: Id, damage: Hp },
+}
+
+impl Trigger {
+    /// The name of the method in scripts responsible for handling the trigger.
+    pub fn method_name(&self) -> &'static str {
+        match self {
+            Trigger::Night => "night",
+            Trigger::Day => "day",
+            Trigger::Active => "active",
+        }
+    }
+}
+
+impl Effect {
+    /// The effect's priority for sorting when multiple effects are happening at the same time.
+    pub fn priority(&self) -> i64 {
+        match self {
+            Effect::Damage { .. } => 0,
+        }
+    }
+}

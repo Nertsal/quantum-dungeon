@@ -16,7 +16,7 @@ impl Model {
                 options,
                 extra_items,
             } => match player_input {
-                PlayerInput::SelectItem(i) => self.select_item(options[i]),
+                PlayerInput::SelectItem(i) => self.select_item(options[i].clone()),
                 PlayerInput::Skip => {
                     self.select_phase(0);
                     self.assets.sounds.step.play();
@@ -90,7 +90,7 @@ impl Model {
                 .find(|(_, item)| item.position == target_pos)
             {
                 let item = &self.player.items[target.item_id];
-                if ItemRef::Category(ItemCategory::Magic).check(item.kind) {
+                if ItemRef::Category(ItemCategory::Magic).check(&item.kind) {
                     let Some((_, player)) = self
                         .entities
                         .iter_mut()
@@ -181,7 +181,11 @@ impl Model {
 
     fn select_item(&mut self, item: ItemKind) {
         log::debug!("Select item {:?}", item);
-        self.player.items.insert(item.instantiate());
+        let item = self
+            .engine
+            .init_item(item)
+            .expect("Item initialization failed"); // TODO: handle error
+        self.player.items.insert(item);
         let items = if let Phase::Select { extra_items, .. } = self.phase {
             extra_items
         } else {

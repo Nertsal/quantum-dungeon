@@ -3,6 +3,7 @@ use crate::prelude::*;
 pub struct GameRender {
     geng: Geng,
     assets: Rc<Assets>,
+    items: Rc<ItemAssets>,
     pub ui_camera: Camera2d,
     pub world_camera: Camera2d,
     pub cell_size: vec2<f32>,
@@ -23,10 +24,11 @@ enum TileLight {
 }
 
 impl GameRender {
-    pub fn new(geng: &Geng, assets: &Rc<Assets>) -> Self {
+    pub fn new(geng: &Geng, assets: &Rc<Assets>, items: &Rc<ItemAssets>) -> Self {
         Self {
             geng: geng.clone(),
             assets: assets.clone(),
+            items: items.clone(),
             ui_camera: Camera2d {
                 center: vec2::ZERO,
                 rotation: Angle::ZERO,
@@ -103,7 +105,7 @@ impl GameRender {
                         if model.items.iter().any(|(_, item)| {
                             item.position == pos
                                 && ItemRef::Category(ItemCategory::Magic)
-                                    .check(model.player.items[item.item_id].kind)
+                                    .check(&model.player.items[item.item_id].kind)
                         }) {
                             TileLight::Light
                         } else {
@@ -126,50 +128,52 @@ impl GameRender {
 
         // Items
         for (i, item) in &model.items {
-            let resolving = if let Phase::Passive {
-                item_queue,
-                start_delay,
-                end_delay,
-            } = &model.phase
-            {
-                item_queue
-                    .last()
-                    .and_then(|&item_id| (item_id == i).then_some((*start_delay, *end_delay)))
-            } else {
-                None
-            };
+            // let resolving = if let Phase::Passive {
+            //     start_delay,
+            //     end_delay,
+            // } = &model.phase
+            // {
+            //     item_queue
+            //         .last()
+            //         .and_then(|&item_id| (item_id == i).then_some((*start_delay, *end_delay)))
+            // } else {
+            //     None
+            // };
 
-            let resolving = resolving
-                .or_else(|| {
-                    model.animations.iter().find_map(|(_, anim)| {
-                        if let AnimationKind::UseActive { item_id, .. } = anim.kind {
-                            if item_id == i {
-                                return Some((anim.time, Lifetime::new_max(R32::ONE)));
-                            }
-                        }
-                        None
-                    })
-                })
-                .or_else(|| {
-                    model.ending_animations.iter().find_map(|anim| {
-                        if let AnimationKind::UseActive { item_id, .. } = anim.kind {
-                            if item_id == i {
-                                return Some((Lifetime::new_max(R32::ONE), anim.time));
-                            }
-                        }
-                        None
-                    })
-                });
+            // let resolving = resolving
+            //     .or_else(|| {
+            //         model.animations.iter().find_map(|(_, anim)| {
+            //             if let AnimationKind::UseActive { item_id, .. } = anim.kind {
+            //                 if item_id == i {
+            //                     return Some((anim.time, Lifetime::new_max(R32::ONE)));
+            //                 }
+            //             }
+            //             None
+            //         })
+            //     })
+            //     .or_else(|| {
+            //         model.ending_animations.iter().find_map(|anim| {
+            //             if let AnimationKind::UseActive { item_id, .. } = anim.kind {
+            //                 if item_id == i {
+            //                     return Some((Lifetime::new_max(R32::ONE), anim.time));
+            //                 }
+            //             }
+            //             None
+            //         })
+            //     });
 
-            let resolution_t = if let Some((start_delay, end_delay)) = resolving {
-                if start_delay.is_above_min() {
-                    1.0 - start_delay.get_ratio().as_f32()
-                } else {
-                    end_delay.get_ratio().as_f32()
-                }
-            } else {
-                0.0
-            };
+            // let resolution_t = if let Some((start_delay, end_delay)) = resolving {
+            //     if start_delay.is_above_min() {
+            //         1.0 - start_delay.get_ratio().as_f32()
+            //     } else {
+            //         end_delay.get_ratio().as_f32()
+            //     }
+            // } else {
+            //     0.0
+            // };
+
+            // TODO
+            let resolution_t = 0.0;
 
             self.draw_item(i, item, resolution_t, model, framebuffer);
         }
@@ -335,24 +339,25 @@ impl GameRender {
             self.buttons = options
                 .iter()
                 .enumerate()
-                .map(|(i, &item)| {
+                .map(|(i, item)| {
                     let pos = vec2(i as f32 * size - offset, 0.0);
                     let target = Aabb2::point(pos).extend_symmetric(vec2::splat(size) / 2.0 * 0.9);
-                    (item, target)
+                    (item.clone(), target)
                 })
                 .collect();
 
             let mut hint = None;
-            for &(item, target) in &self.buttons {
-                let texture = self.assets.sprites.item_texture(item);
+            for (item, target) in &self.buttons {
+                // TODO: default texture
+                let texture = self.items.get_texture(&item.config.name);
                 let background = if target.contains(cursor_ui_pos) {
                     hint = Some(item);
                     &self.assets.sprites.cell
                 } else {
                     &self.assets.sprites.cell_dark
                 };
-                self.draw_at_ui(target, background, framebuffer);
-                self.draw_at_ui(target, texture, framebuffer);
+                self.draw_at_ui(*target, background, framebuffer);
+                self.draw_at_ui(*target, texture, framebuffer);
             }
 
             if model.player.refreshes > 0 {
@@ -380,7 +385,7 @@ impl GameRender {
         {
             // Item hint
             let item = &model.player.items[item.item_id];
-            self.draw_item_hint(item.kind, cursor_ui_pos, framebuffer);
+            self.draw_item_hint(&item.kind, cursor_ui_pos, framebuffer);
         }
 
         // Inventory button
@@ -685,7 +690,7 @@ impl GameRender {
             }
 
             self.draw_at_ui(target, &self.assets.sprites.cell, framebuffer);
-            let texture = self.assets.sprites.item_texture(item.kind);
+            let texture = self.items.get_texture(&item.kind.config.name);
             self.draw_at_ui(target, texture, framebuffer);
 
             // if count > 1 {
@@ -713,13 +718,13 @@ impl GameRender {
         }
 
         if let Some(item) = hint {
-            self.draw_item_hint(item.kind, cursor_ui_pos, framebuffer);
+            self.draw_item_hint(&item.kind, cursor_ui_pos, framebuffer);
         }
     }
 
     fn draw_item_hint(
         &self,
-        item: ItemKind,
+        item: &ItemKind,
         cursor_ui_pos: vec2<f32>,
         framebuffer: &mut ugli::Framebuffer,
     ) {
@@ -747,7 +752,7 @@ impl GameRender {
             &self.ui_camera,
             &draw2d::Text::unit(
                 self.assets.font.clone(),
-                format!("{}", item),
+                format!("{}", item.config.name),
                 Color::try_from("#333").unwrap(),
             )
             .align_bounding_box(vec2(0.5, 1.0))
@@ -755,7 +760,7 @@ impl GameRender {
         );
 
         // Icon
-        let icon = self.assets.sprites.item_texture(item);
+        let icon = self.items.get_texture(&item.config.name);
         let mut icon_target = target.extend_uniform(-target.height() * 0.1);
         icon_target = icon_target.extend_up(-target.height() * 0.09);
         icon_target = icon_target.extend_down(-target.height() * 0.4);
@@ -773,9 +778,10 @@ impl GameRender {
             let positions = [vec2(0.0, 0.0), vec2(1.0, 0.0)];
             let size = icon_target.height() / 5.0; // / 12.0;
             let icon_target = icon_target.extend_uniform(-size / 2.0);
-            for (i, category) in item
-                .categories()
-                .into_iter()
+            for (i, &category) in item
+                .config
+                .categories
+                .iter()
                 .enumerate()
                 .take(positions.len())
             {
@@ -813,7 +819,12 @@ impl GameRender {
         desc_target = desc_target.extend_uniform(-desc_target.height() * 0.05);
 
         let color = Color::try_from("#ffe7cd").unwrap();
-        let description = self.assets.items.get_description(item);
+        let description = self
+            .items
+            .get(&item.config.name)
+            .description
+            .as_deref()
+            .unwrap_or("<description missing>");
 
         let mut lines = Vec::new();
         for source_line in description.lines() {
@@ -891,7 +902,7 @@ impl GameRender {
             position = position + (target.as_f32() - position) * t;
         }
 
-        let texture = self.assets.sprites.item_texture(item.kind);
+        let texture = self.items.get_texture(&item.kind.config.name);
         // TODO: place the shadow
         // self.draw_at(item.position, &self.assets.sprites.item_shadow, framebuffer);
         let offset = vec2(0.0, crate::util::smoothstep(resolution_t) * 0.2);

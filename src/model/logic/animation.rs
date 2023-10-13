@@ -97,9 +97,9 @@ impl Model {
                 }
                 AnimationKind::UseActive { fraction, item_id } => {
                     // Activate item
-                    let fraction = *fraction;
+                    let _fraction = *fraction; // TODO: maybe
                     let item_id = *item_id;
-                    self.active_effect(fraction, item_id);
+                    self.resolve_trigger(Trigger::Active, Some(item_id));
                 }
                 AnimationKind::EntityDeath { entity, .. } => {
                     self.entities.remove(*entity);
@@ -110,7 +110,7 @@ impl Model {
                     self.player.items.remove(item.item_id);
                 }
                 AnimationKind::Dupe { kind } => {
-                    self.new_item_and_spawn(*kind);
+                    self.new_item_and_spawn(kind.clone());
                 }
                 AnimationKind::Damage { target, damage, .. } => {
                     self.entities[*target].health.change(-damage);
@@ -137,7 +137,11 @@ impl Model {
     }
 
     fn new_item_and_spawn(&mut self, kind: ItemKind) {
-        let item_id = self.player.items.insert(kind.instantiate());
+        let item = self
+            .engine
+            .init_item(kind)
+            .expect("Item initialization failed"); // TODO: handle error
+        let item_id = self.player.items.insert(item);
 
         let available = self.calculate_empty_space().sub(&self.visible_tiles);
         if !available.is_empty() {
@@ -148,7 +152,6 @@ impl Model {
             let on_board = self.items.insert(BoardItem {
                 position,
                 item_id,
-                turns_alive: 0,
                 used: false,
             });
             item.on_board = Some(on_board);

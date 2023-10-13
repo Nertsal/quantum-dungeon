@@ -11,7 +11,7 @@ impl Model {
     ) {
         for (target, board_item) in &self.items {
             let item = &mut self.player.items[board_item.item_id];
-            if distance(board_item.position, position) <= range && item_ref.check(item.kind) {
+            if distance(board_item.position, position) <= range && item_ref.check(&item.kind) {
                 self.animations.insert(Animation::new(
                     self.config.animation_time,
                     AnimationKind::Bonus {
@@ -111,7 +111,7 @@ impl Model {
             .filter(|(_, board_item)| {
                 let d = distance(position, board_item.position);
                 let item = &self.player.items[board_item.item_id];
-                item_ref.check(item.kind) && d > 0 && d <= 1
+                item_ref.check(&item.kind) && d > 0 && d <= 1
             })
             .map(|(i, _)| i)
             .collect()
