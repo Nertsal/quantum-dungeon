@@ -1,4 +1,4 @@
-use rhai::{CallFnOptions, EvalAltResult, Module, Shared};
+use rhai::{CallFnOptions, EvalAltResult};
 
 use super::*;
 
@@ -27,7 +27,7 @@ impl Engine {
         }
     }
 
-    pub fn new(state: Rc<RefCell<ModelState>>) -> Self {
+    pub fn new(state: Rc<RefCell<ModelState>>, side_effects: Rc<RefCell<Vec<Effect>>>) -> Self {
         let mut engine = rhai::Engine::new();
 
         // Types
@@ -44,19 +44,20 @@ impl Engine {
                 stats.damage.unwrap_or_default()
             });
 
-        // Effect module
-        let mut effect_module = Module::new();
-        effect_module.set_native_fn("damage", {
+        // Effects
+        engine.register_fn("damage_nearest", {
             let state = Rc::clone(&state);
-            move |target, damage| state.borrow_mut().effect_damage(target, damage)
+            let side_effects = Rc::clone(&side_effects);
+            move |item: InventoryItem, damage: Hp| {
+                item.damage_nearest(damage, &state.borrow(), &mut side_effects.borrow_mut())
+            }
         });
-        let effect_module: Shared<Module> = effect_module.into();
-        engine.register_static_module("effect", effect_module);
 
         Self { inner: engine }
     }
 
     pub fn init_item(&self, kind: ItemKind) -> Result<InventoryItem> {
+        // Base damage:
         // Sword => 2,
         // FireScroll => 5,
         // SoulCrystal => 0,
@@ -84,21 +85,23 @@ impl Engine {
         })
     }
 
-    /// Call the item's trigger handler (if it is defined) and return the list effects produced.
-    pub fn item_trigger(&self, item: &mut InventoryItem, method: &str) -> Result<Vec<Effect>> {
+    /// Call the item's trigger handler (if it is defined).
+    /// Side effects produced by the script are put into [ModelState].
+    ///
+    /// *NOTE*: it borrows [ModelState] and mutates `side_effects`.
+    pub fn item_trigger(&self, item: &mut InventoryItem, method: &str) -> Result<()> {
         let mut item_this = rhai::Dynamic::from(item.clone());
         let options = CallFnOptions::new().bind_this_ptr(&mut item_this);
 
-        let effects = call!(
+        call!(
             &self.inner,
             options,
             &mut item.state,
             &item.kind.script,
             method,
             (),
-        )
-        .unwrap_or_default();
-        Ok(effects)
+        );
+        Ok(())
     }
 
     pub fn compile_items(&self, all_items: &ItemAssets) -> Vec<ItemKind> {

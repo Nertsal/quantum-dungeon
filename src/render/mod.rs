@@ -102,7 +102,7 @@ impl GameRender {
                         TileLight::Dark
                     } else if let Phase::Portal = model.phase {
                         // Highlight magic items
-                        if model.items.iter().any(|(_, item)| {
+                        if model.state.borrow().items.iter().any(|(_, item)| {
                             item.position == pos
                                 && ItemRef::Category(ItemCategory::Magic)
                                     .check(&model.player.items[item.item_id].kind)
@@ -122,12 +122,12 @@ impl GameRender {
         }
 
         // Entities
-        for (id, entity) in &model.entities {
+        for (id, entity) in &model.state.borrow().entities {
             self.draw_entity(id, entity, model, framebuffer);
         }
 
         // Items
-        for (i, item) in &model.items {
+        for (i, item) in &model.state.borrow().items {
             // let resolving = if let Phase::Passive {
             //     start_delay,
             //     end_delay,
@@ -382,6 +382,8 @@ impl GameRender {
                 self.draw_item_hint(item, cursor_ui_pos, framebuffer);
             }
         } else if let Some((_, item)) = model
+            .state
+            .borrow()
             .items
             .iter()
             .find(|(_, item)| item.position == cursor_cell_pos)
@@ -588,8 +590,9 @@ impl GameRender {
                 damage,
             } if end_t == 1.0 => {
                 let from = (from.as_f32() + vec2(0.3, 0.3)) * self.cell_size;
-                let target =
-                    (model.entities[*target].position.as_f32() + vec2(0.3, 0.3)) * self.cell_size;
+                let target = (model.state.borrow().entities[*target].position.as_f32()
+                    + vec2(0.3, 0.3))
+                    * self.cell_size;
                 let t = crate::util::smoothstep(start_t);
                 let pos = from + (target - from) * t;
 
@@ -621,8 +624,9 @@ impl GameRender {
                 ..
             } if end_t == 1.0 => {
                 let from = from.as_f32() * self.cell_size;
-                let target =
-                    (model.items[*target].position.as_f32() + vec2(0.3, 0.3)) * self.cell_size;
+                let target = (model.state.borrow().items[*target].position.as_f32()
+                    + vec2(0.3, 0.3))
+                    * self.cell_size;
                 let t = crate::util::smoothstep(start_t);
                 let pos = from + (target - from) * t;
 

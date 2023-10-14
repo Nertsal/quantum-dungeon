@@ -42,8 +42,8 @@ impl Model {
                 }
             }
             Phase::Passive { start_delay, .. } => {
-                // Start animation
                 if start_delay.is_above_min() {
+                    // Start animation
                     start_delay.change(-delta_time);
                     if start_delay.is_min() {
                         self.resolve_trigger(Trigger::Day, None);
@@ -74,7 +74,7 @@ impl Model {
             item.temp_stats = ItemStats::default();
         }
         // Update turn counter
-        for (_, item) in &mut self.items {
+        for (_, item) in &mut self.state.borrow_mut().items {
             item.used = false;
             self.player.items[item.item_id].turns_on_board += 1;
         }
@@ -84,12 +84,12 @@ impl Model {
         let mut ids: Vec<_> = if let Some(id) = specific {
             vec![id]
         } else {
-            self.items.iter().map(|(i, _)| i).collect()
+            self.state.borrow().items.iter().map(|(i, _)| i).collect()
         };
 
         // Sort by item position
         ids.sort_by_key(|&id| {
-            let pos = self.items[id].position;
+            let pos = self.state.borrow().items[id].position;
             // Left -> Right
             // Top -> Bottom
             (pos.x, -pos.y)
@@ -109,18 +109,20 @@ impl Model {
             .sorted_by_key(|eff| -eff.effect.priority()) // Sort by priority
             .collect();
 
-        self.state.borrow_mut().effect_queue_stack.push(effects);
+        self.effect_queue_stack.push(effects);
     }
 
     /// Resolve the item's response to the trigger.
     fn resolve_item(&mut self, item_id: Id, trigger: Trigger) -> Vec<Effect> {
-        let Some(board_item) = self.items.get(item_id) else {
+        let state = self.state.borrow();
+        let Some(board_item) = state.items.get(item_id) else {
             return vec![];
         };
         let item = &mut self.player.items[board_item.item_id];
         self.engine
             .item_trigger(item, trigger.method_name())
-            .expect("Trigger handler failed") // TODO: handle error
+            .expect("Trigger handler failed"); // TODO: handle error
+        std::mem::take(&mut *self.side_effects.borrow_mut())
     }
 
     // Night effect

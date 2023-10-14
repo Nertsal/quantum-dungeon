@@ -11,6 +11,8 @@ impl Model {
     pub fn update(&mut self, delta_time: Time) {
         self.update_animations(delta_time);
         self.resolve_animations(delta_time);
+        self.update_effects();
+
         if let Phase::LevelFinished { .. } = self.phase {
         } else if self.animations.is_empty() && self.ending_animations.is_empty() {
             self.check_deaths();
@@ -24,9 +26,12 @@ impl Model {
 
     /// Returns `true` when all effects are processed and executed.
     fn wait_for_effects(&self) -> bool {
-        self.state.borrow().effect_queue_stack.is_empty()
-            && self.animations.is_empty()
-            && self.ending_animations.is_empty()
+        self.effect_queue_stack.is_empty() && self.wait_for_animations()
+    }
+
+    /// Returns `true` when all animations are done.
+    fn wait_for_animations(&self) -> bool {
+        self.animations.is_empty() && self.ending_animations.is_empty()
     }
 
     pub fn get_light_level(&self, position: vec2<Coord>) -> f32 {
@@ -49,6 +54,7 @@ impl Model {
     }
 
     pub fn night_phase(&mut self, start_faded: bool) {
+        log::debug!("Night phase");
         self.phase = Phase::Night {
             fade_time: if start_faded {
                 Lifetime::new_zero(r32(1.0))
@@ -60,7 +66,7 @@ impl Model {
 
         self.player.extra_items = self.turn % 2;
         self.grid.fractured.clear();
-        for (_, entity) in &self.entities {
+        for (_, entity) in &self.state.borrow().entities {
             if let EntityKind::Player = entity.kind {
                 self.grid.fractured.insert(entity.position);
             }
@@ -82,13 +88,14 @@ impl Model {
     }
 
     fn player_phase(&mut self) {
+        log::debug!("Player can move again");
         self.phase = Phase::Player;
     }
 
     fn vision_phase(&mut self) {
         log::debug!("Vision phase");
         self.phase = Phase::Vision;
-        for (_, entity) in &mut self.entities {
+        for (_, entity) in &mut self.state.borrow_mut().entities {
             entity.look_dir = vec2::ZERO;
         }
         self.update_vision();
@@ -121,11 +128,14 @@ impl Model {
     }
 
     fn next_turn(&mut self) {
+        log::debug!("Next turn");
         self.turn += 1;
         self.player.turns_left = self.player.turns_left.saturating_sub(1);
         if self.player.turns_left == 0 {
             // Damage for every enemy left on the board
             let damage = self
+                .state
+                .borrow()
                 .entities
                 .iter()
                 .filter(|(_, e)| e.fraction == Fraction::Enemy)
@@ -155,22 +165,24 @@ impl Model {
     }
 
     fn retry(&mut self) {
+        log::debug!("Retry");
         *self = Self::new_compiled(
             self.assets.clone(),
             self.config.clone(),
             std::mem::replace(&mut self.engine, Engine::empty()),
             self.all_items.clone(),
             Rc::clone(&self.state),
+            Rc::clone(&self.side_effects),
         );
     }
 
     fn calculate_empty_space(&self) -> HashSet<vec2<Coord>> {
         let mut available: HashSet<_> = self.grid.tiles.clone();
 
-        for (_, entity) in &self.entities {
+        for (_, entity) in &self.state.borrow().entities {
             available.remove(&entity.position);
         }
-        for (_, item) in &self.items {
+        for (_, item) in &self.state.borrow().items {
             available.remove(&item.position);
         }
 
@@ -180,7 +192,7 @@ impl Model {
     pub fn update_vision(&mut self) {
         log::debug!("Updating vision");
         let mut visible: HashSet<_> = self.grid.lights.keys().copied().collect();
-        for (_, entity) in &self.entities {
+        for (_, entity) in &self.state.borrow().entities {
             if let EntityKind::Player = entity.kind {
                 if entity.look_dir == vec2::ZERO {
                     continue;
@@ -202,7 +214,7 @@ impl Model {
     }
 
     fn check_deaths(&mut self) {
-        for (id, entity) in &self.entities {
+        for (id, entity) in &self.state.borrow().entities {
             if entity.health.is_min() {
                 self.animations.insert(Animation::new(
                     self.config.animation_time,
@@ -215,6 +227,8 @@ impl Model {
         }
 
         if !self
+            .state
+            .borrow()
             .entities
             .iter()
             .any(|(_, e)| e.fraction == Fraction::Enemy)
@@ -226,7 +240,8 @@ impl Model {
 
     /// Move the entity to the target position and swap with the entity occupying the target (if any).
     fn move_entity_swap(&mut self, entity_id: Id, target_pos: vec2<Coord>) {
-        let Some(entity) = self.entities.get_mut(entity_id) else {
+        let mut state = self.state.borrow_mut();
+        let Some(entity) = state.entities.get_mut(entity_id) else {
             log::error!("entity does not exist: {:?}", entity_id);
             return;
         };
@@ -242,19 +257,20 @@ impl Model {
 
         // Swap with entities
         let mut move_entity = None;
-        if let Some((i, _)) = self
+        if let Some((i, _)) = state
             .entities
-            .iter_mut()
+            .iter()
             .find(|(_, e)| e.position == target_pos)
         {
             move_entity = Some(i);
         }
+        drop(state);
 
         // Activate and swap items
-        let ids: Vec<_> = self.items.iter().map(|(i, _)| i).collect();
+        let ids: Vec<_> = self.state.borrow().items.iter().map(|(i, _)| i).collect();
         let mut move_item = None;
         for i in ids {
-            if self.items[i].position == target_pos {
+            if self.state.borrow().items[i].position == target_pos {
                 // Activate
                 self.resolve_trigger(Trigger::Active, None);
                 // Swap

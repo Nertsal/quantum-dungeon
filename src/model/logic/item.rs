@@ -9,7 +9,7 @@ impl Model {
         item_ref: ItemRef,
         bonus: ItemStats,
     ) {
-        for (target, board_item) in &self.items {
+        for (target, board_item) in &self.state.borrow().items {
             let item = &mut self.player.items[board_item.item_id];
             if distance(board_item.position, position) <= range && item_ref.check(&item.kind) {
                 self.animations.insert(Animation::new(
@@ -33,7 +33,7 @@ impl Model {
         after: Vec<Id>,
     ) {
         let source_fraction = Fraction::Player;
-        for (target, entity) in &self.entities {
+        for (target, entity) in &self.state.borrow().entities {
             if source_fraction != entity.fraction && distance(entity.position, position) <= range {
                 self.animations.insert(
                     Animation::new(
@@ -57,7 +57,8 @@ impl Model {
         after: Vec<Id>,
     ) -> Option<Id> {
         let source_fraction = Fraction::Player;
-        let nearest = self
+        let state = self.state.borrow();
+        let nearest = state
             .entities
             .iter()
             .filter(|(_, entity)| source_fraction != entity.fraction)
@@ -85,7 +86,8 @@ impl Model {
     ) -> Option<Id> {
         let source_fraction = Fraction::Player;
         let mut rng = thread_rng();
-        let target = self
+        let state = self.state.borrow();
+        let target = state
             .entities
             .iter()
             .filter(|(_, entity)| source_fraction != entity.fraction)
@@ -106,7 +108,9 @@ impl Model {
     }
 
     pub(super) fn count_items_near(&self, position: vec2<Coord>, item_ref: ItemRef) -> Vec<Id> {
-        self.items
+        self.state
+            .borrow()
+            .items
             .iter()
             .filter(|(_, board_item)| {
                 let d = distance(position, board_item.position);

@@ -61,7 +61,7 @@ impl Model {
                         },
                     ));
 
-                    let target_pos = self.entities[entity_id].position;
+                    let target_pos = self.state.borrow().entities[entity_id].position;
                     if let Some(entity_id) = move_entity {
                         self.animations.insert(Animation::new(
                             self.config.animation_time,
@@ -85,13 +85,13 @@ impl Model {
                     entity_id,
                     target_pos,
                 } => {
-                    self.entities[*entity_id].position = *target_pos;
+                    self.state.borrow_mut().entities[*entity_id].position = *target_pos;
                 }
                 AnimationKind::MoveItem {
                     item_id,
                     target_pos,
                 } => {
-                    if let Some(item) = self.items.get_mut(*item_id) {
+                    if let Some(item) = self.state.borrow_mut().items.get_mut(*item_id) {
                         item.position = *target_pos;
                     }
                 }
@@ -102,18 +102,20 @@ impl Model {
                     self.resolve_trigger(Trigger::Active, Some(item_id));
                 }
                 AnimationKind::EntityDeath { entity, .. } => {
-                    self.entities.remove(*entity);
+                    self.state.borrow_mut().entities.remove(*entity);
                     self.assets.sounds.enemy_death.play();
                 }
                 AnimationKind::ItemDeath { item, .. } => {
-                    let item = self.items.remove(*item).unwrap();
+                    let item = self.state.borrow_mut().items.remove(*item).unwrap();
                     self.player.items.remove(item.item_id);
                 }
                 AnimationKind::Dupe { kind } => {
                     self.new_item_and_spawn(kind.clone());
                 }
                 AnimationKind::Damage { target, damage, .. } => {
-                    self.entities[*target].health.change(-damage);
+                    self.state.borrow_mut().entities[*target]
+                        .health
+                        .change(-damage);
                     self.assets.sounds.damage.play();
                 }
                 AnimationKind::Bonus {
@@ -122,7 +124,7 @@ impl Model {
                     permanent,
                     ..
                 } => {
-                    let board_item = &self.items[*target];
+                    let board_item = &self.state.borrow().items[*target];
                     let item = &mut self.player.items[board_item.item_id];
                     if *permanent {
                         item.perm_stats = item.perm_stats.combine(bonus);
@@ -149,7 +151,7 @@ impl Model {
             let &position = available.iter().choose(&mut rng).unwrap();
 
             let item = &mut self.player.items[item_id];
-            let on_board = self.items.insert(BoardItem {
+            let on_board = self.state.borrow_mut().items.insert(BoardItem {
                 position,
                 item_id,
                 used: false,

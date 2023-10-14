@@ -84,14 +84,18 @@ impl Model {
         }
 
         if let Phase::Portal = self.phase {
-            if let Some((_, target)) = self
+            // What is this trick KEKW
+            let mut state = self.state.borrow_mut();
+            let state_ref = &mut *state;
+
+            if let Some((_, target)) = state_ref
                 .items
                 .iter_mut()
                 .find(|(_, item)| item.position == target_pos)
             {
                 let item = &self.player.items[target.item_id];
                 if ItemRef::Category(ItemCategory::Magic).check(&item.kind) {
-                    let Some((_, player)) = self
+                    let Some((_, player)) = state_ref
                         .entities
                         .iter_mut()
                         .find(|(_, e)| matches!(e.kind, EntityKind::Player))
@@ -103,6 +107,7 @@ impl Model {
                     target.position = player.position;
                     player.position = target_pos;
                     self.grid.fractured.insert(target_pos);
+                    drop(state);
                     self.player_phase();
                     self.assets.sounds.step.play();
                 } else {
@@ -135,7 +140,7 @@ impl Model {
 
         let mut moves = Vec::new();
         let mut move_dir = vec2::ZERO;
-        for (i, entity) in &mut self.entities {
+        for (i, entity) in &mut self.state.borrow_mut().entities {
             if let EntityKind::Player = entity.kind {
                 // TODO: if there are multiple players, resolve conflicting movement
                 move_dir = match player_input {
@@ -164,10 +169,12 @@ impl Model {
 
         let mut moved = false;
         for i in moves {
-            let entity = self.entities.get_mut(i).unwrap();
+            let mut state = self.state.borrow_mut();
+            let entity = state.entities.get_mut(i).unwrap();
             let target = entity.position + move_dir;
             // Fracture tiles as we walk
             if self.grid.check_pos(target) && self.grid.fractured.insert(target) {
+                drop(state);
                 self.move_entity_swap(i, target);
                 moved = true;
             }
@@ -196,7 +203,7 @@ impl Model {
     }
 
     fn player_vision(&mut self, player_input: PlayerInput) {
-        for (_, entity) in &mut self.entities {
+        for (_, entity) in &mut self.state.borrow_mut().entities {
             if let EntityKind::Player = entity.kind {
                 let dir = match player_input {
                     PlayerInput::Dir(dir) => dir,

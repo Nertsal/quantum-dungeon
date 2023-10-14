@@ -26,7 +26,7 @@ pub struct Model {
     pub config: Config,
     pub all_items: Vec<ItemKind>,
     engine: Engine,
-    state: Rc<RefCell<ModelState>>,
+    pub state: Rc<RefCell<ModelState>>,
     pub level: usize,
     pub turn: usize,
     pub score: Score,
@@ -34,16 +34,18 @@ pub struct Model {
     pub grid: Grid,
     pub player: Player,
     pub visible_tiles: HashSet<vec2<Coord>>,
-    pub items: Arena<BoardItem>,
-    pub entities: Arena<Entity>,
     pub animations: Arena<Animation>,
     pub ending_animations: Vec<Animation>,
+    /// The stack of effect queues.
+    pub effect_queue_stack: Vec<VecDeque<QueuedEffect>>,
+    /// Effects produced by scripts. Should be consumed after the script is executed and moved to the queue.
+    pub side_effects: Rc<RefCell<Vec<Effect>>>,
 }
 
 /// The stuff accessible from within the scripts.
 pub struct ModelState {
-    /// The stack of effect queues.
-    pub effect_queue_stack: Vec<VecDeque<QueuedEffect>>,
+    pub items: Arena<BoardItem>,
+    pub entities: Arena<Entity>,
 }
 
 #[derive(Debug, Clone)]
@@ -84,14 +86,26 @@ pub enum Phase {
 impl Model {
     pub fn new(assets: Rc<Assets>, config: Config, all_items: &ItemAssets) -> Self {
         let state = ModelState {
-            effect_queue_stack: Vec::new(),
+            items: Arena::new(),
+            entities: [Entity {
+                position: vec2(0, 0),
+                fraction: Fraction::Player,
+                health: Health::new_max(100),
+                look_dir: vec2(0, 0),
+                kind: EntityKind::Player,
+            }]
+            .into_iter()
+            .collect(),
         };
         let state = Rc::new(RefCell::new(state));
 
-        let engine = Engine::new(Rc::clone(&state));
+        // TODO: maybe mpsc or smth
+        let side_effects = Rc::new(RefCell::new(Vec::new()));
+
+        let engine = Engine::new(Rc::clone(&state), Rc::clone(&side_effects));
         let all_items = engine.compile_items(all_items);
 
-        Self::new_compiled(assets, config, engine, all_items, state)
+        Self::new_compiled(assets, config, engine, all_items, state, side_effects)
     }
 
     fn new_compiled(
@@ -100,6 +114,7 @@ impl Model {
         engine: Engine,
         all_items: Vec<ItemKind>,
         state: Rc<RefCell<ModelState>>,
+        side_effects: Rc<RefCell<Vec<Effect>>>,
     ) -> Self {
         let mut player_items = Arena::new();
         for item in &config.starting_items {
@@ -132,18 +147,10 @@ impl Model {
             grid: Grid::new(3),
             player: Player::new(player_items),
             visible_tiles: HashSet::new(),
-            items: Arena::new(),
-            entities: [Entity {
-                position: vec2(0, 0),
-                fraction: Fraction::Player,
-                health: Health::new_max(100),
-                look_dir: vec2(0, 0),
-                kind: EntityKind::Player,
-            }]
-            .into_iter()
-            .collect(),
             animations: Arena::new(),
             ending_animations: Vec::new(),
+            effect_queue_stack: Vec::new(),
+            side_effects,
         };
         model.next_level();
         model

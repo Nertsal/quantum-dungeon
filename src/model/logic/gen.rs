@@ -41,11 +41,12 @@ impl Model {
             Item(Id),
         }
 
-        let items = self
+        let mut state = self.state.borrow_mut();
+        let items = state
             .items
             .iter()
             .map(|(i, item)| (Thing::Item(i), item.position));
-        let entities = self
+        let entities = state
             .entities
             .iter()
             .map(|(i, e)| (Thing::Entity(i), e.position));
@@ -59,25 +60,25 @@ impl Model {
 
         for (thing, target) in moves {
             let from = match thing {
-                Thing::Entity(i) => self.entities[i].position,
-                Thing::Item(i) => self.items[i].position,
+                Thing::Entity(i) => state.entities[i].position,
+                Thing::Item(i) => state.items[i].position,
             };
 
             // Swap
-            for (_, item) in &mut self.items {
+            for (_, item) in &mut state.items {
                 if item.position == target {
                     item.position = from;
                 }
             }
-            for (_, entity) in &mut self.entities {
+            for (_, entity) in &mut state.entities {
                 if entity.position == target {
                     entity.position = from;
                 }
             }
 
             match thing {
-                Thing::Entity(i) => self.entities[i].position = target,
-                Thing::Item(i) => self.items[i].position = target,
+                Thing::Entity(i) => state.entities[i].position = target,
+                Thing::Item(i) => state.items[i].position = target,
             }
         }
     }
@@ -102,7 +103,7 @@ impl Model {
             let kind = options.choose(&mut rng).unwrap();
             let position = *available.iter().choose(&mut rng).unwrap();
 
-            self.entities.insert(Entity {
+            self.state.borrow_mut().entities.insert(Entity {
                 position,
                 fraction: Fraction::Enemy,
                 health: Health::new_max(health),
@@ -147,9 +148,10 @@ impl Model {
         //     return;
         // }
 
+        let mut state = self.state.borrow_mut();
         for (item_id, item) in &mut self.player.items {
             if let Some(id) = item.on_board {
-                if self.items.contains(id) {
+                if state.items.contains(id) {
                     // Already on the board
                     continue;
                 } else {
@@ -159,7 +161,7 @@ impl Model {
             }
 
             let position = *available.iter().choose(&mut rng).unwrap();
-            let on_board = self.items.insert(BoardItem {
+            let on_board = state.items.insert(BoardItem {
                 position,
                 item_id,
                 used: false,
