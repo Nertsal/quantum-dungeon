@@ -26,7 +26,8 @@ pub struct InventoryItem {
     pub temp_stats: ItemStats,
 }
 
-#[derive(Debug, Clone, Default)]
+#[derive(Debug, Clone, Default, Serialize, Deserialize)]
+#[serde(default)]
 pub struct ItemStats {
     pub damage: Option<i64>,
 }

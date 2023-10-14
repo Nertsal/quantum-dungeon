@@ -71,8 +71,8 @@ impl Engine {
 
         let mut state = Scope::new();
         let options = CallFnOptions::new().eval_ast(false).rewind_scope(false); // Retain variables
-        let base_stats: ItemStats =
-            call!(&self.inner, options, &mut state, &kind.script, "init", (),).unwrap_or_default();
+        call!(&self.inner, options, &mut state, &kind.script, "init", ());
+        let base_stats = kind.config.base_stats.clone();
 
         Ok(InventoryItem {
             on_board: None,

@@ -105,6 +105,8 @@ pub struct ItemConfig {
     pub name: Rc<str>,
     pub categories: Rc<[ItemCategory]>,
     pub appears_in_shop: bool,
+    #[serde(default)]
+    pub base_stats: ItemStats,
 }
 
 impl ItemAssets {
