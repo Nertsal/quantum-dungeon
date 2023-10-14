@@ -19,18 +19,6 @@ impl Model {
                 }
             }
 
-            let animation = &self.animations[i];
-            if let AnimationKind::MovePlayer { .. } = &animation.kind {
-                // Wait for effects
-                if let Phase::Player = self.phase {
-                    if self.animations.len() > 1 {
-                        continue;
-                    }
-                } else {
-                    continue;
-                }
-            }
-
             let animation = &mut self.animations[i];
             animation.time.change(-delta_time);
             if animation.time.is_min() {
@@ -47,40 +35,6 @@ impl Model {
         for i in finished {
             let mut animation = self.animations.remove(i).unwrap();
             match &animation.kind {
-                &AnimationKind::MovePlayer {
-                    entity_id,
-                    move_item,
-                    move_entity,
-                    target_pos,
-                } => {
-                    self.animations.insert(Animation::new(
-                        self.config.animation_time,
-                        AnimationKind::MoveEntity {
-                            entity_id,
-                            target_pos,
-                        },
-                    ));
-
-                    let target_pos = self.state.borrow().entities[entity_id].position;
-                    if let Some(entity_id) = move_entity {
-                        self.animations.insert(Animation::new(
-                            self.config.animation_time,
-                            AnimationKind::MoveEntity {
-                                entity_id,
-                                target_pos,
-                            },
-                        ));
-                    }
-                    if let Some(item_id) = move_item {
-                        self.animations.insert(Animation::new(
-                            self.config.animation_time,
-                            AnimationKind::MoveItem {
-                                item_id,
-                                target_pos,
-                            },
-                        ));
-                    }
-                }
                 AnimationKind::MoveEntity {
                     entity_id,
                     target_pos,

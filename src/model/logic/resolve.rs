@@ -2,6 +2,7 @@ use super::*;
 
 impl Model {
     pub(super) fn resolve_animations(&mut self, delta_time: Time) {
+        let wait_for_effects = self.wait_for_effects();
         match &mut self.phase {
             Phase::LevelStarting { timer } => {
                 timer.change(-delta_time);
@@ -57,6 +58,44 @@ impl Model {
                         }
                     }
                 }
+            }
+            Phase::Active {
+                entity_id,
+                position,
+                item,
+                entity,
+            } if wait_for_effects => {
+                let entity_id = *entity_id;
+                let target_pos = *position;
+
+                self.animations.insert(Animation::new(
+                    self.config.animation_time,
+                    AnimationKind::MoveEntity {
+                        entity_id,
+                        target_pos,
+                    },
+                ));
+
+                let target_pos = self.state.borrow().entities[entity_id].position;
+                if let Some(entity_id) = *entity {
+                    self.animations.insert(Animation::new(
+                        self.config.animation_time,
+                        AnimationKind::MoveEntity {
+                            entity_id,
+                            target_pos,
+                        },
+                    ));
+                }
+                if let Some(item_id) = *item {
+                    self.animations.insert(Animation::new(
+                        self.config.animation_time,
+                        AnimationKind::MoveItem {
+                            item_id,
+                            target_pos,
+                        },
+                    ));
+                }
+                self.player_phase();
             }
             _ => (),
         }

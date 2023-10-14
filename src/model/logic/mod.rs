@@ -278,15 +278,12 @@ impl Model {
             }
         }
 
-        self.animations.insert(Animation::new(
-            0.0,
-            AnimationKind::MovePlayer {
-                entity_id,
-                move_entity,
-                move_item,
-                target_pos,
-            },
-        ));
+        self.phase = Phase::Active {
+            entity_id,
+            item: move_item,
+            entity: move_entity,
+            position: target_pos,
+        };
     }
 }
 

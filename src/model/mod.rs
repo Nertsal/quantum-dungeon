@@ -64,6 +64,17 @@ pub enum Phase {
     },
     /// Player movement.
     Player,
+    /// Player moving and activating an item.
+    Active {
+        /// Id of the player.
+        entity_id: Id,
+        /// Target movement position
+        position: vec2<Coord>,
+        /// Item to swap with.
+        item: Option<Id>,
+        /// Entity to swap with.
+        entity: Option<Id>,
+    },
     /// Place a tile on the map.
     Map { tiles_left: usize },
     /// Swap position with a magic item.
