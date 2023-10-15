@@ -173,16 +173,14 @@ impl Engine {
     }
 }
 
-mod item {
+pub mod item {
     use super::*;
 
     pub fn module() -> Result<Module, ContextError> {
         let mut module = Module::new();
 
         module.ty::<Item>()?;
-        module.associated_function("damage_nearest", |item: &Item, damage: Hp| {
-            item.as_script().damage_nearest(damage)
-        })?;
+        module.function_meta(Item::damage_nearest)?;
 
         module.ty::<Stats>()?;
 
@@ -200,7 +198,7 @@ mod item {
     }
 
     #[derive(Debug, Clone, rune::Any)]
-    struct Stats {
+    pub struct Stats {
         #[rune(get)]
         damage: Hp,
     }
@@ -222,6 +220,11 @@ mod item {
                 board_item: &self.board_item,
                 item: &self.item,
             }
+        }
+
+        #[rune::function]
+        fn damage_nearest(&self, damage: ScriptFunction) {
+            self.as_script().damage_nearest(damage)
         }
     }
 

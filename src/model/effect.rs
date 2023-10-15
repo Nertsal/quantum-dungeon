@@ -16,9 +16,9 @@ pub enum Trigger {
     Active,
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug)]
 pub enum Effect {
-    Damage { target: Id, damage: Hp },
+    Damage { target: Id, damage: ScriptFunction },
 }
 
 impl Trigger {

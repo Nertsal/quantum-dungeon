@@ -1,7 +1,7 @@
 use super::*;
 
 impl ScriptItem<'_> {
-    pub fn damage_nearest(&mut self, damage: Hp) {
+    pub fn damage_nearest(&mut self, damage: ScriptFunction) {
         let source_fraction = Fraction::Player;
         let nearest = self
             .model
@@ -45,9 +45,12 @@ impl Model {
             log::error!("invalid item {:?}", effect.proc_item);
             return;
         };
+        let stats = self.player.items[proc_item.item_id].current_stats();
+        let stats = engine::item::Stats::from(stats);
 
         match effect.effect {
             Effect::Damage { target, damage } => {
+                let damage: Hp = damage.call((stats,)).expect("failed to call rune function"); // TODO: handle error
                 self.animations.insert(Animation::new(
                     self.config.animation_time,
                     AnimationKind::Damage {

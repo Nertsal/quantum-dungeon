@@ -15,6 +15,7 @@ use crate::prelude::*;
 use std::collections::VecDeque;
 
 pub type Script = rune::Unit;
+pub type ScriptFunction = rune::runtime::Function;
 pub type Time = R32;
 pub type Coord = i64;
 pub type Score = u64;

@@ -1,5 +1,6 @@
 pub fn init() {}
 
 pub fn active(item) {
-    item.damage_nearest(item.stats.damage);
+    // item.bonus_from_nearby(ItemRef::This);
+    item.damage_nearest(|stats| stats.damage);
 }
