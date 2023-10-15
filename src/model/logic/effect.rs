@@ -1,5 +1,16 @@
 use super::*;
 
+// #[rune::function(instance)]
+// fn damage_nearest(value: i64) -> i64 {
+//     value / 3
+// }
+
+// fn module() -> Result<Module, ContextError> {
+//     let mut m = Module::with_item(["mymodule"])?;
+//     m.function_meta(divide_by_three)?;
+//     Ok(m)
+// }
+
 impl InventoryItem {
     pub fn damage_nearest(self, damage: Hp, state: &ModelState, effects: &mut Vec<Effect>) {
         let Some(board_item) = self.on_board.and_then(|id| state.items.get(id)) else {

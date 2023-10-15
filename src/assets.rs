@@ -166,7 +166,7 @@ impl geng::asset::Load for ItemAsset {
                 description: geng::asset::Load::load(&manager, &path.join("description.txt"), &())
                     .await
                     .ok(),
-                script: geng::asset::Load::load(&manager, &path.join("script.rhai"), &())
+                script: geng::asset::Load::load(&manager, &path.join("script.rn"), &())
                     .await
                     .ok(),
                 texture: geng::asset::Load::load(

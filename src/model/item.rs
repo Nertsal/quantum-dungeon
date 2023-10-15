@@ -16,7 +16,7 @@ pub struct InventoryItem {
     /// The number of turns this item has been present on the board so far.
     pub turns_on_board: usize,
     /// State of the item script (local variables).
-    pub state: Scope<'static>,
+    pub state: ScriptState,
     /// Base stats that might be used to reset all modifications.
     pub base_stats: ItemStats,
     /// Permanent stats that persist through turns.
@@ -24,6 +24,20 @@ pub struct InventoryItem {
     /// Resolution stats that reset every turn, act as a modifier on the perm_stats.
     /// Call `current_stats()` to get relevant stats for the time.
     pub temp_stats: ItemStats,
+}
+
+#[derive(Debug, Default)]
+pub struct ScriptState {
+    pub stack: rune::runtime::Stack,
+}
+
+impl Clone for ScriptState {
+    fn clone(&self) -> Self {
+        Self {
+            stack: rune::alloc::prelude::TryClone::try_clone(&self.stack)
+                .expect("failed to clone item script state"),
+        }
+    }
 }
 
 #[derive(Debug, Clone, Default, Serialize, Deserialize)]
@@ -52,7 +66,7 @@ pub enum ItemCategory {
 #[derive(Clone)]
 pub struct ItemKind {
     pub config: ItemConfig,
-    pub script: Rc<Script>,
+    pub script: Arc<Script>,
 }
 
 impl InventoryItem {

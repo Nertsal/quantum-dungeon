@@ -3,7 +3,7 @@ use geng::{Key, MouseButton};
 use crate::{prelude::*, render::GameRender};
 
 pub struct Game {
-    geng: Geng,
+    // geng: Geng,
     assets: Rc<Assets>,
     render: GameRender,
     model: Model,
@@ -24,7 +24,7 @@ impl Game {
         all_items: &Rc<ItemAssets>,
     ) -> Self {
         Self {
-            geng: geng.clone(),
+            // geng: geng.clone(),
             assets: assets.clone(),
             render: GameRender::new(geng, assets, all_items),
             model: Model::new(assets.clone(), config, all_items),

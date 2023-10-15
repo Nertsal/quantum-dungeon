@@ -12,11 +12,9 @@ use self::{effect::*, engine::Engine};
 
 use crate::prelude::*;
 
-use rhai::Scope;
-
 use std::collections::VecDeque;
 
-pub type Script = rhai::AST;
+pub type Script = rune::Unit;
 pub type Time = R32;
 pub type Coord = i64;
 pub type Score = u64;
@@ -113,8 +111,12 @@ impl Model {
         // TODO: maybe mpsc or smth
         let side_effects = Rc::new(RefCell::new(Vec::new()));
 
-        let engine = Engine::new(Rc::clone(&state), Rc::clone(&side_effects));
-        let all_items = engine.compile_items(all_items);
+        // TODO: handle errors maybe
+        let engine = Engine::new(Rc::clone(&state), Rc::clone(&side_effects))
+            .expect("Script engine initialization failed");
+        let all_items = engine
+            .compile_items(all_items)
+            .expect("Item compilation failed");
 
         Self::new_compiled(assets, config, engine, all_items, state, side_effects)
     }

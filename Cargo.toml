@@ -10,5 +10,5 @@ clap = { version = "4", features = ["derive"] }
 generational-arena = "0.2.9"
 geng = "0.15.0"
 geng-utils = { git = "https://github.com/Nertsal/geng-utils" }
-rhai = "1.16.2"
+rune = "0.13.1"
 serde = { version = "1.0.188", features = ["derive"] }
