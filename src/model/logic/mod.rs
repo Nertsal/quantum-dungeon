@@ -17,7 +17,7 @@ impl Model {
         } else if self.animations.is_empty() && self.ending_animations.is_empty() {
             self.check_deaths();
             if let Phase::Player = self.phase {
-                if self.player.moves_left == 0 {
+                if self.state.borrow().player.moves_left == 0 {
                     self.vision_phase();
                 }
             }
@@ -64,7 +64,7 @@ impl Model {
             light_time: Lifetime::new_max(r32(1.0)),
         };
 
-        self.player.extra_items = self.turn % 2;
+        self.state.borrow_mut().player.extra_items = self.turn % 2;
         self.grid.fractured.clear();
         for (_, entity) in &self.state.borrow().entities {
             if let EntityKind::Player = entity.kind {
@@ -84,7 +84,7 @@ impl Model {
     pub fn day_phase(&mut self) {
         log::debug!("Day phase");
         self.phase = Phase::Player;
-        self.player.moves_left = 3;
+        self.state.borrow_mut().player.moves_left = 3;
     }
 
     fn player_phase(&mut self) {
@@ -130,8 +130,9 @@ impl Model {
     fn next_turn(&mut self) {
         log::debug!("Next turn");
         self.turn += 1;
-        self.player.turns_left = self.player.turns_left.saturating_sub(1);
-        if self.player.turns_left == 0 {
+        let mut state = self.state.borrow_mut();
+        state.player.turns_left = state.player.turns_left.saturating_sub(1);
+        if state.player.turns_left == 0 {
             // Damage for every enemy left on the board
             let damage = self
                 .state
@@ -140,13 +141,16 @@ impl Model {
                 .iter()
                 .filter(|(_, e)| e.fraction == Fraction::Enemy)
                 .count();
-            self.player.hearts = self.player.hearts.saturating_sub(damage);
-            if self.player.hearts == 0 {
+            state.player.hearts = state.player.hearts.saturating_sub(damage);
+            let hearts = state.player.hearts;
+            drop(state);
+            if hearts == 0 {
                 self.game_over();
             } else {
                 self.finish_level(false);
             }
         } else {
+            drop(state);
             self.night_phase(false);
         }
     }

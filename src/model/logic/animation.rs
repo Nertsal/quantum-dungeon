@@ -61,7 +61,7 @@ impl Model {
                 }
                 AnimationKind::ItemDeath { item, .. } => {
                     let item = self.state.borrow_mut().items.remove(*item).unwrap();
-                    self.player.items.remove(item.item_id);
+                    self.state.borrow_mut().player.items.remove(item.item_id);
                 }
                 AnimationKind::Dupe { kind } => {
                     self.new_item_and_spawn(kind.clone());
@@ -78,8 +78,12 @@ impl Model {
                     permanent,
                     ..
                 } => {
-                    let board_item = &self.state.borrow().items[*target];
-                    let item = &mut self.player.items[board_item.item_id];
+                    // What is this trick KEKW
+                    let mut state = self.state.borrow_mut();
+                    let state = &mut *state;
+
+                    let board_item = &state.items[*target];
+                    let item = &mut state.player.items[board_item.item_id];
                     if *permanent {
                         item.perm_stats = item.perm_stats.combine(bonus);
                     } else {
@@ -97,14 +101,15 @@ impl Model {
             .engine
             .init_item(kind)
             .expect("Item initialization failed"); // TODO: handle error
-        let item_id = self.player.items.insert(item);
+        let mut state = self.state.borrow_mut();
+        let item_id = state.player.items.insert(item);
 
         let available = self.calculate_empty_space().sub(&self.visible_tiles);
         if !available.is_empty() {
             let mut rng = thread_rng();
             let &position = available.iter().choose(&mut rng).unwrap();
 
-            let item = &mut self.player.items[item_id];
+            let item = &mut state.player.items[item_id];
             let on_board = self.state.borrow_mut().items.insert(BoardItem {
                 position,
                 item_id,

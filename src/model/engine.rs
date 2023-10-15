@@ -181,8 +181,10 @@ pub mod item {
 
         module.ty::<Item>()?;
         module.function_meta(Item::damage_nearest)?;
+        module.function_meta(Item::bonus_from_nearby)?;
 
         module.ty::<Stats>()?;
+        module.ty::<Filter>()?;
 
         Ok(module)
     }
@@ -198,9 +200,19 @@ pub mod item {
     }
 
     #[derive(Debug, Clone, rune::Any)]
+    #[rune(constructor)]
     pub struct Stats {
         #[rune(get)]
         damage: Hp,
+    }
+
+    #[derive(Debug, Clone, rune::Any)]
+    pub enum Filter {
+        #[rune(constructor)]
+        This,
+        #[rune(constructor)]
+        Category(#[rune(get)] ItemCategory),
+        Named(Rc<str>),
     }
 
     impl Item {
@@ -226,12 +238,40 @@ pub mod item {
         fn damage_nearest(&self, damage: ScriptFunction) {
             self.as_script().damage_nearest(damage)
         }
+
+        #[rune::function]
+        fn bonus_from_nearby(&self, range: Coord, filter: Filter, stats: Stats, permanent: bool) {
+            self.as_script().bonus_from_nearby(
+                range,
+                filter.into_filter(&self.item.kind.config.name),
+                stats.into(),
+                permanent,
+            )
+        }
     }
 
     impl From<ItemStats> for Stats {
         fn from(value: ItemStats) -> Self {
             Self {
                 damage: value.damage.unwrap_or_default(),
+            }
+        }
+    }
+
+    impl From<Stats> for ItemStats {
+        fn from(value: Stats) -> Self {
+            Self {
+                damage: Some(value.damage),
+            }
+        }
+    }
+
+    impl Filter {
+        fn into_filter(self, this: &Rc<str>) -> ItemFilter {
+            match self {
+                Filter::This => ItemFilter::Named(Rc::clone(this)),
+                Filter::Category(cat) => ItemFilter::Category(cat),
+                Filter::Named(name) => ItemFilter::Named(name),
             }
         }
     }

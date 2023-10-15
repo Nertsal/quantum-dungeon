@@ -22,8 +22,10 @@ impl Model {
                     self.assets.sounds.step.play();
                 }
                 PlayerInput::Reroll => {
-                    if self.player.refreshes > 0 {
-                        self.player.refreshes -= 1;
+                    let mut state = self.state.borrow_mut();
+                    if state.player.refreshes > 0 {
+                        state.player.refreshes -= 1;
+                        drop(state);
                         self.select_phase(extra_items + 1);
                         self.assets.sounds.step.play();
                     }
@@ -93,8 +95,8 @@ impl Model {
                 .iter_mut()
                 .find(|(_, item)| item.position == target_pos)
             {
-                let item = &self.player.items[target.item_id];
-                if ItemRef::Category(ItemCategory::Magic).check(&item.kind) {
+                let item = &state_ref.player.items[target.item_id];
+                if ItemFilter::Category(ItemCategory::Magic).check(&item.kind) {
                     let Some((_, player)) = state_ref
                         .entities
                         .iter_mut()
@@ -124,15 +126,18 @@ impl Model {
     }
 
     fn player_move(&mut self, player_input: PlayerInput) {
-        if self.player.moves_left == 0 {
+        let state = self.state.borrow();
+        if state.player.moves_left == 0 {
             // Should be unreachable
             log::error!("tried to move, but no moves are left");
+            drop(state);
             self.vision_phase();
             return;
         }
 
         if let PlayerInput::Skip = player_input {
             log::debug!("Skipping turn");
+            drop(state);
             self.vision_phase();
             self.assets.sounds.step.play();
             return;
@@ -140,7 +145,9 @@ impl Model {
 
         let mut moves = Vec::new();
         let mut move_dir = vec2::ZERO;
-        for (i, entity) in &mut self.state.borrow_mut().entities {
+        drop(state);
+        let mut state = self.state.borrow_mut();
+        for (i, entity) in &mut state.entities {
             if let EntityKind::Player = entity.kind {
                 // TODO: if there are multiple players, resolve conflicting movement
                 move_dir = match player_input {
@@ -168,6 +175,7 @@ impl Model {
         }
 
         let mut moved = false;
+        drop(state);
         for i in moves {
             let mut state = self.state.borrow_mut();
             let entity = state.entities.get_mut(i).unwrap();
@@ -181,7 +189,8 @@ impl Model {
         }
 
         if moved {
-            self.player.moves_left = self.player.moves_left.saturating_sub(1);
+            let mut state = self.state.borrow_mut();
+            state.player.moves_left = state.player.moves_left.saturating_sub(1);
             self.assets.sounds.step.play();
         }
     }
@@ -192,7 +201,7 @@ impl Model {
             .engine
             .init_item(item)
             .expect("Item initialization failed"); // TODO: handle error
-        self.player.items.insert(item);
+        self.state.borrow_mut().player.items.insert(item);
         let items = if let Phase::Select { extra_items, .. } = self.phase {
             extra_items
         } else {

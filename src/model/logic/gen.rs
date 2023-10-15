@@ -2,18 +2,21 @@ use super::*;
 
 impl Model {
     pub fn next_level(&mut self) {
-        if self.level > 0 {
-            self.score += self.config.score_per_level;
-            self.score += self.config.score_per_turn_left * self.player.turns_left as Score;
+        {
+            let mut state = self.state.borrow_mut();
+            if self.level > 0 {
+                self.score += self.config.score_per_level;
+                self.score += self.config.score_per_turn_left * state.player.turns_left as Score;
+            }
+
+            self.level += 1;
+            log::info!("Next level {}", self.level);
+
+            let turns = 4 + 2_usize.pow(self.level as u32 / 4);
+            let turns = turns.min(10);
+            state.player.turns_left = turns;
+            // self.player.hearts = 3;
         }
-
-        self.level += 1;
-        log::info!("Next level {}", self.level);
-
-        let turns = 4 + 2_usize.pow(self.level as u32 / 4);
-        let turns = turns.min(10);
-        self.player.turns_left = turns;
-        // self.player.hearts = 3;
 
         // self.items.clear();
         // if self.entities.len() == 1 {
@@ -148,8 +151,11 @@ impl Model {
         //     return;
         // }
 
+        // What is this trick KEKW
         let mut state = self.state.borrow_mut();
-        for (item_id, item) in &mut self.player.items {
+        let state = &mut *state;
+
+        for (item_id, item) in &mut state.player.items {
             if let Some(id) = item.on_board {
                 if state.items.contains(id) {
                     // Already on the board

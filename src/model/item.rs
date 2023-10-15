@@ -56,20 +56,24 @@ pub struct ItemStats {
     pub damage: Option<i64>,
 }
 
-/// A reference to an item kind or a category of items.
-/// Used in synergies.
-#[derive(Debug, Clone)]
-pub enum ItemRef {
+/// A filter for item kind or category of items.
+#[derive(Debug, Clone, rune::Any)]
+pub enum ItemFilter {
     Category(ItemCategory),
-    Specific { name: Rc<str> },
+    Named(Rc<str>),
 }
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, rune::Any)]
 pub enum ItemCategory {
+    #[rune(constructor)]
     Spooky,
+    #[rune(constructor)]
     Tech,
+    #[rune(constructor)]
     Weapon,
+    #[rune(constructor)]
     Treasure,
+    #[rune(constructor)]
     Magic,
 }
 
@@ -86,11 +90,11 @@ impl InventoryItem {
     }
 }
 
-impl ItemRef {
+impl ItemFilter {
     pub fn check(&self, item: &ItemKind) -> bool {
         match self {
-            ItemRef::Category(category) => item.config.categories.contains(category),
-            ItemRef::Specific { name } => item.config.name == *name,
+            ItemFilter::Category(category) => item.config.categories.contains(category),
+            ItemFilter::Named(name) => item.config.name == *name,
         }
     }
 }

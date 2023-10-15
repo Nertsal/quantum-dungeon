@@ -104,8 +104,8 @@ impl GameRender {
                         // Highlight magic items
                         if model.state.borrow().items.iter().any(|(_, item)| {
                             item.position == pos
-                                && ItemRef::Category(ItemCategory::Magic)
-                                    .check(&model.player.items[item.item_id].kind)
+                                && ItemFilter::Category(ItemCategory::Magic)
+                                    .check(&model.state.borrow().player.items[item.item_id].kind)
                         }) {
                             TileLight::Light
                         } else {
@@ -181,7 +181,7 @@ impl GameRender {
         self.draw_animations(model, framebuffer);
 
         // Hearts
-        for i in 0..model.player.hearts {
+        for i in 0..model.state.borrow().player.hearts {
             let pos = self.ui_camera.center + vec2(-6.7, 1.7) + vec2(i, 0).as_f32() * 0.6;
             let size = vec2::splat(1.5);
             let target = Aabb2::point(pos).extend_symmetric(size / 2.0);
@@ -199,7 +199,7 @@ impl GameRender {
                 &self.ui_camera,
                 &draw2d::Text::unit(
                     self.assets.font.clone(),
-                    format!("{}", model.player.turns_left),
+                    format!("{}", model.state.borrow().player.turns_left),
                     Color::try_from("#c9464b").unwrap(),
                 )
                 .scale_uniform(0.15)
@@ -363,7 +363,7 @@ impl GameRender {
                 self.draw_at_ui(*target, texture, framebuffer);
             }
 
-            if model.player.refreshes > 0 {
+            if model.state.borrow().player.refreshes > 0 {
                 self.draw_button(
                     self.reroll_button,
                     &self.assets.sprites.reroll_button,
@@ -389,7 +389,7 @@ impl GameRender {
             .find(|(_, item)| item.position == cursor_cell_pos)
         {
             // Item hint
-            let item = &model.player.items[item.item_id];
+            let item = &model.state.borrow().player.items[item.item_id];
             self.draw_item_hint(&item.kind, cursor_ui_pos, framebuffer);
         }
 
@@ -672,7 +672,8 @@ impl GameRender {
         );
 
         let mut items = Vec::new();
-        for (i, item) in &model.player.items {
+        let state = model.state.borrow();
+        for (i, item) in &state.player.items {
             // if let Some((_, count)) = items.iter_mut().find(|(kind, _)| *kind == item) {
             //     *count += 1;
             // } else {
@@ -892,7 +893,7 @@ impl GameRender {
         model: &Model,
         framebuffer: &mut ugli::Framebuffer,
     ) {
-        let item = &model.player.items[board_item.item_id];
+        let item = &model.state.borrow().player.items[board_item.item_id];
 
         let alpha = model.get_light_level(board_item.position);
         let alpha = crate::util::smoothstep(alpha);
@@ -1092,7 +1093,7 @@ impl GameRender {
 
         if let EntityKind::Player = entity.kind {
             // Draw the remaining moves as circles
-            let moves = model.player.moves_left.min(6);
+            let moves = model.state.borrow().player.moves_left.min(6);
             let offset = (moves as f32 - 1.0) / 2.0;
             for i in 0..moves {
                 let pos = (position + vec2(0.0, -0.27)) * self.cell_size

@@ -18,7 +18,16 @@ pub enum Trigger {
 
 #[derive(Debug)]
 pub enum Effect {
-    Damage { target: Id, damage: ScriptFunction },
+    Damage {
+        target: Id,
+        damage: ScriptFunction,
+    },
+    Bonus {
+        from: vec2<Coord>,
+        target: Id,
+        bonus: ItemStats,
+        permanent: bool,
+    },
 }
 
 impl Trigger {
@@ -37,6 +46,7 @@ impl Effect {
     pub fn priority(&self) -> i64 {
         match self {
             Effect::Damage { .. } => 0,
+            Effect::Bonus { .. } => 10,
         }
     }
 }

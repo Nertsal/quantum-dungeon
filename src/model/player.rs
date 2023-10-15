@@ -24,14 +24,14 @@ pub enum PlayerInput {
 }
 
 impl Player {
-    pub fn new(items: Arena<InventoryItem>) -> Self {
+    pub fn new() -> Self {
         Self {
             moves_left: 0,
             turns_left: 0,
             hearts: 3,
             extra_items: 0,
             refreshes: 0,
-            items,
+            items: Arena::new(),
         }
     }
 }

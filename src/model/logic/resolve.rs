@@ -19,8 +19,11 @@ impl Model {
             Phase::PostVision { timer } => {
                 timer.change(-delta_time);
                 if timer.is_min() {
-                    self.player.refreshes = 2;
-                    self.select_phase(self.player.extra_items);
+                    let mut state = self.state.borrow_mut();
+                    state.player.refreshes = 2;
+                    let extra = state.player.extra_items;
+                    drop(state);
+                    self.select_phase(extra);
                 }
             }
             Phase::Night {
@@ -108,14 +111,18 @@ impl Model {
             end_delay: Lifetime::new_max(r32(0.2)),
         };
 
+        // What is this trick KEKW
+        let mut state = self.state.borrow_mut();
+        let state = &mut *state;
+
         // Clear temp stats
-        for (_, item) in &mut self.player.items {
+        for (_, item) in &mut state.player.items {
             item.temp_stats = ItemStats::default();
         }
         // Update turn counter
-        for (_, item) in &mut self.state.borrow_mut().items {
+        for (_, item) in &mut state.items {
             item.used = false;
-            self.player.items[item.item_id].turns_on_board += 1;
+            state.player.items[item.item_id].turns_on_board += 1;
         }
     }
 
@@ -164,7 +171,7 @@ impl Model {
             }
         }
 
-        let item = &self.player.items[board_item.item_id];
+        let item = &state.player.items[board_item.item_id];
 
         // Execute
         // NOTE: requires immutable access to [ModelState]
@@ -175,12 +182,15 @@ impl Model {
 
         // Update item state
         drop(state);
+        // What is this trick KEKW
         let mut state = self.state.borrow_mut();
+        let state = &mut *state;
+
         let board_item = state.items.get_mut(item_id).unwrap();
         if let Trigger::Active = trigger {
             board_item.used = true;
         }
-        self.player.items[board_item.item_id].state = item_state;
+        state.player.items[board_item.item_id].state = item_state;
 
         std::mem::take(&mut *self.side_effects.borrow_mut())
     }

@@ -13,6 +13,50 @@ impl ScriptItem<'_> {
             self.effects.push(Effect::Damage { target, damage });
         }
     }
+
+    pub fn bonus_from_nearby(
+        &mut self,
+        range: Coord,
+        filter: ItemFilter,
+        bonus: ItemStats,
+        permanent: bool,
+    ) {
+        for (target, board_item) in &self.model.items {
+            let item = &self.model.player.items[board_item.item_id];
+            let dist = distance(board_item.position, self.board_item.position);
+            if (1..=range).contains(&dist) && filter.check(&item.kind) {
+                self.effects.push(Effect::Bonus {
+                    from: self.board_item.position,
+                    target,
+                    bonus: bonus.clone(),
+                    permanent,
+                });
+            }
+        }
+    }
+    // /// Give a temporary bonus to nearby items.
+    // pub(super) fn bonus_near_temporary(
+    //     &mut self,
+    //     position: vec2<Coord>,
+    //     range: Coord,
+    //     item_ref: ItemFilter,
+    //     bonus: ItemStats,
+    // ) {
+    //     for (target, board_item) in &self.state.borrow().items {
+    //         let item = &mut self.player.items[board_item.item_id];
+    //         if distance(board_item.position, position) <= range && item_ref.check(&item.kind) {
+    //             self.animations.insert(Animation::new(
+    //                 self.config.animation_time,
+    //                 AnimationKind::Bonus {
+    //                     from: position,
+    //                     target,
+    //                     bonus: bonus.clone(),
+    //                     permanent: false,
+    //                 },
+    //             ));
+    //         }
+    //     }
+    // }
 }
 
 impl Model {
@@ -45,7 +89,7 @@ impl Model {
             log::error!("invalid item {:?}", effect.proc_item);
             return;
         };
-        let stats = self.player.items[proc_item.item_id].current_stats();
+        let stats = state.player.items[proc_item.item_id].current_stats();
         let stats = engine::item::Stats::from(stats);
 
         match effect.effect {
@@ -57,6 +101,22 @@ impl Model {
                         from: proc_item.position,
                         target,
                         damage,
+                    },
+                ));
+            }
+            Effect::Bonus {
+                from,
+                target,
+                bonus,
+                permanent,
+            } => {
+                self.animations.insert(Animation::new(
+                    self.config.animation_time,
+                    AnimationKind::Bonus {
+                        from,
+                        target,
+                        bonus,
+                        permanent,
                     },
                 ));
             }

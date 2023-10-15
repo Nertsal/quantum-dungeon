@@ -6,11 +6,12 @@ impl Model {
         &mut self,
         position: vec2<Coord>,
         range: Coord,
-        item_ref: ItemRef,
+        item_ref: ItemFilter,
         bonus: ItemStats,
     ) {
-        for (target, board_item) in &self.state.borrow().items {
-            let item = &mut self.player.items[board_item.item_id];
+        let state = self.state.borrow();
+        for (target, board_item) in &state.items {
+            let item = &state.player.items[board_item.item_id];
             if distance(board_item.position, position) <= range && item_ref.check(&item.kind) {
                 self.animations.insert(Animation::new(
                     self.config.animation_time,
@@ -107,14 +108,14 @@ impl Model {
         })
     }
 
-    pub(super) fn count_items_near(&self, position: vec2<Coord>, item_ref: ItemRef) -> Vec<Id> {
-        self.state
-            .borrow()
+    pub(super) fn count_items_near(&self, position: vec2<Coord>, item_ref: ItemFilter) -> Vec<Id> {
+        let state = self.state.borrow();
+        state
             .items
             .iter()
             .filter(|(_, board_item)| {
                 let d = distance(position, board_item.position);
-                let item = &self.player.items[board_item.item_id];
+                let item = &state.player.items[board_item.item_id];
                 item_ref.check(&item.kind) && d > 0 && d <= 1
             })
             .map(|(i, _)| i)

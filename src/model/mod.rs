@@ -31,7 +31,6 @@ pub struct Model {
     pub score: Score,
     pub phase: Phase,
     pub grid: Grid,
-    pub player: Player,
     pub visible_tiles: HashSet<vec2<Coord>>,
     pub animations: Arena<Animation>,
     pub ending_animations: Vec<Animation>,
@@ -44,6 +43,7 @@ pub struct Model {
 /// The stuff accessible from within the scripts.
 #[derive(Debug)]
 pub struct ModelState {
+    pub player: Player,
     pub items: Arena<BoardItem>,
     pub entities: Arena<Entity>,
 }
@@ -97,6 +97,7 @@ pub enum Phase {
 impl Model {
     pub fn new(assets: Rc<Assets>, config: Config, all_items: &ItemAssets) -> Self {
         let state = ModelState {
+            player: Player::new(),
             items: Arena::new(),
             entities: [Entity {
                 position: vec2(0, 0),
@@ -120,6 +121,24 @@ impl Model {
             .compile_items(all_items)
             .expect("Item compilation failed");
 
+        {
+            // Initialize player items
+            let player_items = &mut state.borrow_mut().player.items;
+            for item in &config.starting_items {
+                match all_items.iter().find(|kind| *kind.config.name == **item) {
+                    Some(item) => {
+                        let item = engine
+                            .init_item(item.clone())
+                            .expect("Item initialization failed");
+                        player_items.insert(item);
+                    }
+                    None => {
+                        panic!("Unknown item {}", item);
+                    }
+                };
+            }
+        }
+
         Self::new_compiled(assets, config, engine, all_items, state, side_effects)
     }
 
@@ -131,21 +150,6 @@ impl Model {
         state: Rc<RefCell<ModelState>>,
         side_effects: Rc<RefCell<Vec<Effect>>>,
     ) -> Self {
-        let mut player_items = Arena::new();
-        for item in &config.starting_items {
-            match all_items.iter().find(|kind| *kind.config.name == **item) {
-                Some(item) => {
-                    let item = engine
-                        .init_item(item.clone())
-                        .expect("Item initialization failed");
-                    player_items.insert(item);
-                }
-                None => {
-                    panic!("Unknown item {}", item);
-                }
-            };
-        }
-
         let mut model = Self {
             assets,
             config,
@@ -160,7 +164,6 @@ impl Model {
                 light_time: Lifetime::new_max(r32(0.5)),
             },
             grid: Grid::new(3),
-            player: Player::new(player_items),
             visible_tiles: HashSet::new(),
             animations: Arena::new(),
             ending_animations: Vec::new(),
