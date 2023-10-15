@@ -153,24 +153,34 @@ impl Model {
 
     /// Resolve the item's response to the trigger.
     fn resolve_item(&mut self, item_id: Id, trigger: Trigger) -> Vec<Effect> {
-        let mut state = self.state.borrow_mut();
-        let Some(board_item) = state.items.get_mut(item_id) else {
+        let state = self.state.borrow();
+        let Some(board_item) = state.items.get(item_id) else {
             return vec![];
         };
 
         if let Trigger::Active = trigger {
-            if std::mem::replace(&mut board_item.used, true) {
-                // Item already used, cant activate again
+            if board_item.used {
                 return vec![];
             }
         }
 
-        let item = &mut self.player.items[board_item.item_id];
+        let item = &self.player.items[board_item.item_id];
 
-        drop(state); // Drop a reference so the script can access it
-        self.engine
-            .item_trigger(item, trigger.method_name())
+        // Execute
+        // NOTE: requires immutable access to [ModelState]
+        let item_state = self
+            .engine
+            .item_trigger(item, board_item, trigger.method_name())
             .expect("Trigger handler failed"); // TODO: handle error
+
+        // Update item state
+        drop(state);
+        let mut state = self.state.borrow_mut();
+        let board_item = state.items.get_mut(item_id).unwrap();
+        if let Trigger::Active = trigger {
+            board_item.used = true;
+        }
+        self.player.items[board_item.item_id].state = item_state;
 
         std::mem::take(&mut *self.side_effects.borrow_mut())
     }

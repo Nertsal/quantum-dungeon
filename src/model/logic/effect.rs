@@ -1,34 +1,16 @@
 use super::*;
 
-// #[rune::function(instance)]
-// fn damage_nearest(value: i64) -> i64 {
-//     value / 3
-// }
-
-// fn module() -> Result<Module, ContextError> {
-//     let mut m = Module::with_item(["mymodule"])?;
-//     m.function_meta(divide_by_three)?;
-//     Ok(m)
-// }
-
-impl InventoryItem {
-    pub fn damage_nearest(self, damage: Hp, state: &ModelState, effects: &mut Vec<Effect>) {
-        let Some(board_item) = self.on_board.and_then(|id| state.items.get(id)) else {
-            log::error!(
-                "called an effect from an item that is not on the board: {:?}",
-                self
-            );
-            return;
-        };
-
+impl ScriptItem<'_> {
+    pub fn damage_nearest(&mut self, damage: Hp) {
         let source_fraction = Fraction::Player;
-        let nearest = state
+        let nearest = self
+            .model
             .entities
             .iter()
             .filter(|(_, entity)| source_fraction != entity.fraction)
-            .min_by_key(|(_, entity)| distance(entity.position, board_item.position));
+            .min_by_key(|(_, entity)| distance(entity.position, self.board_item.position));
         if let Some((target, _)) = nearest {
-            effects.push(Effect::Damage { target, damage });
+            self.effects.push(Effect::Damage { target, damage });
         }
     }
 }

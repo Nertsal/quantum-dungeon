@@ -41,6 +41,7 @@ pub struct Model {
 }
 
 /// The stuff accessible from within the scripts.
+#[derive(Debug)]
 pub struct ModelState {
     pub items: Arena<BoardItem>,
     pub entities: Arena<Entity>,

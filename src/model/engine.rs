@@ -8,6 +8,8 @@ use rune::{
 };
 
 pub struct Engine {
+    model_state: Rc<RefCell<ModelState>>,
+    side_effects: Rc<RefCell<Vec<Effect>>>,
     context: Context,
     runtime: Arc<RuntimeContext>,
 }
@@ -25,15 +27,8 @@ pub struct Engine {
 // }
 
 impl Engine {
-    pub fn empty() -> Self {
-        Self {
-            context: Context::default(),
-            runtime: Arc::new(RuntimeContext::default()),
-        }
-    }
-
     pub fn new(
-        state: Rc<RefCell<ModelState>>,
+        model_state: Rc<RefCell<ModelState>>,
         side_effects: Rc<RefCell<Vec<Effect>>>,
     ) -> Result<Self> {
         let mut context = Context::with_default_modules()?;
@@ -63,7 +58,12 @@ impl Engine {
         //     }
         // });
 
-        Ok(Self { context, runtime })
+        Ok(Self {
+            model_state,
+            side_effects,
+            context,
+            runtime,
+        })
     }
 
     pub fn compile_items(&self, all_items: &ItemAssets) -> Result<Vec<ItemKind>> {
@@ -133,6 +133,8 @@ impl Engine {
         let base_stats = kind.config.base_stats.clone();
 
         Ok(InventoryItem {
+            model_state: Rc::clone(&self.model_state),
+            side_effects: Rc::clone(&self.side_effects),
             on_board: None,
             kind,
             state,
@@ -143,12 +145,17 @@ impl Engine {
         })
     }
 
-    /// Call the item's trigger handler (if it is defined).
+    /// Call the item's trigger handler (if it is defined) and return the new item state.
     /// Side effects produced by the script are put into [ModelState].
     ///
     /// *NOTE*: it borrows [ModelState] and mutates `side_effects`.
-    pub fn item_trigger(&self, item: &mut InventoryItem, method: &str) -> Result<()> {
-        let script_item = item::Item::from(&*item);
+    pub fn item_trigger(
+        &self,
+        item: &InventoryItem,
+        board_item: &BoardItem,
+        method: &str,
+    ) -> Result<ScriptState> {
+        let script_item = item::Item::from_real(item, board_item);
 
         let vm = Vm::with_stack(
             Arc::clone(&self.runtime),
@@ -158,11 +165,11 @@ impl Engine {
         if let Ok(fun) = vm.lookup_function([method]) {
             fun.call((script_item,)).into_result()?;
         }
-        item.state = ScriptState {
+
+        Ok(ScriptState {
             stack: rune::alloc::prelude::TryClone::try_clone(vm.stack())
                 .expect("failed to clone script stack"),
-        };
-        Ok(())
+        })
     }
 }
 
@@ -173,6 +180,10 @@ mod item {
         let mut module = Module::new();
 
         module.ty::<Item>()?;
+        module.associated_function("damage_nearest", |item: &Item, damage: Hp| {
+            item.as_script().damage_nearest(damage)
+        })?;
+
         module.ty::<Stats>()?;
 
         Ok(module)
@@ -180,23 +191,36 @@ mod item {
 
     #[derive(Debug, Clone, rune::Any)]
     pub struct Item {
+        board_item: BoardItem,
+        item: InventoryItem,
         #[rune(get)]
-        pub turns_on_board: usize,
+        turns_on_board: usize,
         #[rune(get)]
-        pub stats: Stats,
+        stats: Stats,
     }
 
     #[derive(Debug, Clone, rune::Any)]
-    pub struct Stats {
+    struct Stats {
         #[rune(get)]
-        pub damage: Hp,
+        damage: Hp,
     }
 
-    impl From<&InventoryItem> for Item {
-        fn from(value: &InventoryItem) -> Self {
+    impl Item {
+        pub fn from_real(item: &InventoryItem, board_item: &BoardItem) -> Self {
             Self {
-                turns_on_board: value.turns_on_board,
-                stats: value.current_stats().into(),
+                board_item: board_item.clone(),
+                item: item.clone(),
+                turns_on_board: item.turns_on_board,
+                stats: item.current_stats().into(),
+            }
+        }
+
+        pub fn as_script(&self) -> ScriptItem<'_> {
+            ScriptItem {
+                model: self.item.model_state.borrow(),
+                effects: self.item.side_effects.borrow_mut(),
+                board_item: &self.board_item,
+                item: &self.item,
             }
         }
     }

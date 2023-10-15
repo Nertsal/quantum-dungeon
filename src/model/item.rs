@@ -10,6 +10,8 @@ pub struct BoardItem {
 
 #[derive(Debug, Clone)]
 pub struct InventoryItem {
+    pub model_state: Rc<RefCell<ModelState>>,
+    pub side_effects: Rc<RefCell<Vec<Effect>>>,
     /// The id of the board item, if it is present on the board.
     pub on_board: Option<Id>,
     pub kind: ItemKind,
@@ -24,6 +26,14 @@ pub struct InventoryItem {
     /// Resolution stats that reset every turn, act as a modifier on the perm_stats.
     /// Call `current_stats()` to get relevant stats for the time.
     pub temp_stats: ItemStats,
+}
+
+/// A representation on the item used temporarily for scripts.
+pub struct ScriptItem<'a> {
+    pub model: Ref<'a, ModelState>,
+    pub effects: RefMut<'a, Vec<Effect>>,
+    pub board_item: &'a BoardItem,
+    pub item: &'a InventoryItem,
 }
 
 #[derive(Debug, Default)]

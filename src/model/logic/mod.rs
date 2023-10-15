@@ -169,7 +169,10 @@ impl Model {
         *self = Self::new_compiled(
             self.assets.clone(),
             self.config.clone(),
-            std::mem::replace(&mut self.engine, Engine::empty()),
+            std::mem::replace(
+                &mut self.engine,
+                Engine::new(Rc::clone(&self.state), Rc::clone(&self.side_effects)).unwrap(),
+            ),
             self.all_items.clone(),
             Rc::clone(&self.state),
             Rc::clone(&self.side_effects),

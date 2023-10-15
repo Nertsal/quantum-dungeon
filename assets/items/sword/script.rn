@@ -1,1 +1,5 @@
+pub fn init() {}
 
+pub fn active(item) {
+    item.damage_nearest(item.stats.damage);
+}
