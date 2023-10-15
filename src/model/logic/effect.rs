@@ -21,13 +21,13 @@ impl ScriptItem<'_> {
         bonus: ItemStats,
         permanent: bool,
     ) {
-        for (target, board_item) in &self.model.items {
+        for (_, board_item) in &self.model.items {
             let item = &self.model.player.items[board_item.item_id];
             let dist = distance(board_item.position, self.board_item.position);
             if (1..=range).contains(&dist) && filter.check(&item.kind) {
                 self.effects.push(Effect::Bonus {
-                    from: self.board_item.position,
-                    target,
+                    from: board_item.position,
+                    target: self.item.on_board.unwrap(),
                     bonus: bonus.clone(),
                     permanent,
                 });

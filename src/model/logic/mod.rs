@@ -279,7 +279,7 @@ impl Model {
         for i in ids {
             if self.state.borrow().items[i].position == target_pos {
                 // Activate
-                self.resolve_trigger(Trigger::Active, None);
+                self.resolve_trigger(Trigger::Active, Some(i));
                 // Swap
                 move_item = Some(i);
             }
