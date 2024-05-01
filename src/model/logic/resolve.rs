@@ -169,9 +169,7 @@ impl Model {
     /// Start item passive resolution animation.
     /// If there is an animation required for the item, its priority is returned.
     fn resolve_item_passive(&mut self, item_id: Id) -> Option<isize> {
-        let Some(board_item) = self.items.get(item_id) else {
-            return None;
-        };
+        let board_item = self.items.get(item_id)?;
 
         let mut rng = thread_rng();
         let item = &self.player.items[board_item.item_id];
