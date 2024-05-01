@@ -1,0 +1,2 @@
+On use :
+Deals total damage of 2 times every connected tech item to the nearest enemy.

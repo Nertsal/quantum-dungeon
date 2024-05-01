@@ -1,0 +1,2 @@
+On use :
+Deals 5 damage to a random enemy, destroys itself after.
