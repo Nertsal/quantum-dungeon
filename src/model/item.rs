@@ -8,7 +8,7 @@ pub struct BoardItem {
     pub used: bool,
 }
 
-#[derive(Debug, Clone)]
+#[derive(Clone)]
 pub struct InventoryItem {
     pub model_state: Rc<RefCell<ModelState>>,
     pub side_effects: Rc<RefCell<Vec<Effect>>>,

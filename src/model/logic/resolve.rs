@@ -160,13 +160,17 @@ impl Model {
 
     /// Resolve the item's response to the trigger.
     fn resolve_item(&mut self, item_id: Id, trigger: Trigger) -> Vec<Effect> {
+        log::debug!("Resolving item {:?} trigger {:?}", item_id, trigger);
+
         let state = self.state.borrow();
         let Some(board_item) = state.items.get(item_id) else {
+            log::debug!("Item {:?} not found on the board", item_id);
             return vec![];
         };
 
         if let Trigger::Active = trigger {
             if board_item.used {
+                log::debug!("Item {:?} has already been activated", item_id);
                 return vec![];
             }
         }
@@ -175,10 +179,16 @@ impl Model {
 
         // Execute
         // NOTE: requires immutable access to [ModelState]
-        let item_state = self
+        let item_state = match self
             .engine
             .item_trigger(item, board_item, trigger.method_name())
-            .expect("Trigger handler failed"); // TODO: handle error
+        {
+            Ok(state) => state,
+            Err(err) => {
+                log::error!("Trigger handler failed: {:?}", err);
+                return vec![];
+            }
+        };
 
         // Update item state
         drop(state);
@@ -188,11 +198,14 @@ impl Model {
 
         let mut effects = std::mem::take(&mut *self.side_effects.borrow_mut());
         let board_item = state.items.get(item_id).unwrap();
-        if let Trigger::Active = trigger {
+        if matches!(trigger, Trigger::Active)
+            && !matches!(effects.last(), Some(Effect::Destroy { .. }))
+        {
             effects.push(Effect::SetUsed { item_id });
         }
         state.player.items[board_item.item_id].state = item_state;
 
+        log::debug!("Item {:?} resolved: {:?}", item_id, effects);
         effects
     }
 

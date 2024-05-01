@@ -9,7 +9,11 @@ use super::*;
 
 impl Model {
     pub fn update(&mut self, delta_time: Time) {
-        self.update_animations(delta_time);
+        // TODO: unhardcode
+        if let Phase::Map { .. } = self.phase {
+        } else {
+            self.update_animations(delta_time);
+        }
         self.resolve_animations(delta_time);
         self.update_effects();
 
@@ -197,7 +201,6 @@ impl Model {
     }
 
     pub fn update_vision(&mut self) {
-        log::debug!("Updating vision");
         let mut visible: HashSet<_> = self.grid.lights.keys().copied().collect();
         for (_, entity) in &self.state.borrow().entities {
             if let EntityKind::Player = entity.kind {

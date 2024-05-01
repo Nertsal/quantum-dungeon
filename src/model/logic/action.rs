@@ -2,11 +2,14 @@ use super::*;
 
 impl Model {
     pub fn player_action(&mut self, player_input: PlayerInput) {
-        log::debug!(
-            "Player action: {:?}, current phase: {:?}",
-            player_input,
-            self.phase
-        );
+        if let PlayerInput::Vision { .. } = player_input {
+        } else {
+            log::debug!(
+                "Player action: {:?}, current phase: {:?}",
+                player_input,
+                self.phase
+            );
+        }
         match &self.phase {
             Phase::Player if self.wait_for_effects() => self.player_move(player_input),
             Phase::Vision => self.player_vision(player_input),
@@ -58,11 +61,20 @@ impl Model {
             return;
         }
 
-        if let Phase::Map { tiles_left } = &mut self.phase {
+        if let Phase::Map {
+            tiles_left,
+            next_phase,
+        } = &mut self.phase
+        {
             self.grid.expand(pos);
             *tiles_left = tiles_left.saturating_sub(1);
             if *tiles_left == 0 {
-                self.player_phase();
+                log::debug!("Moving from Map phase to {:?}", next_phase);
+                let mut phase = Phase::Vision;
+                std::mem::swap(&mut self.phase, &mut phase);
+                if let Phase::Map { next_phase, .. } = phase {
+                    self.phase = *next_phase;
+                }
             }
             self.assets.sounds.step.play();
         } else {
@@ -225,7 +237,7 @@ impl Model {
                     }
                 };
                 if dir.x != 0 && dir.y != 0 {
-                    log::error!("invalid input direction during phase Vision: {}", dir);
+                    // log::error!("invalid input direction during phase Vision: {}", dir);
                     return;
                 }
                 entity.look_dir = dir.map(|x| x.clamp_abs(1));

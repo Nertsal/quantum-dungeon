@@ -41,7 +41,6 @@ pub struct Model {
 }
 
 /// The stuff accessible from within the scripts.
-#[derive(Debug)]
 pub struct ModelState {
     pub player: Player,
     pub items: Arena<BoardItem>,
@@ -76,7 +75,11 @@ pub enum Phase {
         entity: Option<Id>,
     },
     /// Place a tile on the map.
-    Map { tiles_left: usize },
+    Map {
+        tiles_left: usize,
+        /// Phase to go to after the tiles have been opened.
+        next_phase: Box<Phase>,
+    },
     /// Swap position with a magic item.
     Portal,
     /// Player sets their look direction.

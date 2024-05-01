@@ -1,6 +1,5 @@
 use super::*;
 
-#[derive(Debug)]
 pub struct Player {
     pub moves_left: usize,
     pub turns_left: usize,

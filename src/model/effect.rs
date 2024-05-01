@@ -31,15 +31,23 @@ pub enum Effect {
         bonus: ItemStats,
         permanent: bool,
     },
+    /// Uncover tiles on the map.
+    OpenTiles {
+        tiles: usize,
+    },
+    /// Completely remove the item from the map.
+    Destroy {
+        item_id: Id,
+    },
 }
 
 impl Trigger {
     /// The name of the method in scripts responsible for handling the trigger.
     pub fn method_name(&self) -> &'static str {
         match self {
-            Trigger::Night => "night",
-            Trigger::Day => "day",
-            Trigger::Active => "active",
+            Self::Night => "night",
+            Self::Day => "day",
+            Self::Active => "active",
         }
     }
 }
@@ -48,9 +56,11 @@ impl Effect {
     /// The effect's priority for sorting when multiple effects are happening at the same time.
     pub fn priority(&self) -> i64 {
         match self {
-            Effect::SetUsed { .. } => -999999,
-            Effect::Damage { .. } => 0,
-            Effect::Bonus { .. } => 10,
+            Self::SetUsed { .. } => -999999,
+            Self::Damage { .. } => 0,
+            Self::Bonus { .. } => 10,
+            Self::OpenTiles { .. } => 999,
+            Self::Destroy { .. } => 100,
         }
     }
 }

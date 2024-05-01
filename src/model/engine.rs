@@ -155,6 +155,13 @@ impl Engine {
         board_item: &BoardItem,
         method: &str,
     ) -> Result<ScriptState> {
+        log::debug!(
+            "Item trigger {:?} for {:?}, item: {:?}",
+            method,
+            item.kind,
+            board_item,
+        );
+
         let script_item = item::Item::from_real(item, board_item);
 
         let vm = Vm::with_stack(
@@ -182,6 +189,8 @@ pub mod item {
         module.ty::<Item>()?;
         module.function_meta(Item::damage_nearest)?;
         module.function_meta(Item::bonus_from_nearby)?;
+        module.function_meta(Item::open_tiles)?;
+        module.function_meta(Item::destroy)?;
 
         module.ty::<Stats>()?;
         module.ty::<Filter>()?;
@@ -189,7 +198,7 @@ pub mod item {
         Ok(module)
     }
 
-    #[derive(Debug, Clone, rune::Any)]
+    #[derive(Clone, rune::Any)]
     pub struct Item {
         board_item: BoardItem,
         item: InventoryItem,
@@ -247,6 +256,16 @@ pub mod item {
                 stats.into(),
                 permanent,
             )
+        }
+
+        #[rune::function]
+        fn open_tiles(&self, tiles: usize) {
+            self.as_script().open_tiles(tiles)
+        }
+
+        #[rune::function]
+        fn destroy(&self) {
+            self.as_script().destroy()
         }
     }
 

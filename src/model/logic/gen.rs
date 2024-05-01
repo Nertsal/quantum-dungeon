@@ -15,15 +15,7 @@ impl Model {
             let turns = 4 + 2_usize.pow(self.level as u32 / 4);
             let turns = turns.min(10);
             state.player.turns_left = turns;
-            // self.player.hearts = 3;
         }
-
-        // self.items.clear();
-        // if self.entities.len() == 1 {
-        //     for (_, entity) in &mut self.entities {
-        //         entity.position = vec2::ZERO;
-        //     }
-        // }
 
         self.spawn_enemies();
         self.spawn_items(); // First spawn has to be done manually
@@ -128,28 +120,6 @@ impl Model {
         }
 
         let mut rng = thread_rng();
-
-        // For testing
-        // if self.items.is_empty() {
-        //     for kind in [ItemKind::CharmingStaff] {
-        //         let position = *available.iter().choose(&mut rng).unwrap();
-        //         let item_id = self.player.items.insert(kind.instantiate());
-        //         let item = &mut self.player.items[item_id];
-        //         let on_board = self.items.insert(BoardItem {
-        //             position,
-        //             item_id,
-        //             turns_alive: 0,
-        //             used: false,
-        //         });
-        //         item.on_board = Some(on_board);
-
-        //         available.remove(&position);
-        //         if available.is_empty() {
-        //             break;
-        //         }
-        //     }
-        //     return;
-        // }
 
         // What is this trick KEKW
         let mut state = self.state.borrow_mut();

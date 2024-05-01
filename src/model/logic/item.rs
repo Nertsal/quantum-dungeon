@@ -1,124 +1,50 @@
 use super::*;
 
-impl Model {
-    /// Give a temporary bonus to nearby items.
-    pub(super) fn bonus_near_temporary(
+// NOTE: expose functions in src/model/engine.rs
+impl ScriptItem<'_> {
+    pub fn damage_nearest(&mut self, damage: ScriptFunction) {
+        let source_fraction = Fraction::Player;
+        let nearest = self
+            .model
+            .entities
+            .iter()
+            .filter(|(_, entity)| source_fraction != entity.fraction)
+            .min_by_key(|(_, entity)| distance(entity.position, self.board_item.position));
+        if let Some((target, _)) = nearest {
+            self.effects.push(Effect::Damage { target, damage });
+        }
+    }
+
+    pub fn bonus_from_nearby(
         &mut self,
-        position: vec2<Coord>,
         range: Coord,
-        item_ref: ItemFilter,
+        filter: ItemFilter,
         bonus: ItemStats,
+        permanent: bool,
     ) {
-        let state = self.state.borrow();
-        for (target, board_item) in &state.items {
-            let item = &state.player.items[board_item.item_id];
-            if distance(board_item.position, position) <= range && item_ref.check(&item.kind) {
-                self.animations.insert(Animation::new(
-                    self.config.animation_time,
-                    AnimationKind::Bonus {
-                        from: position,
-                        target,
-                        bonus: bonus.clone(),
-                        permanent: false,
-                    },
-                ));
+        for (_, board_item) in &self.model.items {
+            let item = &self.model.player.items[board_item.item_id];
+            let dist = distance(board_item.position, self.board_item.position);
+            if (1..=range).contains(&dist) && filter.check(&item.kind) {
+                self.effects.push(Effect::Bonus {
+                    from: board_item.position,
+                    target: self.item.on_board.unwrap(),
+                    bonus: bonus.clone(),
+                    permanent,
+                });
             }
         }
     }
 
-    pub(super) fn deal_damage_around(
-        &mut self,
-        position: vec2<Coord>,
-        damage: Hp,
-        range: Coord,
-        after: Vec<Id>,
-    ) {
-        let source_fraction = Fraction::Player;
-        for (target, entity) in &self.state.borrow().entities {
-            if source_fraction != entity.fraction && distance(entity.position, position) <= range {
-                self.animations.insert(
-                    Animation::new(
-                        self.config.animation_time,
-                        AnimationKind::Damage {
-                            from: position,
-                            target,
-                            damage,
-                        },
-                    )
-                    .after(after.clone()),
-                );
-            }
-        }
+    /// Lets the player uncover new tiles on the map.
+    pub fn open_tiles(&mut self, tiles: usize) {
+        self.effects.push(Effect::OpenTiles { tiles });
     }
 
-    pub(super) fn deal_damage_nearest(
-        &mut self,
-        position: vec2<Coord>,
-        damage: Hp,
-        after: Vec<Id>,
-    ) -> Option<Id> {
-        let source_fraction = Fraction::Player;
-        let state = self.state.borrow();
-        let nearest = state
-            .entities
-            .iter()
-            .filter(|(_, entity)| source_fraction != entity.fraction)
-            .min_by_key(|(_, entity)| distance(entity.position, position));
-        nearest.map(|(target, _)| {
-            self.animations.insert(
-                Animation::new(
-                    self.config.animation_time,
-                    AnimationKind::Damage {
-                        from: position,
-                        target,
-                        damage,
-                    },
-                )
-                .after(after),
-            )
-        })
-    }
-
-    pub(super) fn deal_damage_random(
-        &mut self,
-        position: vec2<Coord>,
-        damage: Hp,
-        after: Vec<Id>,
-    ) -> Option<Id> {
-        let source_fraction = Fraction::Player;
-        let mut rng = thread_rng();
-        let state = self.state.borrow();
-        let target = state
-            .entities
-            .iter()
-            .filter(|(_, entity)| source_fraction != entity.fraction)
-            .choose(&mut rng);
-        target.map(|(target, _)| {
-            self.animations.insert(
-                Animation::new(
-                    self.config.animation_time,
-                    AnimationKind::Damage {
-                        from: position,
-                        target,
-                        damage,
-                    },
-                )
-                .after(after),
-            )
-        })
-    }
-
-    pub(super) fn count_items_near(&self, position: vec2<Coord>, item_ref: ItemFilter) -> Vec<Id> {
-        let state = self.state.borrow();
-        state
-            .items
-            .iter()
-            .filter(|(_, board_item)| {
-                let d = distance(position, board_item.position);
-                let item = &state.player.items[board_item.item_id];
-                item_ref.check(&item.kind) && d > 0 && d <= 1
-            })
-            .map(|(i, _)| i)
-            .collect()
+    /// Destroys the self item.
+    pub fn destroy(&mut self) {
+        self.effects.push(Effect::Destroy {
+            item_id: self.board_item.item_id,
+        });
     }
 }
