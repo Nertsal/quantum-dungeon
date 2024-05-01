@@ -2,16 +2,32 @@ use super::*;
 
 // NOTE: expose functions in src/model/engine.rs
 impl ScriptItem<'_> {
-    pub fn damage_nearest(&mut self, damage: ScriptFunction) {
-        let source_fraction = Fraction::Player;
-        let nearest = self
-            .model
-            .entities
-            .iter()
-            .filter(|(_, entity)| source_fraction != entity.fraction)
-            .min_by_key(|(_, entity)| distance(entity.position, self.board_item.position));
-        if let Some((target, _)) = nearest {
+    pub fn damage(&mut self, target: ItemTarget, damage: ScriptFunction) {
+        let mut rng = thread_rng(); // TODO: seeded rng
+
+        let source_fraction = Fraction::Player; // TODO: non-player items?
+
+        let target = match target {
+            ItemTarget::Nearest => self
+                .model
+                .entities
+                .iter()
+                .filter(|(_, entity)| source_fraction != entity.fraction)
+                .min_by_key(|(_, entity)| distance(entity.position, self.board_item.position))
+                .map(|(i, _)| i),
+            ItemTarget::Random => self
+                .model
+                .entities
+                .iter()
+                .filter(|(_, entity)| source_fraction != entity.fraction)
+                .choose(&mut rng)
+                .map(|(i, _)| i),
+        };
+
+        if let Some(target) = target {
             self.effects.push(Effect::Damage { target, damage });
+        } else {
+            log::debug!("Item tried attacking but no target was found");
         }
     }
 

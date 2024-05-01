@@ -63,6 +63,13 @@ pub enum ItemFilter {
     Named(Rc<str>),
 }
 
+/// A filter for item kind or category of items.
+#[derive(Debug, Clone, rune::Any)]
+pub enum ItemTarget {
+    Nearest,
+    Random,
+}
+
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, rune::Any)]
 pub enum ItemCategory {
     #[rune(constructor)]

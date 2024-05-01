@@ -60,7 +60,7 @@ impl Effect {
             Self::Damage { .. } => 0,
             Self::Bonus { .. } => 10,
             Self::OpenTiles { .. } => 999,
-            Self::Destroy { .. } => 100,
+            Self::Destroy { .. } => -999999,
         }
     }
 }

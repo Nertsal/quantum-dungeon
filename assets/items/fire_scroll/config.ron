@@ -2,5 +2,8 @@ ItemConfig(
     name: "Fire scroll",
     categories: [Magic, Weapon],
     appears_in_shop: true,
+    base_stats: ItemStats(
+        damage: Some(5),
+    ),
 )
 
