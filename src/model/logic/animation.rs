@@ -20,11 +20,19 @@ impl Model {
             }
 
             let animation = &mut self.animations[i];
-            animation.time.change(-delta_time);
+
+            // TODO: independent start and end times
+            if let AnimationKind::EntityDeath { .. } = animation.kind {
+                animation.time.set_ratio(Time::ZERO);
+            } else {
+                animation.time.change(-delta_time);
+            }
+
             if animation.time.is_min() {
                 if let AnimationKind::UseActive { .. } = animation.kind {
-                    if self.animations.len() > 2 {
+                    if self.animations.len() > 1 {
                         // Wait for other animations
+                        // (1 animation is the item is itself)
                         continue;
                     }
                 }

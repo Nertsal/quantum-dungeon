@@ -18,11 +18,13 @@ impl Model {
         self.update_effects();
 
         if let Phase::LevelFinished { .. } = self.phase {
-        } else if self.animations.is_empty() && self.ending_animations.is_empty() {
+        } else {
             self.check_deaths();
-            if let Phase::Player = self.phase {
-                if self.state.borrow().player.moves_left == 0 {
-                    self.vision_phase();
+            if self.animations.is_empty() && self.ending_animations.is_empty() {
+                if let Phase::Player = self.phase {
+                    if self.state.borrow().player.moves_left == 0 {
+                        self.vision_phase();
+                    }
                 }
             }
         }
@@ -160,6 +162,11 @@ impl Model {
     }
 
     fn finish_level(&mut self, win: bool) {
+        if win && !self.wait_for_effects() {
+            // Cant win until all effects are done
+            return;
+        }
+
         log::info!("Level finished, win: {}", win);
         self.phase = Phase::LevelFinished {
             win,
@@ -224,7 +231,9 @@ impl Model {
     }
 
     fn check_deaths(&mut self) {
-        for (id, entity) in &self.state.borrow().entities {
+        let state = self.state.borrow();
+
+        for (id, entity) in &state.entities {
             if entity.health.is_min() {
                 self.animations.insert(Animation::new(
                     self.config.animation_time,
@@ -236,14 +245,13 @@ impl Model {
             }
         }
 
-        if !self
-            .state
-            .borrow()
+        if !state
             .entities
             .iter()
             .any(|(_, e)| e.fraction == Fraction::Enemy)
         {
             // All enemies died -> next level
+            drop(state);
             self.finish_level(true);
         }
     }
