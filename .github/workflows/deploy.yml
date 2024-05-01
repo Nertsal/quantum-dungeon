@@ -9,7 +9,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v3
       - uses: Swatinem/rust-cache@v2
-      - run: cargo geng build --web --release
+      - run: cargo geng build --release --platform web
       - name: Upload artifacts (web)
         uses: actions/upload-artifact@v2
         with:
