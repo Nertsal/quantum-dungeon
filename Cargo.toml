@@ -8,7 +8,10 @@ edition = "2021"
 [dependencies]
 clap = { version = "4", features = ["derive"] }
 generational-arena = "0.2.9"
-geng = "0.15.0"
-geng-utils = { git = "https://github.com/Nertsal/geng-utils" }
 rune = "0.13.1"
+geng = "0.17.0"
+geng-utils = "0.3.0"
 serde = { version = "1.0.188", features = ["derive"] }
+
+[patch.crates-io]
+async-broadcast = { git = "https://github.com/kuviman/async-broadcast", branch = "fix-wasm" } # TODO: until https://github.com/smol-rs/async-broadcast/pull/47 is merged
