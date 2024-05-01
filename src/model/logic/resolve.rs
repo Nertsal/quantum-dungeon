@@ -186,13 +186,14 @@ impl Model {
         let mut state = self.state.borrow_mut();
         let state = &mut *state;
 
-        let board_item = state.items.get_mut(item_id).unwrap();
+        let mut effects = std::mem::take(&mut *self.side_effects.borrow_mut());
+        let board_item = state.items.get(item_id).unwrap();
         if let Trigger::Active = trigger {
-            board_item.used = true;
+            effects.push(Effect::SetUsed { item_id });
         }
         state.player.items[board_item.item_id].state = item_state;
 
-        std::mem::take(&mut *self.side_effects.borrow_mut())
+        effects
     }
 
     // Night effect

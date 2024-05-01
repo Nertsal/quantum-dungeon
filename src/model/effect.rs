@@ -18,6 +18,9 @@ pub enum Trigger {
 
 #[derive(Debug)]
 pub enum Effect {
+    SetUsed {
+        item_id: Id,
+    },
     Damage {
         target: Id,
         damage: ScriptFunction,
@@ -45,6 +48,7 @@ impl Effect {
     /// The effect's priority for sorting when multiple effects are happening at the same time.
     pub fn priority(&self) -> i64 {
         match self {
+            Effect::SetUsed { .. } => -999999,
             Effect::Damage { .. } => 0,
             Effect::Bonus { .. } => 10,
         }

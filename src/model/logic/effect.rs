@@ -84,7 +84,7 @@ impl Model {
 
     fn resolve_effect(&mut self, effect: QueuedEffect) {
         log::debug!("Resolving effect {:?}", effect);
-        let state = self.state.borrow();
+        let mut state = self.state.borrow_mut();
         let Some(proc_item) = state.items.get(effect.proc_item) else {
             log::error!("invalid item {:?}", effect.proc_item);
             return;
@@ -93,6 +93,11 @@ impl Model {
         let stats = engine::item::Stats::from(stats);
 
         match effect.effect {
+            Effect::SetUsed { item_id } => {
+                if let Some(item) = state.items.get_mut(item_id) {
+                    item.used = true;
+                }
+            }
             Effect::Damage { target, damage } => {
                 let damage: Hp = damage.call((stats,)).expect("failed to call rune function"); // TODO: handle error
                 self.animations.insert(Animation::new(
