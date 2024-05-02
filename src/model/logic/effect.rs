@@ -10,7 +10,8 @@ impl Model {
             }
         }
 
-        if self.wait_for_animations() {
+        // if self.wait_for_animations() {
+        if self.animations.is_empty() {
             self.resolve_next_effect();
         }
     }
@@ -23,7 +24,7 @@ impl Model {
         }
     }
 
-    fn resolve_effect(&mut self, effect: QueuedEffect) {
+    pub fn resolve_effect(&mut self, effect: QueuedEffect) {
         log::debug!("Resolving effect {:?}", effect);
         let mut state = self.state.borrow_mut();
         let Some(proc_item) = state.items.get(effect.proc_item) else {
@@ -33,6 +34,14 @@ impl Model {
         let stats = state.player.items[proc_item.item_id].current_stats();
         let stats = engine::item::Stats::from(stats);
 
+        let mut animations = Vec::new();
+        let mut play_animation = |kind| {
+            animations.push(
+                self.animations
+                    .insert(Animation::new(self.config.animation_time, kind)),
+            );
+        };
+
         match effect.effect {
             Effect::SetUsed { item_id } => {
                 if let Some(item) = state.items.get_mut(item_id) {
@@ -41,14 +50,11 @@ impl Model {
             }
             Effect::Damage { target, damage } => {
                 let damage: Hp = damage.call((stats,)).expect("failed to call rune function"); // TODO: handle error
-                self.animations.insert(Animation::new(
-                    self.config.animation_time,
-                    AnimationKind::Damage {
-                        from: proc_item.position,
-                        target,
-                        damage,
-                    },
-                ));
+                play_animation(AnimationKind::Damage {
+                    from: proc_item.position,
+                    target,
+                    damage,
+                });
             }
             Effect::Bonus {
                 from,
@@ -56,15 +62,12 @@ impl Model {
                 bonus,
                 permanent,
             } => {
-                self.animations.insert(Animation::new(
-                    self.config.animation_time,
-                    AnimationKind::Bonus {
-                        from,
-                        target,
-                        bonus,
-                        permanent,
-                    },
-                ));
+                play_animation(AnimationKind::Bonus {
+                    from,
+                    target,
+                    bonus,
+                    permanent,
+                });
             }
             Effect::OpenTiles { tiles } => {
                 let mut next_phase = Phase::Vision;
@@ -77,15 +80,17 @@ impl Model {
             Effect::Destroy { item_id } => {
                 // TODO: error log
                 if let Some(item) = state.items.get(item_id) {
-                    self.animations.insert(Animation::new(
-                        self.config.animation_time,
-                        AnimationKind::ItemDeath {
-                            item: item_id,
-                            pos: item.position,
-                        },
-                    ));
+                    play_animation(AnimationKind::ItemDeath {
+                        item: item_id,
+                        pos: item.position,
+                    });
                 }
             }
         }
+
+        self.resolving_items.insert(ItemResolving {
+            board_item: effect.proc_item,
+            animations,
+        });
     }
 }

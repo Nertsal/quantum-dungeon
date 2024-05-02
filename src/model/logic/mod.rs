@@ -287,12 +287,12 @@ impl Model {
         // Activate and swap items
         let ids: Vec<_> = self.state.borrow().items.iter().map(|(i, _)| i).collect();
         let mut move_item = None;
-        for i in ids {
-            if self.state.borrow().items[i].position == target_pos {
+        for item_id in ids {
+            if self.state.borrow().items[item_id].position == target_pos {
                 // Activate
-                self.resolve_trigger(Trigger::Active, Some(i));
+                self.resolve_trigger(Trigger::Active, Some(item_id));
                 // Swap
-                move_item = Some(i);
+                move_item = Some(item_id);
             }
         }
 

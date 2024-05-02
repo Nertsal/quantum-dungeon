@@ -32,12 +32,31 @@ pub struct Model {
     pub phase: Phase,
     pub grid: Grid,
     pub visible_tiles: HashSet<vec2<Coord>>,
+
     pub animations: Arena<Animation>,
     pub ending_animations: Vec<Animation>,
+
+    pub resolving_items: Collection<ItemResolving>,
+    pub resolved_items: Collection<ItemResolved>,
+
     /// The stack of effect queues.
     pub effect_queue_stack: Vec<VecDeque<QueuedEffect>>,
     /// Effects produced by scripts. Should be consumed after the script is executed and moved to the queue.
     pub side_effects: Rc<RefCell<Vec<Effect>>>,
+}
+
+#[derive(Debug, HasId)]
+pub struct ItemResolving {
+    #[has_id(id)]
+    pub board_item: Id,
+    pub animations: Vec<Id>,
+}
+
+#[derive(Debug, HasId)]
+pub struct ItemResolved {
+    #[has_id(id)]
+    pub board_item: Id,
+    pub time: Lifetime,
 }
 
 /// The stuff accessible from within the scripts.
@@ -168,8 +187,13 @@ impl Model {
             },
             grid: Grid::new(3),
             visible_tiles: HashSet::new(),
+
             animations: Arena::new(),
             ending_animations: Vec::new(),
+
+            resolving_items: Collection::new(),
+            resolved_items: Collection::new(),
+
             effect_queue_stack: Vec::new(),
             side_effects,
         };

@@ -29,13 +29,6 @@ impl Model {
             }
 
             if animation.time.is_min() {
-                if let AnimationKind::UseActive { .. } = animation.kind {
-                    if self.animations.len() > 1 {
-                        // Wait for other animations
-                        // (1 animation is the item is itself)
-                        continue;
-                    }
-                }
                 finished.push(i);
             }
         }
@@ -57,11 +50,8 @@ impl Model {
                         item.position = *target_pos;
                     }
                 }
-                AnimationKind::UseActive { fraction, item_id } => {
-                    // Activate item
-                    let _fraction = *fraction; // TODO: maybe
-                    let item_id = *item_id;
-                    self.resolve_trigger(Trigger::Active, Some(item_id));
+                &AnimationKind::ResolveItem { item_id, trigger } => {
+                    self.resolve_trigger(trigger, Some(item_id));
                 }
                 AnimationKind::EntityDeath { entity, .. } => {
                     self.state.borrow_mut().entities.remove(*entity);

@@ -2,7 +2,24 @@ use super::*;
 
 impl Model {
     pub(super) fn resolve_animations(&mut self, delta_time: Time) {
-        let wait_for_effects = self.wait_for_effects();
+        for item in &mut self.resolved_items {
+            item.time.change(-delta_time);
+        }
+        self.resolved_items.retain(|item| item.time.is_above_min());
+
+        for item in &mut self.resolving_items {
+            item.animations.retain(|id| self.animations.contains(*id));
+            if item.animations.is_empty() {
+                self.resolved_items.insert(ItemResolved {
+                    board_item: item.board_item,
+                    time: Lifetime::new_max(self.config.animation_time),
+                });
+            }
+        }
+        self.resolving_items
+            .retain(|item| !item.animations.is_empty());
+
+        let wait_for_effects = self.wait_for_effects() && self.resolved_items.is_empty();
         match &mut self.phase {
             Phase::LevelStarting { timer } => {
                 timer.change(-delta_time);
@@ -198,7 +215,8 @@ impl Model {
 
         let mut effects = std::mem::take(&mut *self.side_effects.borrow_mut());
         let board_item = state.items.get(item_id).unwrap();
-        if matches!(trigger, Trigger::Active)
+        if !effects.is_empty()
+            && matches!(trigger, Trigger::Active)
             && !matches!(effects.last(), Some(Effect::Destroy { .. }))
         {
             effects.push(Effect::SetUsed { item_id });

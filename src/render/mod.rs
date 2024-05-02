@@ -128,52 +128,22 @@ impl GameRender {
 
         // Items
         for (i, item) in &model.state.borrow().items {
-            // let resolving = if let Phase::Passive {
-            //     start_delay,
-            //     end_delay,
-            // } = &model.phase
-            // {
-            //     item_queue
-            //         .last()
-            //         .and_then(|&item_id| (item_id == i).then_some((*start_delay, *end_delay)))
-            // } else {
-            //     None
-            // };
+            let up = model.animations.iter().rev().find_map(|(_, anim)| {
+                if let AnimationKind::ResolveItem { item_id, .. } = anim.kind {
+                    if item_id == i {
+                        return Some(Time::ONE - anim.time.get_ratio());
+                    }
+                }
+                None
+            });
+            let up = up.or_else(|| model.resolving_items.get(&i).map(|_| Time::ONE));
 
-            // let resolving = resolving
-            //     .or_else(|| {
-            //         model.animations.iter().find_map(|(_, anim)| {
-            //             if let AnimationKind::UseActive { item_id, .. } = anim.kind {
-            //                 if item_id == i {
-            //                     return Some((anim.time, Lifetime::new_max(R32::ONE)));
-            //                 }
-            //             }
-            //             None
-            //         })
-            //     })
-            //     .or_else(|| {
-            //         model.ending_animations.iter().find_map(|anim| {
-            //             if let AnimationKind::UseActive { item_id, .. } = anim.kind {
-            //                 if item_id == i {
-            //                     return Some((Lifetime::new_max(R32::ONE), anim.time));
-            //                 }
-            //             }
-            //             None
-            //         })
-            //     });
+            let down = model
+                .resolved_items
+                .get(&i)
+                .map(|item| item.time.get_ratio());
 
-            // let resolution_t = if let Some((start_delay, end_delay)) = resolving {
-            //     if start_delay.is_above_min() {
-            //         1.0 - start_delay.get_ratio().as_f32()
-            //     } else {
-            //         end_delay.get_ratio().as_f32()
-            //     }
-            // } else {
-            //     0.0
-            // };
-
-            // TODO
-            let resolution_t = 0.0;
+            let resolution_t = up.or(down).map(R32::as_f32).unwrap_or(0.0);
 
             self.draw_item(i, item, resolution_t, model, framebuffer);
         }
