@@ -189,12 +189,14 @@ pub mod item {
         module.ty::<Item>()?;
         module.function_meta(Item::damage)?;
         module.function_meta(Item::bonus_from_nearby)?;
+        module.function_meta(Item::bonus_to_nearby)?;
         module.function_meta(Item::open_tiles)?;
         module.function_meta(Item::destroy)?;
 
         module.ty::<Stats>()?;
         module.ty::<Filter>()?;
         module.ty::<Target>()?;
+        module.ty::<Category>()?;
 
         Ok(module)
     }
@@ -221,16 +223,8 @@ pub mod item {
         #[rune(constructor)]
         This,
         #[rune(constructor)]
-        Category(#[rune(get)] ItemCategory),
+        Category(#[rune(get)] Category),
         Named(Rc<str>),
-    }
-
-    #[derive(Debug, Clone, rune::Any)]
-    pub enum Target {
-        #[rune(constructor)]
-        Nearest,
-        #[rune(constructor)]
-        Random,
     }
 
     impl Item {
@@ -254,12 +248,22 @@ pub mod item {
 
         #[rune::function]
         fn damage(&self, target: Target, damage: ScriptFunction) {
-            self.as_script().damage(target.into(), damage)
+            self.as_script().damage(target, damage)
         }
 
         #[rune::function]
         fn bonus_from_nearby(&self, range: Coord, filter: Filter, stats: Stats, permanent: bool) {
             self.as_script().bonus_from_nearby(
+                range,
+                filter.into_filter(&self.item.kind.config.name),
+                stats.into(),
+                permanent,
+            )
+        }
+
+        #[rune::function]
+        fn bonus_to_nearby(&self, range: Coord, filter: Filter, stats: Stats, permanent: bool) {
+            self.as_script().bonus_to_nearby(
                 range,
                 filter.into_filter(&self.item.kind.config.name),
                 stats.into(),
@@ -300,15 +304,6 @@ pub mod item {
                 Filter::This => ItemFilter::Named(Rc::clone(this)),
                 Filter::Category(cat) => ItemFilter::Category(cat),
                 Filter::Named(name) => ItemFilter::Named(name),
-            }
-        }
-    }
-
-    impl From<Target> for ItemTarget {
-        fn from(value: Target) -> Self {
-            match value {
-                Target::Nearest => ItemTarget::Nearest,
-                Target::Random => ItemTarget::Random,
             }
         }
     }

@@ -108,7 +108,7 @@ impl Model {
                 .find(|(_, item)| item.position == target_pos)
             {
                 let item = &state_ref.player.items[target.item_id];
-                if ItemFilter::Category(ItemCategory::Magic).check(&item.kind) {
+                if ItemFilter::Category(Category::Magic).check(&item.kind) {
                     let Some((_, player)) = state_ref
                         .entities
                         .iter_mut()

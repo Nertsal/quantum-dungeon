@@ -59,19 +59,21 @@ pub struct ItemStats {
 /// A filter for item kind or category of items.
 #[derive(Debug, Clone, rune::Any)]
 pub enum ItemFilter {
-    Category(ItemCategory),
+    Category(Category),
     Named(Rc<str>),
 }
 
 /// A filter for item kind or category of items.
 #[derive(Debug, Clone, rune::Any)]
-pub enum ItemTarget {
+pub enum Target {
+    #[rune(constructor)]
     Nearest,
+    #[rune(constructor)]
     Random,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, rune::Any)]
-pub enum ItemCategory {
+pub enum Category {
     #[rune(constructor)]
     Spooky,
     #[rune(constructor)]

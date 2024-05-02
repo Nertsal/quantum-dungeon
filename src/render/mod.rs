@@ -104,7 +104,7 @@ impl GameRender {
                         // Highlight magic items
                         if model.state.borrow().items.iter().any(|(_, item)| {
                             item.position == pos
-                                && ItemFilter::Category(ItemCategory::Magic)
+                                && ItemFilter::Category(Category::Magic)
                                     .check(&model.state.borrow().player.items[item.item_id].kind)
                         }) {
                             TileLight::Light
