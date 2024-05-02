@@ -129,8 +129,8 @@ impl GameRender {
         // Items
         for (i, item) in &model.state.borrow().items {
             let up = model.animations.iter().rev().find_map(|(_, anim)| {
-                if let AnimationKind::ResolveItem { item_id, .. } = anim.kind {
-                    if item_id == i {
+                if let AnimationKind::ItemEffect { item } = anim.kind {
+                    if item == i {
                         return Some(Time::ONE - anim.time.get_ratio());
                     }
                 }

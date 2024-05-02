@@ -50,9 +50,7 @@ impl Model {
                         item.position = *target_pos;
                     }
                 }
-                &AnimationKind::ResolveItem { item_id, trigger } => {
-                    self.resolve_trigger(trigger, Some(item_id));
-                }
+                AnimationKind::ItemEffect { .. } => {}
                 AnimationKind::EntityDeath { entity, .. } => {
                     self.state.borrow_mut().entities.remove(*entity);
                     self.assets.sounds.enemy_death.play();

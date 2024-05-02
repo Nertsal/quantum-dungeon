@@ -21,9 +21,8 @@ pub enum AnimationKind {
         entity_id: Id,
         target_pos: vec2<Coord>,
     },
-    ResolveItem {
-        item_id: Id,
-        trigger: Trigger,
+    ItemEffect {
+        item: Id,
     },
     EntityDeath {
         entity: Id,

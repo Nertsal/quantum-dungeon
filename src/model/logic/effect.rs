@@ -35,12 +35,21 @@ impl Model {
         let stats = engine::item::Stats::from(stats);
 
         let mut animations = Vec::new();
-        let mut play_animation = |kind| {
-            animations.push(
-                self.animations
-                    .insert(Animation::new(self.config.animation_time, kind)),
-            );
-        };
+
+        let animation_delay = self.animations.insert(Animation::new(
+            self.config.animation_time,
+            AnimationKind::ItemEffect {
+                item: effect.proc_item,
+            },
+        ));
+        animations.push(animation_delay);
+
+        let mut play_animation =
+            |kind| {
+                animations.push(self.animations.insert(
+                    Animation::new(self.config.animation_time, kind).after([animation_delay]),
+                ));
+            };
 
         match effect.effect {
             Effect::SetUsed { item_id } => {
@@ -88,8 +97,20 @@ impl Model {
             }
         }
 
+        let board_item = effect.proc_item;
+        if self.resolving_items.get(&board_item).is_none() {
+            // Set wind up animation
+            let down = self
+                .resolved_items
+                .get(&board_item)
+                .map_or(Time::ZERO, |item| item.time.get_ratio());
+            let t = Time::ONE - down;
+            if let Some(anim) = self.animations.get_mut(animation_delay) {
+                anim.time.set_ratio(t);
+            }
+        }
         self.resolving_items.insert(ItemResolving {
-            board_item: effect.proc_item,
+            board_item,
             animations,
         });
     }
