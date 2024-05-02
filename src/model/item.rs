@@ -28,10 +28,12 @@ pub struct InventoryItem {
     pub temp_stats: ItemStats,
 }
 
+pub struct ScriptEffects<'a>(pub RefMut<'a, Vec<Effect>>);
+
 /// A representation on the item used temporarily for scripts.
 pub struct ScriptItem<'a> {
     pub model: Ref<'a, ModelState>,
-    pub effects: RefMut<'a, Vec<Effect>>,
+    pub effects: ScriptEffects<'a>,
     pub board_item: &'a BoardItem,
     pub item: &'a InventoryItem,
 }

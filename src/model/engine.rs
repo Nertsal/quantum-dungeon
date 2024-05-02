@@ -241,7 +241,7 @@ pub mod item {
         pub fn as_script(&self) -> ScriptItem<'_> {
             ScriptItem {
                 model: self.item.model_state.borrow(),
-                effects: self.item.side_effects.borrow_mut(),
+                effects: ScriptEffects(self.item.side_effects.borrow_mut()),
                 board_item: &self.board_item,
                 item: &self.item,
             }

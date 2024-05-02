@@ -25,19 +25,19 @@ impl ScriptItem<'_> {
         };
 
         if let Some(target) = target {
-            self.effects.push(Effect::Damage { target, damage });
+            self.effects.damage(target, damage);
         } else {
             log::debug!("Item tried attacking but no target was found");
         }
     }
 
     pub fn bonus(&mut self, bonus: ItemStats, permanent: bool) {
-        self.effects.push(Effect::Bonus {
-            from: self.board_item.position,
-            target: self.item.on_board.unwrap(),
-            bonus: bonus.clone(),
+        self.effects.bonus(
+            self.board_item.position,
+            self.item.on_board.unwrap(),
+            bonus.clone(),
             permanent,
-        });
+        );
     }
 
     pub fn bonus_from_nearby(
@@ -51,12 +51,12 @@ impl ScriptItem<'_> {
             let item = &self.model.player.items[board_item.item_id];
             let dist = distance(board_item.position, self.board_item.position);
             if (1..=range).contains(&dist) && filter.check(&item.kind) {
-                self.effects.push(Effect::Bonus {
-                    from: board_item.position,
-                    target: self.item.on_board.unwrap(),
-                    bonus: bonus.clone(),
+                self.effects.bonus(
+                    board_item.position,
+                    self.item.on_board.unwrap(),
+                    bonus.clone(),
                     permanent,
-                });
+                );
             }
         }
     }
@@ -72,25 +72,19 @@ impl ScriptItem<'_> {
             let item = &self.model.player.items[board_item.item_id];
             let dist = distance(board_item.position, self.board_item.position);
             if (1..=range).contains(&dist) && filter.check(&item.kind) {
-                self.effects.push(Effect::Bonus {
-                    from: self.board_item.position,
-                    target,
-                    bonus: bonus.clone(),
-                    permanent,
-                });
+                self.effects
+                    .bonus(self.board_item.position, target, bonus.clone(), permanent);
             }
         }
     }
 
     /// Lets the player uncover new tiles on the map.
     pub fn open_tiles(&mut self, tiles: usize) {
-        self.effects.push(Effect::OpenTiles { tiles });
+        self.effects.open_tiles(tiles);
     }
 
     /// Destroys the self item.
     pub fn destroy(&mut self) {
-        self.effects.push(Effect::Destroy {
-            item_id: self.board_item.item_id,
-        });
+        self.effects.destroy(self.board_item.item_id);
     }
 }

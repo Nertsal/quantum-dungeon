@@ -32,7 +32,7 @@ impl Model {
             return;
         };
         let stats = state.player.items[proc_item.item_id].current_stats();
-        let stats = engine::item::Stats::from(stats);
+        let stats = crate::model::engine::item::Stats::from(stats);
 
         let mut animations = Vec::new();
 
