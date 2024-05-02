@@ -188,6 +188,7 @@ pub mod item {
 
         module.ty::<Item>()?;
         module.function_meta(Item::damage)?;
+        module.function_meta(Item::bonus)?;
         module.function_meta(Item::bonus_from_nearby)?;
         module.function_meta(Item::bonus_to_nearby)?;
         module.function_meta(Item::open_tiles)?;
@@ -249,6 +250,11 @@ pub mod item {
         #[rune::function]
         fn damage(&self, target: Target, damage: ScriptFunction) {
             self.as_script().damage(target, damage)
+        }
+
+        #[rune::function]
+        fn bonus(&self, stats: Stats, permanent: bool) {
+            self.as_script().bonus(stats.into(), permanent)
         }
 
         #[rune::function]

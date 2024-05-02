@@ -31,6 +31,15 @@ impl ScriptItem<'_> {
         }
     }
 
+    pub fn bonus(&mut self, bonus: ItemStats, permanent: bool) {
+        self.effects.push(Effect::Bonus {
+            from: self.board_item.position,
+            target: self.item.on_board.unwrap(),
+            bonus: bonus.clone(),
+            permanent,
+        });
+    }
+
     pub fn bonus_from_nearby(
         &mut self,
         range: Coord,
