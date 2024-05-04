@@ -220,7 +220,7 @@ impl Model {
         let board_item = state.items.get(item_id).unwrap();
         if !effects.is_empty()
             && matches!(trigger, Trigger::Active)
-            && !matches!(effects.last(), Some(Effect::Destroy { .. }))
+            && !effects.iter().any(|e| matches!(e, Effect::Destroy { .. }))
         {
             effects.push(Effect::SetUsed { item_id });
         }
