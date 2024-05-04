@@ -310,3 +310,8 @@ fn distance(a: vec2<Coord>, b: vec2<Coord>) -> Coord {
     let delta = b - a;
     delta.x.abs().max(delta.y.abs())
 }
+
+fn distance_manhattan(a: vec2<Coord>, b: vec2<Coord>) -> Coord {
+    let delta = b - a;
+    delta.x.abs() + delta.y.abs()
+}

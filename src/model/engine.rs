@@ -143,6 +143,7 @@ pub mod item {
         module.function_meta(Item::damage)?;
         module.function_meta(Item::bonus)?;
         module.function_meta(Item::bonus_from_nearby)?;
+        module.function_meta(Item::bonus_from_connected)?;
         module.function_meta(Item::bonus_to_nearby)?;
         module.function_meta(Item::open_tiles)?;
         module.function_meta(Item::destroy)?;
@@ -237,6 +238,15 @@ pub mod item {
         fn bonus_from_nearby(&self, range: Coord, filter: Filter, stats: Stats, permanent: bool) {
             self.as_script().bonus_from_nearby(
                 range,
+                filter.into_filter(&self.inventory.kind.config.name),
+                stats.into(),
+                permanent,
+            )
+        }
+
+        #[rune::function]
+        fn bonus_from_connected(&self, filter: Filter, stats: Stats, permanent: bool) {
+            self.as_script().bonus_from_connected(
                 filter.into_filter(&self.inventory.kind.config.name),
                 stats.into(),
                 permanent,

@@ -61,6 +61,21 @@ impl ScriptItem<'_> {
         }
     }
 
+    pub fn bonus_from_connected(&mut self, filter: ItemFilter, bonus: ItemStats, permanent: bool) {
+        for (_, board_item) in &self.model.items {
+            let item = &self.model.player.items[board_item.item_id];
+            let dist = distance_manhattan(board_item.position, self.board_item.position);
+            if dist == 1 && filter.check(&item.kind) {
+                self.effects.bonus(
+                    board_item.position,
+                    self.item.on_board.unwrap(),
+                    bonus.clone(),
+                    permanent,
+                );
+            }
+        }
+    }
+
     pub fn bonus_to_nearby(
         &mut self,
         range: Coord,
