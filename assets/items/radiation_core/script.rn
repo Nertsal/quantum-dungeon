@@ -1,0 +1,3 @@
+pub fn day(item) {
+    item.damage_all_nearby(Some(1), |stats| stats.damage);
+}
