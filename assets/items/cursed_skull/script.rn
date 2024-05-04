@@ -1,0 +1,13 @@
+pub fn day(item) {
+
+}
+
+pub fn active(item) {
+    if let Some(target) = item.find_random(Filter::Category(Category::Spooky)) {
+        item.swap_with(target);
+    }
+}
+
+pub fn night(item) {
+    
+}

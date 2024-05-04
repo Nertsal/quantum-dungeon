@@ -88,20 +88,19 @@ impl Model {
             }
             Effect::Destroy { item_id } => {
                 // TODO: error log
-                if let Some(item) = state.items.get(item_id) {
-                    play_animation(AnimationKind::ItemDeath {
-                        item: item_id,
-                        pos: item.position,
-                    });
+                if let Some(item) = state.player.items.get(item_id) {
+                    if let Some(board) = item.on_board.and_then(|id| state.items.get(id)) {
+                        play_animation(AnimationKind::ItemDeath {
+                            item: item_id,
+                            pos: board.position,
+                        });
+                    } else {
+                        state.player.items.remove(item_id);
+                    }
                 }
             }
             Effect::Duplicate { item_id } => {
-                if let Some((_, inv)) = state
-                    .player
-                    .items
-                    .iter()
-                    .find(|(_, item)| item.on_board == Some(item_id))
-                {
+                if let Some(inv) = state.player.items.get(item_id) {
                     play_animation(AnimationKind::Dupe {
                         kind: inv.kind.clone(),
                     });
@@ -124,6 +123,20 @@ impl Model {
                     };
                 } else {
                     log::debug!("Tried activating portal state but there are no magic items");
+                }
+            }
+            Effect::SwapItems { board_a, board_b } => {
+                if let Some(a) = state.items.get(board_a) {
+                    if let Some(b) = state.items.get(board_b) {
+                        play_animation(AnimationKind::MoveItem {
+                            item_id: board_a,
+                            target_pos: b.position,
+                        });
+                        play_animation(AnimationKind::MoveItem {
+                            item_id: board_b,
+                            target_pos: a.position,
+                        });
+                    }
                 }
             }
         }

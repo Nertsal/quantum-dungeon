@@ -48,6 +48,10 @@ pub enum Effect {
         moves: usize,
     },
     Portal,
+    SwapItems {
+        board_a: Id,
+        board_b: Id,
+    },
 }
 
 impl Trigger {
@@ -73,6 +77,7 @@ impl Effect {
             Self::Destroy { .. } => -999999,
             Self::Duplicate { .. } => 20,
             Self::GainMoves { .. } => 0,
+            Self::SwapItems { .. } => 0,
         }
     }
 }

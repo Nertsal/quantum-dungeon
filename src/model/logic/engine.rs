@@ -37,4 +37,8 @@ impl ScriptEffects<'_> {
     pub fn portal(&mut self) {
         self.0.push(Effect::Portal);
     }
+
+    pub fn swap_items(&mut self, board_a: Id, board_b: Id) {
+        self.0.push(Effect::SwapItems { board_a, board_b });
+    }
 }

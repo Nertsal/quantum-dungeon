@@ -88,10 +88,6 @@ pub enum Phase {
         entity_id: Id,
         /// Target movement position
         position: vec2<Coord>,
-        /// Item to swap with.
-        item: Option<Id>,
-        /// Entity to swap with.
-        entity: Option<Id>,
     },
     /// Place a tile on the map.
     Map {

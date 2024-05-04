@@ -136,6 +136,14 @@ impl ScriptItem<'_> {
         items.choose(&mut thread_rng()).map(|(id, _)| id)
     }
 
+    pub fn find_random(&self, filter: ItemFilter) -> Option<Id> {
+        let items = self.model.items.iter().filter(|(_, board_item)| {
+            let item = &self.model.player.items[board_item.item_id];
+            filter.check(&item.kind)
+        });
+        items.choose(&mut thread_rng()).map(|(id, _)| id)
+    }
+
     pub fn duplicate(&mut self) {
         self.effects.duplicate(self.board_item.item_id);
     }
@@ -146,5 +154,10 @@ impl ScriptItem<'_> {
 
     pub fn portal(&mut self) {
         self.effects.portal();
+    }
+
+    pub fn swap_with(&mut self, target: Id) {
+        let a = self.item.on_board.unwrap();
+        self.effects.swap_items(a, target);
     }
 }

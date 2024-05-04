@@ -82,8 +82,6 @@ impl Model {
             Phase::Active {
                 entity_id,
                 position,
-                item,
-                entity,
             } if wait_for_effects => {
                 let entity_id = *entity_id;
                 let target_pos = *position;
@@ -96,8 +94,12 @@ impl Model {
                     },
                 ));
 
-                let target_pos = self.state.borrow().entities[entity_id].position;
-                if let Some(entity_id) = *entity {
+                let state = self.state.borrow();
+                let from_pos = target_pos;
+                let target_pos = state.entities[entity_id].position;
+                if let Some((entity_id, _)) =
+                    state.entities.iter().find(|(_, e)| e.position == from_pos)
+                {
                     self.animations.insert(Animation::new(
                         self.config.animation_time,
                         AnimationKind::MoveEntity {
@@ -106,7 +108,8 @@ impl Model {
                         },
                     ));
                 }
-                if let Some(item_id) = *item {
+                if let Some((item_id, _)) = state.items.iter().find(|(_, i)| i.position == from_pos)
+                {
                     self.animations.insert(Animation::new(
                         self.config.animation_time,
                         AnimationKind::MoveItem {
@@ -115,6 +118,8 @@ impl Model {
                         },
                     ));
                 }
+                drop(state);
+
                 self.player_phase();
             }
             _ => (),

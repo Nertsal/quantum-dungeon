@@ -150,10 +150,12 @@ pub mod item {
         module.function_meta(Item::open_tiles)?;
         module.function_meta(Item::destroy)?;
         module.function_meta(Item::find_nearby)?;
+        module.function_meta(Item::find_random)?;
         module.function_meta(Item::duplicate)?;
         module.function_meta(Item::rng_float)?;
         module.function_meta(Item::gain_moves)?;
         module.function_meta(Item::portal)?;
+        module.function_meta(Item::swap_with)?;
 
         module.ty::<Position>()?;
         module.ty::<Stats>()?;
@@ -300,6 +302,14 @@ pub mod item {
             self.get_item_board(id)
         }
 
+        #[rune::function]
+        fn find_random(&self, filter: Filter) -> Option<Item> {
+            let id = self
+                .as_script()
+                .find_random(filter.into_filter(&self.inventory.kind.config.name))?;
+            self.get_item_board(id)
+        }
+
         fn get_item_board(&self, id: Id) -> Option<Item> {
             let script = self.as_script();
             let (_, inv) = script
@@ -330,6 +340,12 @@ pub mod item {
         #[rune::function]
         fn portal(&self) {
             self.as_script().portal()
+        }
+
+        #[rune::function]
+        fn swap_with(&self, target: &Item) {
+            self.as_script()
+                .swap_with(target.inventory.on_board.unwrap());
         }
     }
 

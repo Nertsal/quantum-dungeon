@@ -259,8 +259,7 @@ impl Model {
 
     /// Move the entity to the target position and swap with the entity occupying the target (if any).
     fn move_entity_swap(&mut self, entity_id: Id, target_pos: vec2<Coord>) {
-        let mut state = self.state.borrow_mut();
-        let Some(entity) = state.entities.get_mut(entity_id) else {
+        let Some(_entity) = self.state.borrow_mut().entities.get_mut(entity_id) else {
             log::error!("entity does not exist: {:?}", entity_id);
             return;
         };
@@ -272,35 +271,19 @@ impl Model {
             return;
         };
 
-        let _fraction = entity.fraction; // TODO: maybe
-
-        // Swap with entities
-        let mut move_entity = None;
-        if let Some((i, _)) = state
-            .entities
-            .iter()
-            .find(|(_, e)| e.position == target_pos)
-        {
-            move_entity = Some(i);
-        }
-        drop(state);
-
-        // Activate and swap items
+        // Activate items
         let ids: Vec<_> = self.state.borrow().items.iter().map(|(i, _)| i).collect();
-        let mut move_item = None;
         for item_id in ids {
             if self.state.borrow().items[item_id].position == target_pos {
                 // Activate
                 self.resolve_trigger(Trigger::Active, Some(item_id));
-                // Swap
-                move_item = Some(item_id);
             }
         }
 
+        // NOTE: swapping items/entities is resolve on phase end
+
         self.phase = Phase::Active {
             entity_id,
-            item: move_item,
-            entity: move_entity,
             position: target_pos,
         };
     }
