@@ -141,6 +141,7 @@ pub mod item {
 
         module.ty::<Item>()?;
         module.function_meta(Item::damage)?;
+        module.function_meta(Item::damage_all_nearby)?;
         module.function_meta(Item::bonus)?;
         module.function_meta(Item::bonus_from_nearby)?;
         module.function_meta(Item::bonus_from_connected)?;
@@ -231,6 +232,11 @@ pub mod item {
         #[rune::function]
         fn damage(&self, target: Target, damage: ScriptFunction) {
             self.as_script().damage(target, damage)
+        }
+
+        #[rune::function]
+        fn damage_all_nearby(&self, range: Coord, damage: ScriptFunction) {
+            self.as_script().damage_all_nearby(range, damage)
         }
 
         #[rune::function]

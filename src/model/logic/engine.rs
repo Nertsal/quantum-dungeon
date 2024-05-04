@@ -5,7 +5,7 @@ impl ScriptEffects<'_> {
         self.0.push(Effect::SetUsed { item_id });
     }
 
-    pub fn damage(&mut self, target: Id, damage: ScriptFunction) {
+    pub fn damage(&mut self, target: Id, damage: Rc<ScriptFunction>) {
         self.0.push(Effect::Damage { target, damage });
     }
 

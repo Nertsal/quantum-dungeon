@@ -23,7 +23,7 @@ pub enum Effect {
     },
     Damage {
         target: Id,
-        damage: ScriptFunction,
+        damage: Rc<ScriptFunction>,
     },
     Bonus {
         from: vec2<Coord>,

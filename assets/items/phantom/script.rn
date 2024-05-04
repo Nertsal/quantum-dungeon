@@ -1,0 +1,4 @@
+pub fn active(item) {
+    item.damage(Target::Nearest, |stats| stats.damage);
+    item.bonus(Stats { damage: 1 }, true);
+}

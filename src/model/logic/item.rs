@@ -3,6 +3,7 @@ use super::*;
 // NOTE: expose functions in src/model/engine.rs
 impl ScriptItem<'_> {
     pub fn damage(&mut self, target: Target, damage: ScriptFunction) {
+        let damage = Rc::new(damage);
         let mut rng = thread_rng(); // TODO: seeded rng
 
         let source_fraction = Fraction::Player; // TODO: non-player items?
@@ -28,6 +29,17 @@ impl ScriptItem<'_> {
             self.effects.damage(target, damage);
         } else {
             log::debug!("Item tried attacking but no target was found");
+        }
+    }
+
+    pub fn damage_all_nearby(&mut self, range: Coord, damage: ScriptFunction) {
+        let damage = Rc::new(damage);
+        let source_fraction = Fraction::Player; // TODO: non-player items?
+        for (target, _) in self.model.entities.iter().filter(|(_, entity)| {
+            source_fraction != entity.fraction
+                && distance(entity.position, self.board_item.position) <= range
+        }) {
+            self.effects.damage(target, damage.clone());
         }
     }
 
