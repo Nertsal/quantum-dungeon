@@ -43,6 +43,10 @@ pub enum Effect {
     Duplicate {
         item_id: Id,
     },
+    /// Gain extra moves for this turn.
+    GainMoves {
+        moves: usize,
+    },
 }
 
 impl Trigger {
@@ -66,6 +70,7 @@ impl Effect {
             Self::OpenTiles { .. } => 999,
             Self::Destroy { .. } => -999999,
             Self::Duplicate { .. } => 20,
+            Self::GainMoves { .. } => 0,
         }
     }
 }

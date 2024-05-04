@@ -29,4 +29,8 @@ impl ScriptEffects<'_> {
     pub fn duplicate(&mut self, item_id: Id) {
         self.0.push(Effect::Duplicate { item_id });
     }
+
+    pub fn gain_moves(&mut self, moves: usize) {
+        self.0.push(Effect::GainMoves { moves });
+    }
 }

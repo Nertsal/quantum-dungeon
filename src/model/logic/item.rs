@@ -125,4 +125,8 @@ impl ScriptItem<'_> {
     pub fn duplicate(&mut self) {
         self.effects.duplicate(self.board_item.item_id);
     }
+
+    pub fn gain_moves(&mut self, moves: usize) {
+        self.effects.gain_moves(moves);
+    }
 }

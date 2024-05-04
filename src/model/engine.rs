@@ -151,6 +151,7 @@ pub mod item {
         module.function_meta(Item::find_nearby)?;
         module.function_meta(Item::duplicate)?;
         module.function_meta(Item::rng_float)?;
+        module.function_meta(Item::gain_moves)?;
 
         module.ty::<Position>()?;
         module.ty::<Stats>()?;
@@ -312,6 +313,11 @@ pub mod item {
         #[rune::function]
         fn rng_float(&self) -> f32 {
             thread_rng().gen()
+        }
+
+        #[rune::function]
+        fn gain_moves(&self, moves: usize) {
+            self.as_script().gain_moves(moves)
         }
     }
 

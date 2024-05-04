@@ -107,6 +107,9 @@ impl Model {
                     });
                 }
             }
+            Effect::GainMoves { moves } => {
+                state.player.moves_left += moves;
+            }
         }
 
         let board_item = effect.proc_item;
