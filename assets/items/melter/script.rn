@@ -1,0 +1,8 @@
+pub fn day(item) {
+    if item.rng_float() < 0.2 {
+        if let Some(victim) = item.find_nearby(1, Filter::Category(Category::Tech)) {
+            victim.destroy();
+            item.bonus_to_all(Filter::Category(Category::Weapon), Stats { damage: 1 }, true);
+        }
+    }
+}

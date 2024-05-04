@@ -93,6 +93,16 @@ impl ScriptItem<'_> {
         }
     }
 
+    pub fn bonus_to_all(&mut self, filter: ItemFilter, bonus: ItemStats, permanent: bool) {
+        for (target, board_item) in &self.model.items {
+            let item = &self.model.player.items[board_item.item_id];
+            if filter.check(&item.kind) {
+                self.effects
+                    .bonus(self.board_item.position, target, bonus.clone(), permanent);
+            }
+        }
+    }
+
     /// Lets the player uncover new tiles on the map.
     pub fn open_tiles(&mut self, tiles: usize) {
         self.effects.open_tiles(tiles);
