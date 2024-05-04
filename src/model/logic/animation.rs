@@ -97,21 +97,20 @@ impl Model {
             .engine
             .init_item(kind)
             .expect("Item initialization failed"); // TODO: handle error
-        let mut state = self.state.borrow_mut();
-        let item_id = state.player.items.insert(item);
+        let item_id = self.state.borrow_mut().player.items.insert(item);
 
         let available = self.calculate_empty_space().sub(&self.visible_tiles);
         if !available.is_empty() {
             let mut rng = thread_rng();
             let &position = available.iter().choose(&mut rng).unwrap();
 
-            let item = &mut state.player.items[item_id];
-            let on_board = self.state.borrow_mut().items.insert(BoardItem {
+            let mut state = self.state.borrow_mut();
+            let on_board = state.items.insert(BoardItem {
                 position,
                 item_id,
                 used: false,
             });
-            item.on_board = Some(on_board);
+            state.player.items[item_id].on_board = Some(on_board);
         }
     }
 }

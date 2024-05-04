@@ -95,6 +95,18 @@ impl Model {
                     });
                 }
             }
+            Effect::Duplicate { item_id } => {
+                if let Some((_, inv)) = state
+                    .player
+                    .items
+                    .iter()
+                    .find(|(_, item)| item.on_board == Some(item_id))
+                {
+                    play_animation(AnimationKind::Dupe {
+                        kind: inv.kind.clone(),
+                    });
+                }
+            }
         }
 
         let board_item = effect.proc_item;

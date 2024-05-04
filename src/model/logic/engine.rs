@@ -25,4 +25,8 @@ impl ScriptEffects<'_> {
     pub fn destroy(&mut self, item_id: Id) {
         self.0.push(Effect::Destroy { item_id });
     }
+
+    pub fn duplicate(&mut self, item_id: Id) {
+        self.0.push(Effect::Duplicate { item_id });
+    }
 }

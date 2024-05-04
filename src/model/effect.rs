@@ -39,6 +39,10 @@ pub enum Effect {
     Destroy {
         item_id: Id,
     },
+    /// Duplicate an item, making a copy in the inventory, and, if there is space, on the board.
+    Duplicate {
+        item_id: Id,
+    },
 }
 
 impl Trigger {
@@ -61,6 +65,7 @@ impl Effect {
             Self::Bonus { .. } => 10,
             Self::OpenTiles { .. } => 999,
             Self::Destroy { .. } => -999999,
+            Self::Duplicate { .. } => 20,
         }
     }
 }

@@ -87,4 +87,17 @@ impl ScriptItem<'_> {
     pub fn destroy(&mut self) {
         self.effects.destroy(self.board_item.item_id);
     }
+
+    pub fn find_nearby(&self, range: Coord, filter: ItemFilter) -> Option<Id> {
+        let items = self.model.items.iter().filter(|(_, board_item)| {
+            let item = &self.model.player.items[board_item.item_id];
+            let dist = distance(board_item.position, self.board_item.position);
+            (1..=range).contains(&dist) && filter.check(&item.kind)
+        });
+        items.choose(&mut thread_rng()).map(|(id, _)| id)
+    }
+
+    pub fn duplicate(&mut self) {
+        self.effects.duplicate(self.board_item.item_id);
+    }
 }
