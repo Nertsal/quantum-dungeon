@@ -149,6 +149,7 @@ pub mod item {
         module.function_meta(Item::destroy)?;
         module.function_meta(Item::find_nearby)?;
         module.function_meta(Item::duplicate)?;
+        module.function_meta(Item::rng_float)?;
 
         module.ty::<Position>()?;
         module.ty::<Stats>()?;
@@ -296,6 +297,11 @@ pub mod item {
         #[rune::function]
         fn duplicate(&self) {
             self.as_script().duplicate()
+        }
+
+        #[rune::function]
+        fn rng_float(&self) -> f32 {
+            thread_rng().gen()
         }
     }
 

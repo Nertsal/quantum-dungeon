@@ -3,5 +3,5 @@ Config(
     effect_padding_time: 0.3,
     score_per_level: 10,
     score_per_turn_left: 3,
-    starting_items: ["Sword", "Grand map", "Electric rod", "Electric rod"]
+    starting_items: ["Sword", "Grand map", "Magic wire"]
 )
