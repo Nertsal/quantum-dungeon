@@ -198,7 +198,8 @@ pub mod item {
         This,
         #[rune(constructor)]
         Category(#[rune(get)] Category),
-        Named(Rc<str>),
+        #[rune(constructor)]
+        Named(#[rune(get)] String),
     }
 
     #[derive(Debug, Clone, Copy, rune::Any)]
@@ -427,7 +428,7 @@ pub mod item {
             match self {
                 Filter::This => ItemFilter::Named(Rc::clone(this)),
                 Filter::Category(cat) => ItemFilter::Category(cat),
-                Filter::Named(name) => ItemFilter::Named(name),
+                Filter::Named(name) => ItemFilter::Named(name.into()),
             }
         }
     }
