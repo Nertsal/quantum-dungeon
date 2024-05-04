@@ -99,7 +99,9 @@ impl Model {
             .expect("Item initialization failed"); // TODO: handle error
         let item_id = self.state.borrow_mut().player.items.insert(item);
 
-        let available = self.calculate_empty_space().sub(&self.visible_tiles);
+        let available = self
+            .calculate_empty_space()
+            .sub(&self.state.borrow().visible_tiles);
         if !available.is_empty() {
             let mut rng = thread_rng();
             let &position = available.iter().choose(&mut rng).unwrap();

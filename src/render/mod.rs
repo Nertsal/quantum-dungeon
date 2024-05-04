@@ -69,14 +69,14 @@ impl GameRender {
         for &pos in &state.grid.tiles {
             let light = match model.phase {
                 Phase::Vision | Phase::PostVision { .. } | Phase::Select { .. } => {
-                    if model.visible_tiles.contains(&pos) {
+                    if state.visible_tiles.contains(&pos) {
                         TileLight::Light
                     } else {
                         TileLight::Normal
                     }
                 }
                 Phase::LevelStarting { .. } | Phase::Night { .. } | Phase::Dawn { .. } => {
-                    if model.visible_tiles.contains(&pos) {
+                    if state.visible_tiles.contains(&pos) {
                         self.draw_at_grid(
                             pos.as_f32(),
                             Angle::ZERO,

@@ -25,7 +25,8 @@ impl Model {
     }
 
     pub(super) fn shift_everything(&mut self) {
-        let available: HashSet<_> = self.state.borrow().grid.tiles.sub(&self.visible_tiles);
+        let mut state = self.state.borrow_mut();
+        let available: HashSet<_> = state.grid.tiles.sub(&state.visible_tiles);
         if available.is_empty() {
             // Cannot shift
             return;
@@ -36,7 +37,6 @@ impl Model {
             Item(Id),
         }
 
-        let mut state = self.state.borrow_mut();
         let items = state
             .items
             .iter()
@@ -49,7 +49,7 @@ impl Model {
 
         let mut rng = thread_rng();
         let moves: Vec<(Thing, vec2<Coord>)> = things
-            .filter(|(_, pos)| !self.visible_tiles.contains(pos))
+            .filter(|(_, pos)| !state.visible_tiles.contains(pos))
             .map(|(i, _)| (i, *available.iter().choose(&mut rng).unwrap()))
             .collect();
 
@@ -79,7 +79,9 @@ impl Model {
     }
 
     fn spawn_enemies(&mut self) {
-        let mut available = self.calculate_empty_space().sub(&self.visible_tiles);
+        let mut available = self
+            .calculate_empty_space()
+            .sub(&self.state.borrow().visible_tiles);
         if available.is_empty() {
             return;
         }
@@ -114,7 +116,9 @@ impl Model {
     }
 
     pub(super) fn spawn_items(&mut self) {
-        let mut available = self.calculate_empty_space().sub(&self.visible_tiles);
+        let mut available = self
+            .calculate_empty_space()
+            .sub(&self.state.borrow().visible_tiles);
         if available.is_empty() {
             return;
         }

@@ -159,6 +159,7 @@ pub mod item {
         module.function_meta(Item::grid_bounds)?;
         module.function_meta(Item::turn_into)?;
         module.function_meta(Item::emit_light_around)?;
+        module.function_meta(Item::is_observed)?;
 
         module.ty::<Position>()?;
         module.ty::<Bounds>()?;
@@ -390,6 +391,11 @@ pub mod item {
         fn emit_light_around(&self, position: Position, radius: Coord, duration: usize) {
             self.as_script()
                 .emit_light_around(position.into(), radius, duration)
+        }
+
+        #[rune::function]
+        fn is_observed(&self) -> bool {
+            self.as_script().is_observed()
         }
     }
 

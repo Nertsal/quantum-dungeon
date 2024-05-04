@@ -30,7 +30,6 @@ pub struct Model {
     pub turn: usize,
     pub score: Score,
     pub phase: Phase,
-    pub visible_tiles: HashSet<vec2<Coord>>,
 
     pub animations: Arena<Animation>,
     pub ending_animations: Vec<Animation>,
@@ -64,6 +63,7 @@ pub struct ModelState {
     pub player: Player,
     pub items: Arena<BoardItem>,
     pub entities: Arena<Entity>,
+    pub visible_tiles: HashSet<vec2<Coord>>,
 }
 
 #[derive(Debug, Clone)]
@@ -129,6 +129,7 @@ impl Model {
             }]
             .into_iter()
             .collect(),
+            visible_tiles: HashSet::new(),
         };
         let state = Rc::new(RefCell::new(state));
 
@@ -183,7 +184,6 @@ impl Model {
             phase: Phase::Dawn {
                 light_time: Lifetime::new_max(r32(0.5)),
             },
-            visible_tiles: HashSet::new(),
 
             animations: Arena::new(),
             ending_animations: Vec::new(),

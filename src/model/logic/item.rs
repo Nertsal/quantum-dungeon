@@ -172,4 +172,8 @@ impl ScriptItem<'_> {
     pub fn emit_light_around(&mut self, position: vec2<Coord>, radius: Coord, duration: usize) {
         self.effects.emit_light(position, radius, duration);
     }
+
+    pub fn is_observed(&self) -> bool {
+        self.model.visible_tiles.contains(&self.board_item.position)
+    }
 }

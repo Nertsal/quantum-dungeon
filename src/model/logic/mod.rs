@@ -42,17 +42,18 @@ impl Model {
     }
 
     pub fn get_light_level(&self, position: vec2<Coord>) -> f32 {
+        let state = self.state.borrow();
         match self.phase {
             Phase::LevelStarting { .. } => 0.0,
             Phase::Night { fade_time } => {
-                if self.visible_tiles.contains(&position) {
+                if state.visible_tiles.contains(&position) {
                     1.0
                 } else {
                     fade_time.get_ratio().as_f32()
                 }
             }
             Phase::Dawn { light_time } => {
-                if self.visible_tiles.contains(&position) {
+                if state.visible_tiles.contains(&position) {
                     1.0
                 } else {
                     1.0 - light_time.get_ratio().as_f32()
@@ -215,7 +216,7 @@ impl Model {
     }
 
     pub fn update_vision(&mut self) {
-        let state = self.state.borrow();
+        let mut state = self.state.borrow_mut();
         let mut visible: HashSet<_> = state.grid.lights.keys().copied().collect();
         for (_, entity) in &state.entities {
             if let EntityKind::Player = entity.kind {
@@ -235,7 +236,7 @@ impl Model {
             }
         }
 
-        self.visible_tiles = visible;
+        state.visible_tiles = visible;
     }
 
     fn check_deaths(&mut self) {
