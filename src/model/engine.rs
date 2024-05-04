@@ -143,6 +143,7 @@ pub mod item {
         module.function_meta(Item::damage)?;
         module.function_meta(Item::damage_all_nearby)?;
         module.function_meta(Item::bonus)?;
+        module.function_meta(Item::bonus_from)?;
         module.function_meta(Item::bonus_from_nearby)?;
         module.function_meta(Item::bonus_from_connected)?;
         module.function_meta(Item::bonus_to_nearby)?;
@@ -273,6 +274,12 @@ pub mod item {
         #[rune::function]
         fn bonus(&self, stats: Stats, permanent: bool) {
             self.as_script().bonus(stats.into(), permanent)
+        }
+
+        #[rune::function]
+        fn bonus_from(&self, target: &Item, stats: Stats, permanent: bool) {
+            self.as_script()
+                .bonus_from(target.board.position, stats.into(), permanent)
         }
 
         #[rune::function]

@@ -54,6 +54,11 @@ impl ScriptItem<'_> {
         );
     }
 
+    pub fn bonus_from(&mut self, from: vec2<Coord>, bonus: ItemStats, permanent: bool) {
+        self.effects
+            .bonus(from, self.item.on_board.unwrap(), bonus.clone(), permanent);
+    }
+
     pub fn bonus_from_nearby(
         &mut self,
         range: Coord,
