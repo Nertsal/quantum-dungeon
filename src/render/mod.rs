@@ -100,7 +100,7 @@ impl GameRender {
                 _ => {
                     if model.grid.fractured.contains(&pos) {
                         TileLight::Dark
-                    } else if let Phase::Portal = model.phase {
+                    } else if let Phase::Portal { .. } = model.phase {
                         // Highlight magic items
                         if model.state.borrow().items.iter().any(|(_, item)| {
                             item.position == pos
@@ -235,7 +235,7 @@ impl GameRender {
                 "Day"
             }
             Phase::Active { .. } | Phase::Passive { .. } => "Day",
-            Phase::Portal => "Select a magic item",
+            Phase::Portal { .. } => "Select a magic item",
             Phase::Vision => "Select a direction to look at",
             Phase::PostVision { .. } => "Night",
             Phase::LevelFinished { win, .. } => {

@@ -14,7 +14,7 @@ impl Model {
             Phase::Player if self.wait_for_effects() => self.player_move(player_input),
             Phase::Vision => self.player_vision(player_input),
             Phase::Map { .. } => self.map_action(player_input),
-            Phase::Portal => self.portal_action(player_input),
+            Phase::Portal { .. } => self.portal_action(player_input),
             Phase::Select {
                 options,
                 extra_items,
@@ -97,7 +97,7 @@ impl Model {
             return;
         }
 
-        if let Phase::Portal = self.phase {
+        if let Phase::Portal { .. } = self.phase {
             // What is this trick KEKW
             let mut state = self.state.borrow_mut();
             let state_ref = &mut *state;
@@ -122,7 +122,13 @@ impl Model {
                     player.position = target_pos;
                     self.grid.fractured.insert(target_pos);
                     drop(state);
-                    self.player_phase();
+
+                    let mut phase = Phase::Vision;
+                    std::mem::swap(&mut self.phase, &mut phase);
+                    if let Phase::Portal { next_phase } = phase {
+                        self.phase = *next_phase;
+                    }
+
                     self.assets.sounds.step.play();
                 } else {
                     log::error!(

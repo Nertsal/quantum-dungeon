@@ -152,6 +152,7 @@ pub mod item {
         module.function_meta(Item::duplicate)?;
         module.function_meta(Item::rng_float)?;
         module.function_meta(Item::gain_moves)?;
+        module.function_meta(Item::portal)?;
 
         module.ty::<Position>()?;
         module.ty::<Stats>()?;
@@ -318,6 +319,11 @@ pub mod item {
         #[rune::function]
         fn gain_moves(&self, moves: usize) {
             self.as_script().gain_moves(moves)
+        }
+
+        #[rune::function]
+        fn portal(&self) {
+            self.as_script().portal()
         }
     }
 

@@ -33,4 +33,8 @@ impl ScriptEffects<'_> {
     pub fn gain_moves(&mut self, moves: usize) {
         self.0.push(Effect::GainMoves { moves });
     }
+
+    pub fn portal(&mut self) {
+        self.0.push(Effect::Portal);
+    }
 }

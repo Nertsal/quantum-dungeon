@@ -110,6 +110,22 @@ impl Model {
             Effect::GainMoves { moves } => {
                 state.player.moves_left += moves;
             }
+            Effect::Portal => {
+                if state
+                    .player
+                    .items
+                    .iter()
+                    .any(|(_, item)| item.kind.config.categories.contains(&Category::Magic))
+                {
+                    let mut next_phase = Phase::Vision;
+                    std::mem::swap(&mut self.phase, &mut next_phase);
+                    self.phase = Phase::Portal {
+                        next_phase: Box::new(next_phase),
+                    };
+                } else {
+                    log::debug!("Tried activating portal state but there are no magic items");
+                }
+            }
         }
 
         let board_item = effect.proc_item;

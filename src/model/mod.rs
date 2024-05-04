@@ -100,7 +100,10 @@ pub enum Phase {
         next_phase: Box<Phase>,
     },
     /// Swap position with a magic item.
-    Portal,
+    Portal {
+        /// Phase to go to after the teleport.
+        next_phase: Box<Phase>,
+    },
     /// Player sets their look direction.
     Vision,
     /// Vision has beet set, visualize.

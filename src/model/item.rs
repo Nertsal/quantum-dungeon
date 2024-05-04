@@ -110,37 +110,6 @@ impl ItemFilter {
     }
 }
 
-impl ItemKind {
-    // pub fn categories(&self) -> Vec<ItemCategory> {
-    //     use ItemCategory::*;
-    //     match self {
-    //         ItemKind::Boots => vec![Tech],
-    //         ItemKind::Forge => vec![Magic],
-    //         ItemKind::Sword => vec![Weapon],
-    //         ItemKind::Map => vec![Treasure],
-    //         ItemKind::Camera => vec![Tech],
-    //         ItemKind::Ghost => vec![Spooky],
-    //         ItemKind::FireScroll => vec![Magic, Weapon],
-    //         ItemKind::SoulCrystal => vec![Spooky],
-    //         ItemKind::RadiationCore => vec![Tech, Weapon],
-    //         ItemKind::GreedyPot => vec![Treasure],
-    //         ItemKind::SpiritCoin => vec![Spooky, Treasure],
-    //         ItemKind::Chest => vec![Treasure],
-    //         ItemKind::MagicTreasureBag => vec![Treasure, Magic],
-    //         ItemKind::ElectricRod => vec![Tech, Weapon],
-    //         ItemKind::MagicWire => vec![Magic, Tech],
-    //         ItemKind::Melter => vec![Tech],
-    //         ItemKind::Phantom => vec![Spooky, Weapon],
-    //         ItemKind::CursedSkull => vec![Spooky],
-    //         ItemKind::KingSkull => vec![Treasure, Weapon],
-    //         ItemKind::GoldenLantern => vec![Treasure],
-    //         ItemKind::CharmingStaff => vec![Magic, Weapon],
-    //         ItemKind::WarpPortal => vec![Magic],
-    //         ItemKind::Solitude => vec![Weapon],
-    //     }
-    // }
-}
-
 impl ItemStats {
     pub fn combine(&self, other: &Self) -> Self {
         fn combine<T: Add<T, Output = T>>(value: Option<T>, other: Option<T>) -> Option<T> {

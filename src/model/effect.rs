@@ -47,6 +47,7 @@ pub enum Effect {
     GainMoves {
         moves: usize,
     },
+    Portal,
 }
 
 impl Trigger {
@@ -68,6 +69,7 @@ impl Effect {
             Self::Damage { .. } => 0,
             Self::Bonus { .. } => 10,
             Self::OpenTiles { .. } => 999,
+            Self::Portal { .. } => 999,
             Self::Destroy { .. } => -999999,
             Self::Duplicate { .. } => 20,
             Self::GainMoves { .. } => 0,

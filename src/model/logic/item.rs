@@ -129,4 +129,8 @@ impl ScriptItem<'_> {
     pub fn gain_moves(&mut self, moves: usize) {
         self.effects.gain_moves(moves);
     }
+
+    pub fn portal(&mut self) {
+        self.effects.portal();
+    }
 }
