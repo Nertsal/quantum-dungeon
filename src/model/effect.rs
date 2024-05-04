@@ -56,6 +56,11 @@ pub enum Effect {
         item_id: Id,
         target_name: String,
     },
+    EmitLight {
+        position: vec2<Coord>,
+        radius: Coord,
+        duration: usize,
+    },
 }
 
 impl Trigger {
@@ -83,6 +88,7 @@ impl Effect {
             Self::GainMoves { .. } => 0,
             Self::SwapItems { .. } => 0,
             Self::TransformItem { .. } => 100,
+            Self::EmitLight { .. } => 0,
         }
     }
 }

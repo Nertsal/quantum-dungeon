@@ -158,6 +158,7 @@ pub mod item {
         module.function_meta(Item::swap_with)?;
         module.function_meta(Item::grid_bounds)?;
         module.function_meta(Item::turn_into)?;
+        module.function_meta(Item::emit_light_around)?;
 
         module.ty::<Position>()?;
         module.ty::<Bounds>()?;
@@ -210,6 +211,12 @@ pub mod item {
     impl From<vec2<Coord>> for Position {
         fn from(vec2(x, y): vec2<Coord>) -> Self {
             Self { x, y }
+        }
+    }
+
+    impl From<Position> for vec2<Coord> {
+        fn from(value: Position) -> Self {
+            vec2(value.x, value.y)
         }
     }
 
@@ -377,6 +384,12 @@ pub mod item {
         #[rune::function]
         fn turn_into(&self, target: &str) {
             self.as_script().turn_into(target)
+        }
+
+        #[rune::function]
+        fn emit_light_around(&self, position: Position, radius: Coord, duration: usize) {
+            self.as_script()
+                .emit_light_around(position.into(), radius, duration)
         }
     }
 

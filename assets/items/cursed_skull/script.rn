@@ -11,5 +11,5 @@ pub fn active(item) {
 }
 
 pub fn night(item) {
-    
+    item.emit_light_around(item.position, 0, 1);
 }

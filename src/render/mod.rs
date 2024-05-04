@@ -75,27 +75,37 @@ impl GameRender {
                         TileLight::Normal
                     }
                 }
-                Phase::LevelStarting { .. } | Phase::Night { .. } => {
-                    // Crossfade
-                    let t = model.get_light_level(pos);
-                    let t = crate::util::smoothstep(t);
-                    let mut color = Color::WHITE;
-                    color.a = 1.0 - t;
-                    self.draw_at_grid(
-                        pos.as_f32(),
-                        Angle::ZERO,
-                        &self.assets.sprites.cell_dark,
-                        color,
-                        framebuffer,
-                    );
-                    color.a = t;
-                    self.draw_at_grid(
-                        pos.as_f32(),
-                        Angle::ZERO,
-                        &self.assets.sprites.cell,
-                        color,
-                        framebuffer,
-                    );
+                Phase::LevelStarting { .. } | Phase::Night { .. } | Phase::Dawn { .. } => {
+                    if model.visible_tiles.contains(&pos) {
+                        self.draw_at_grid(
+                            pos.as_f32(),
+                            Angle::ZERO,
+                            &self.assets.sprites.cell_light,
+                            Color::WHITE,
+                            framebuffer,
+                        );
+                    } else {
+                        // Crossfade
+                        let t = model.get_light_level(pos);
+                        let t = crate::util::smoothstep(t);
+                        let mut color = Color::WHITE;
+                        color.a = 1.0 - t;
+                        self.draw_at_grid(
+                            pos.as_f32(),
+                            Angle::ZERO,
+                            &self.assets.sprites.cell_dark,
+                            color,
+                            framebuffer,
+                        );
+                        color.a = t;
+                        self.draw_at_grid(
+                            pos.as_f32(),
+                            Angle::ZERO,
+                            &self.assets.sprites.cell,
+                            color,
+                            framebuffer,
+                        );
+                    }
                     continue;
                 }
                 _ => {
@@ -223,7 +233,7 @@ impl GameRender {
         self.buttons.clear();
         let text = match &model.phase {
             Phase::GameOver => "Game over",
-            Phase::Night { .. } | Phase::LevelStarting { .. } => "Night",
+            Phase::Night { .. } | Phase::Dawn { .. } | Phase::LevelStarting { .. } => "Night",
             Phase::Player => {
                 // Skip button
                 self.draw_button(

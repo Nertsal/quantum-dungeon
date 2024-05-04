@@ -24,7 +24,7 @@ impl Model {
             Phase::LevelStarting { timer } => {
                 timer.change(-delta_time);
                 if timer.is_min() {
-                    self.night_phase(true);
+                    self.dawn_phase();
                 }
             }
             Phase::LevelFinished { timer, .. } => {
@@ -43,23 +43,21 @@ impl Model {
                     self.select_phase(extra);
                 }
             }
-            Phase::Night {
-                fade_time,
-                light_time,
-            } => {
-                if fade_time.is_above_min() {
-                    fade_time.change(-delta_time);
-                    if fade_time.is_min() {
-                        // Night effects
+            Phase::Night { fade_time } => {
+                if wait_for_effects {
+                    if fade_time.is_above_min() {
+                        fade_time.change(-delta_time);
+                    } else {
                         self.shift_everything();
                         self.spawn_items();
-                        self.resolve_trigger(Trigger::Night, None);
+                        self.dawn_phase();
                     }
-                } else if self.animations.is_empty() {
-                    light_time.change(-delta_time);
-                    if light_time.is_min() {
-                        self.resolution_phase();
-                    }
+                }
+            }
+            Phase::Dawn { light_time } => {
+                light_time.change(-delta_time);
+                if light_time.is_min() {
+                    self.resolution_phase();
                 }
             }
             Phase::Passive { start_delay, .. } => {

@@ -48,4 +48,12 @@ impl ScriptEffects<'_> {
             target_name: target_name.to_owned(),
         });
     }
+
+    pub fn emit_light(&mut self, position: vec2<Coord>, radius: Coord, duration: usize) {
+        self.0.push(Effect::EmitLight {
+            position,
+            radius,
+            duration,
+        });
+    }
 }

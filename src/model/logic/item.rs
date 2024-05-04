@@ -168,4 +168,8 @@ impl ScriptItem<'_> {
     pub fn turn_into(&mut self, target: &str) {
         self.effects.transform_item(self.board_item.item_id, target);
     }
+
+    pub fn emit_light_around(&mut self, position: vec2<Coord>, radius: Coord, duration: usize) {
+        self.effects.emit_light(position, radius, duration);
+    }
 }

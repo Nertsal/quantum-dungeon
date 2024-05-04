@@ -44,14 +44,16 @@ impl Model {
     pub fn get_light_level(&self, position: vec2<Coord>) -> f32 {
         match self.phase {
             Phase::LevelStarting { .. } => 0.0,
-            Phase::Night {
-                fade_time,
-                light_time,
-            } => {
+            Phase::Night { fade_time } => {
                 if self.visible_tiles.contains(&position) {
                     1.0
-                } else if fade_time.is_above_min() {
+                } else {
                     fade_time.get_ratio().as_f32()
+                }
+            }
+            Phase::Dawn { light_time } => {
+                if self.visible_tiles.contains(&position) {
+                    1.0
                 } else {
                     1.0 - light_time.get_ratio().as_f32()
                 }
@@ -60,15 +62,10 @@ impl Model {
         }
     }
 
-    pub fn night_phase(&mut self, start_faded: bool) {
+    pub fn night_phase(&mut self) {
         log::debug!("Night phase");
         self.phase = Phase::Night {
-            fade_time: if start_faded {
-                Lifetime::new_zero(r32(1.0))
-            } else {
-                Lifetime::new_max(r32(1.0))
-            },
-            light_time: Lifetime::new_max(r32(1.0)),
+            fade_time: Lifetime::new_max(r32(1.0)),
         };
 
         let mut state_ref = self.state.borrow_mut();
@@ -88,7 +85,14 @@ impl Model {
         state.grid.lights.retain(|_, duration| *duration > 0);
         drop(state_ref);
 
-        self.update_vision();
+        self.resolve_trigger(Trigger::Night, None);
+    }
+
+    pub fn dawn_phase(&mut self) {
+        log::debug!("Dawn phase");
+        self.phase = Phase::Dawn {
+            light_time: Lifetime::new_max(r32(1.0)),
+        };
     }
 
     pub fn day_phase(&mut self) {
@@ -144,9 +148,7 @@ impl Model {
         state.player.turns_left = state.player.turns_left.saturating_sub(1);
         if state.player.turns_left == 0 {
             // Damage for every enemy left on the board
-            let damage = self
-                .state
-                .borrow()
+            let damage = state
                 .entities
                 .iter()
                 .filter(|(_, e)| e.fraction == Fraction::Enemy)
@@ -161,7 +163,7 @@ impl Model {
             }
         } else {
             drop(state);
-            self.night_phase(false);
+            self.night_phase();
         }
     }
 

@@ -162,6 +162,15 @@ impl Model {
                     }
                 }
             }
+            Effect::EmitLight {
+                position,
+                radius,
+                duration,
+            } => {
+                state.grid.light_up(position, radius, duration);
+                drop(state);
+                self.update_vision();
+            }
         }
 
         let board_item = effect.proc_item;

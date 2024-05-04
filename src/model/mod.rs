@@ -70,11 +70,10 @@ pub struct ModelState {
 pub enum Phase {
     /// Level transition.
     LevelStarting { timer: Lifetime },
+    /// Resolve night effects.
+    Night { fade_time: Lifetime },
     /// Shift and spawn items and enemies.
-    Night {
-        fade_time: Lifetime,
-        light_time: Lifetime,
-    },
+    Dawn { light_time: Lifetime },
     /// Resolve passive item effects.
     Passive {
         start_delay: Lifetime,
@@ -181,8 +180,7 @@ impl Model {
             level: 0,
             turn: 0,
             score: 0,
-            phase: Phase::Night {
-                fade_time: Lifetime::new_zero(r32(0.5)),
+            phase: Phase::Dawn {
                 light_time: Lifetime::new_max(r32(0.5)),
             },
             visible_tiles: HashSet::new(),
