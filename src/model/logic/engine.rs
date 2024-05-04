@@ -41,4 +41,11 @@ impl ScriptEffects<'_> {
     pub fn swap_items(&mut self, board_a: Id, board_b: Id) {
         self.0.push(Effect::SwapItems { board_a, board_b });
     }
+
+    pub fn transform_item(&mut self, item: Id, target_name: &str) {
+        self.0.push(Effect::TransformItem {
+            item_id: item,
+            target_name: target_name.to_owned(),
+        });
+    }
 }

@@ -157,8 +157,10 @@ pub mod item {
         module.function_meta(Item::portal)?;
         module.function_meta(Item::swap_with)?;
         module.function_meta(Item::grid_bounds)?;
+        module.function_meta(Item::turn_into)?;
 
         module.ty::<Position>()?;
+        module.ty::<Bounds>()?;
         module.ty::<Stats>()?;
         module.ty::<Filter>()?;
         module.ty::<Target>()?;
@@ -370,6 +372,11 @@ pub mod item {
         #[rune::function]
         fn grid_bounds(&self) -> Bounds {
             self.as_script().grid_bounds().into()
+        }
+
+        #[rune::function]
+        fn turn_into(&self, target: &str) {
+            self.as_script().turn_into(target)
         }
     }
 

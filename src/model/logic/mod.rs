@@ -71,10 +71,11 @@ impl Model {
             light_time: Lifetime::new_max(r32(1.0)),
         };
 
-        let mut state = self.state.borrow_mut();
+        let mut state_ref = self.state.borrow_mut();
+        let state = &mut *state_ref;
         state.player.extra_items = self.turn % 2;
         state.grid.fractured.clear();
-        for (_, entity) in &self.state.borrow().entities {
+        for (_, entity) in &state.entities {
             if let EntityKind::Player = entity.kind {
                 state.grid.fractured.insert(entity.position);
             }
@@ -85,7 +86,7 @@ impl Model {
             *duration = duration.saturating_sub(1);
         }
         state.grid.lights.retain(|_, duration| *duration > 0);
-        drop(state);
+        drop(state_ref);
 
         self.update_vision();
     }

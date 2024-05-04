@@ -1,5 +1,7 @@
 pub fn day(item) {
-
+    if item.position.y == item.grid_bounds().high.y {
+        item.turn_into("King's skull");
+    }
 }
 
 pub fn active(item) {

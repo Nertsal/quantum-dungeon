@@ -139,6 +139,29 @@ impl Model {
                     }
                 }
             }
+            Effect::TransformItem {
+                item_id,
+                target_name,
+            } => {
+                if let Some(item) = state.player.items.get_mut(item_id) {
+                    if let Some(target) = self
+                        .all_items
+                        .iter()
+                        .find(|kind| *kind.config.name == target_name)
+                    {
+                        let new_item = self
+                            .engine
+                            .init_item(target.clone())
+                            .expect("Item initialization failed");
+                        *item = new_item;
+                    } else {
+                        log::error!(
+                            "Tried transforming an item into an unknown kind: {:?}",
+                            target_name
+                        );
+                    }
+                }
+            }
         }
 
         let board_item = effect.proc_item;

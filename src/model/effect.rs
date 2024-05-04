@@ -52,6 +52,10 @@ pub enum Effect {
         board_a: Id,
         board_b: Id,
     },
+    TransformItem {
+        item_id: Id,
+        target_name: String,
+    },
 }
 
 impl Trigger {
@@ -78,6 +82,7 @@ impl Effect {
             Self::Duplicate { .. } => 20,
             Self::GainMoves { .. } => 0,
             Self::SwapItems { .. } => 0,
+            Self::TransformItem { .. } => 100,
         }
     }
 }

@@ -137,9 +137,9 @@ impl ScriptItem<'_> {
     }
 
     pub fn find_random(&self, filter: ItemFilter) -> Option<Id> {
-        let items = self.model.items.iter().filter(|(_, board_item)| {
+        let items = self.model.items.iter().filter(|(i, board_item)| {
             let item = &self.model.player.items[board_item.item_id];
-            filter.check(&item.kind)
+            *i != self.item.on_board.unwrap() && filter.check(&item.kind)
         });
         items.choose(&mut thread_rng()).map(|(id, _)| id)
     }
@@ -163,5 +163,9 @@ impl ScriptItem<'_> {
 
     pub fn grid_bounds(&self) -> Aabb2<Coord> {
         self.model.grid.bounds()
+    }
+
+    pub fn turn_into(&mut self, target: &str) {
+        self.effects.transform_item(self.board_item.item_id, target);
     }
 }
