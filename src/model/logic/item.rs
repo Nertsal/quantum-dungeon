@@ -160,4 +160,8 @@ impl ScriptItem<'_> {
         let a = self.item.on_board.unwrap();
         self.effects.swap_items(a, target);
     }
+
+    pub fn grid_bounds(&self) -> Aabb2<Coord> {
+        self.model.grid.bounds()
+    }
 }

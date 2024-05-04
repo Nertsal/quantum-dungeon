@@ -53,7 +53,8 @@ impl Model {
             log::error!("invalid input during phase Map, expected a tile");
             return;
         };
-        if !self.grid.check_pos_near(pos) {
+        let mut state = self.state.borrow_mut();
+        if !state.grid.check_pos_near(pos) {
             log::error!(
                 "position {} is not valid, select an empty one on the edge",
                 pos
@@ -66,7 +67,7 @@ impl Model {
             next_phase,
         } = &mut self.phase
         {
-            self.grid.expand(pos);
+            state.grid.expand(pos);
             *tiles_left = tiles_left.saturating_sub(1);
             if *tiles_left == 0 {
                 log::debug!("Moving from Map phase to {:?}", next_phase);
@@ -88,14 +89,16 @@ impl Model {
             log::error!("invalid input during phase Portal, expected a tile");
             return;
         };
-        if !self.grid.check_pos(target_pos) {
+        let state = self.state.borrow();
+        if !state.grid.check_pos(target_pos) {
             log::error!("position {} is not valid, select a valid tile", target_pos);
             return;
         }
-        if self.grid.fractured.contains(&target_pos) {
+        if state.grid.fractured.contains(&target_pos) {
             log::error!("cannot move to a fractured position");
             return;
         }
+        drop(state);
 
         if let Phase::Portal { .. } = self.phase {
             // What is this trick KEKW
@@ -120,7 +123,7 @@ impl Model {
                     // Swap
                     target.position = player.position;
                     player.position = target_pos;
-                    self.grid.fractured.insert(target_pos);
+                    state.grid.fractured.insert(target_pos);
                     drop(state);
 
                     let mut phase = Phase::Vision;
@@ -164,14 +167,15 @@ impl Model {
         let mut moves = Vec::new();
         let mut move_dir = vec2::ZERO;
         drop(state);
-        let mut state = self.state.borrow_mut();
+        let mut state_ref = self.state.borrow_mut();
+        let state = &mut *state_ref;
         for (i, entity) in &mut state.entities {
             if let EntityKind::Player = entity.kind {
                 // TODO: if there are multiple players, resolve conflicting movement
                 move_dir = match player_input {
                     PlayerInput::Dir(dir) => dir,
                     PlayerInput::Tile(pos) => {
-                        if !self.grid.check_pos(pos) {
+                        if !state.grid.check_pos(pos) {
                             log::error!("invalid input during phase Player, expected a valid tile");
                             return;
                         } else {
@@ -193,13 +197,13 @@ impl Model {
         }
 
         let mut moved = false;
-        drop(state);
+        drop(state_ref);
         for i in moves {
             let mut state = self.state.borrow_mut();
             let entity = state.entities.get_mut(i).unwrap();
             let target = entity.position + move_dir;
             // Fracture tiles as we walk
-            if self.grid.check_pos(target) && self.grid.fractured.insert(target) {
+            if state.grid.check_pos(target) && state.grid.fractured.insert(target) {
                 drop(state);
                 self.move_entity_swap(i, target);
                 moved = true;

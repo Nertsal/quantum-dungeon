@@ -30,7 +30,6 @@ pub struct Model {
     pub turn: usize,
     pub score: Score,
     pub phase: Phase,
-    pub grid: Grid,
     pub visible_tiles: HashSet<vec2<Coord>>,
 
     pub animations: Arena<Animation>,
@@ -61,6 +60,7 @@ pub struct ItemResolved {
 
 /// The stuff accessible from within the scripts.
 pub struct ModelState {
+    pub grid: Grid,
     pub player: Player,
     pub items: Arena<BoardItem>,
     pub entities: Arena<Entity>,
@@ -118,6 +118,7 @@ pub enum Phase {
 impl Model {
     pub fn new(assets: Rc<Assets>, config: Config, all_items: &ItemAssets) -> Self {
         let state = ModelState {
+            grid: Grid::new(3),
             player: Player::new(),
             items: Arena::new(),
             entities: [Entity {
@@ -184,7 +185,6 @@ impl Model {
                 fade_time: Lifetime::new_zero(r32(0.5)),
                 light_time: Lifetime::new_max(r32(0.5)),
             },
-            grid: Grid::new(3),
             visible_tiles: HashSet::new(),
 
             animations: Arena::new(),

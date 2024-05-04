@@ -25,7 +25,7 @@ impl Model {
     }
 
     pub(super) fn shift_everything(&mut self) {
-        let available: HashSet<_> = self.grid.tiles.sub(&self.visible_tiles);
+        let available: HashSet<_> = self.state.borrow().grid.tiles.sub(&self.visible_tiles);
         if available.is_empty() {
             // Cannot shift
             return;

@@ -156,6 +156,7 @@ pub mod item {
         module.function_meta(Item::gain_moves)?;
         module.function_meta(Item::portal)?;
         module.function_meta(Item::swap_with)?;
+        module.function_meta(Item::grid_bounds)?;
 
         module.ty::<Position>()?;
         module.ty::<Stats>()?;
@@ -207,6 +208,24 @@ pub mod item {
     impl From<vec2<Coord>> for Position {
         fn from(vec2(x, y): vec2<Coord>) -> Self {
             Self { x, y }
+        }
+    }
+
+    #[derive(Debug, Clone, Copy, rune::Any)]
+    #[rune(constructor)]
+    pub struct Bounds {
+        #[rune(get)]
+        pub low: Position,
+        #[rune(get)]
+        pub high: Position,
+    }
+
+    impl From<Aabb2<Coord>> for Bounds {
+        fn from(bounds: Aabb2<Coord>) -> Self {
+            Self {
+                low: bounds.min.into(),
+                high: bounds.max.into(),
+            }
         }
     }
 
@@ -346,6 +365,11 @@ pub mod item {
         fn swap_with(&self, target: &Item) {
             self.as_script()
                 .swap_with(target.inventory.on_board.unwrap());
+        }
+
+        #[rune::function]
+        fn grid_bounds(&self) -> Bounds {
+            self.as_script().grid_bounds().into()
         }
     }
 

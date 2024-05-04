@@ -71,19 +71,21 @@ impl Model {
             light_time: Lifetime::new_max(r32(1.0)),
         };
 
-        self.state.borrow_mut().player.extra_items = self.turn % 2;
-        self.grid.fractured.clear();
+        let mut state = self.state.borrow_mut();
+        state.player.extra_items = self.turn % 2;
+        state.grid.fractured.clear();
         for (_, entity) in &self.state.borrow().entities {
             if let EntityKind::Player = entity.kind {
-                self.grid.fractured.insert(entity.position);
+                state.grid.fractured.insert(entity.position);
             }
         }
 
         // Update light duration
-        for duration in self.grid.lights.values_mut() {
+        for duration in state.grid.lights.values_mut() {
             *duration = duration.saturating_sub(1);
         }
-        self.grid.lights.retain(|_, duration| *duration > 0);
+        state.grid.lights.retain(|_, duration| *duration > 0);
+        drop(state);
 
         self.update_vision();
     }
@@ -196,12 +198,13 @@ impl Model {
     }
 
     fn calculate_empty_space(&self) -> HashSet<vec2<Coord>> {
-        let mut available: HashSet<_> = self.grid.tiles.clone();
+        let state = self.state.borrow();
+        let mut available: HashSet<_> = state.grid.tiles.clone();
 
-        for (_, entity) in &self.state.borrow().entities {
+        for (_, entity) in &state.entities {
             available.remove(&entity.position);
         }
-        for (_, item) in &self.state.borrow().items {
+        for (_, item) in &state.items {
             available.remove(&item.position);
         }
 
@@ -209,8 +212,9 @@ impl Model {
     }
 
     pub fn update_vision(&mut self) {
-        let mut visible: HashSet<_> = self.grid.lights.keys().copied().collect();
-        for (_, entity) in &self.state.borrow().entities {
+        let state = self.state.borrow();
+        let mut visible: HashSet<_> = state.grid.lights.keys().copied().collect();
+        for (_, entity) in &state.entities {
             if let EntityKind::Player = entity.kind {
                 if entity.look_dir == vec2::ZERO {
                     continue;
@@ -219,7 +223,7 @@ impl Model {
                 visible.insert(pos);
                 loop {
                     let target = pos + entity.look_dir;
-                    if !self.grid.check_pos(target) {
+                    if !state.grid.check_pos(target) {
                         break;
                     }
                     visible.insert(target);
@@ -259,17 +263,19 @@ impl Model {
 
     /// Move the entity to the target position and swap with the entity occupying the target (if any).
     fn move_entity_swap(&mut self, entity_id: Id, target_pos: vec2<Coord>) {
-        let Some(_entity) = self.state.borrow_mut().entities.get_mut(entity_id) else {
+        let mut state = self.state.borrow_mut();
+        let Some(_entity) = state.entities.get_mut(entity_id) else {
             log::error!("entity does not exist: {:?}", entity_id);
             return;
         };
 
-        let target_pos = if self.grid.check_pos(target_pos) {
+        let target_pos = if state.grid.check_pos(target_pos) {
             target_pos
         } else {
             log::error!("tried to move to an invalid position: {}", target_pos);
             return;
         };
+        drop(state);
 
         // Activate items
         let ids: Vec<_> = self.state.borrow().items.iter().map(|(i, _)| i).collect();

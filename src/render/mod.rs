@@ -65,7 +65,8 @@ impl GameRender {
         }
 
         // Tiles
-        for &pos in &model.grid.tiles {
+        let state = model.state.borrow();
+        for &pos in &state.grid.tiles {
             let light = match model.phase {
                 Phase::Vision | Phase::PostVision { .. } | Phase::Select { .. } => {
                     if model.visible_tiles.contains(&pos) {
@@ -98,11 +99,11 @@ impl GameRender {
                     continue;
                 }
                 _ => {
-                    if model.grid.fractured.contains(&pos) {
+                    if state.grid.fractured.contains(&pos) {
                         TileLight::Dark
                     } else if let Phase::Portal { .. } = model.phase {
                         // Highlight magic items
-                        if model.state.borrow().items.iter().any(|(_, item)| {
+                        if state.items.iter().any(|(_, item)| {
                             item.position == pos
                                 && ItemFilter::Category(Category::Magic)
                                     .check(&model.state.borrow().player.items[item.item_id].kind)
@@ -111,7 +112,7 @@ impl GameRender {
                         } else {
                             TileLight::Normal
                         }
-                    } else if model.grid.lights.contains_key(&pos) {
+                    } else if state.grid.lights.contains_key(&pos) {
                         TileLight::Light
                     } else {
                         TileLight::Normal
@@ -247,7 +248,7 @@ impl GameRender {
             }
             Phase::Map { .. } => {
                 // Tile plus
-                for pos in model.grid.outside_tiles() {
+                for pos in state.grid.outside_tiles() {
                     self.draw_at_grid(
                         pos.as_f32(),
                         Angle::ZERO,
