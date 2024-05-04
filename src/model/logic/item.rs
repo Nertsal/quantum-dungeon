@@ -32,12 +32,14 @@ impl ScriptItem<'_> {
         }
     }
 
-    pub fn damage_all_nearby(&mut self, range: Coord, damage: ScriptFunction) {
+    pub fn damage_all_nearby(&mut self, range: Option<Coord>, damage: ScriptFunction) {
         let damage = Rc::new(damage);
         let source_fraction = Fraction::Player; // TODO: non-player items?
         for (target, _) in self.model.entities.iter().filter(|(_, entity)| {
             source_fraction != entity.fraction
-                && distance(entity.position, self.board_item.position) <= range
+                && range.map_or(true, |range| {
+                    distance(entity.position, self.board_item.position) <= range
+                })
         }) {
             self.effects.damage(target, damage.clone());
         }

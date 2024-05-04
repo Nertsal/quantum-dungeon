@@ -1,0 +1,3 @@
+pub fn active(item) {
+    item.damage_all_nearby(None, |stats| stats.damage);
+}

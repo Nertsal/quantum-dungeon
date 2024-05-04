@@ -235,7 +235,7 @@ pub mod item {
         }
 
         #[rune::function]
-        fn damage_all_nearby(&self, range: Coord, damage: ScriptFunction) {
+        fn damage_all_nearby(&self, range: Option<Coord>, damage: ScriptFunction) {
             self.as_script().damage_all_nearby(range, damage)
         }
 
