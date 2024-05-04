@@ -14,18 +14,6 @@ pub struct Engine {
     runtime: Arc<RuntimeContext>,
 }
 
-// macro_rules! call {
-//     ($engine:expr, $options:expr, $scope:expr, $script:expr, $name:expr, $args: expr $(,)?) => {{
-//         let script = $script;
-//         let name = $name;
-//         if script.iter_functions().any(|fun| fun.name == name) {
-//             Some($engine.call_fn_with_options($options, $scope, script, name, $args)?)
-//         } else {
-//             None
-//         }
-//     }};
-// }
-
 impl Engine {
     pub fn new(
         model_state: Rc<RefCell<ModelState>>,
@@ -34,29 +22,6 @@ impl Engine {
         let mut context = Context::with_default_modules()?;
         context.install(item::module()?)?;
         let runtime = Arc::new(context.runtime()?);
-
-        // // Types
-        // engine.register_type_with_name::<Id>("Id");
-        // engine
-        //     .register_type_with_name::<InventoryItem>("Item")
-        //     .register_get("turns_on_board", |item: &mut InventoryItem| {
-        //         item.turns_on_board
-        //     })
-        //     .register_get("stats", |item: &mut InventoryItem| item.current_stats());
-        // engine
-        //     .register_type_with_name::<ItemStats>("ItemStats")
-        //     .register_get("damage", |stats: &mut ItemStats| {
-        //         stats.damage.unwrap_or_default()
-        //     });
-
-        // // Effects
-        // engine.register_fn("damage_nearest", {
-        //     let state = Rc::clone(&state);
-        //     let side_effects = Rc::clone(&side_effects);
-        //     move |item: InventoryItem, damage: Hp| {
-        //         item.damage_nearest(damage, &state.borrow(), &mut side_effects.borrow_mut())
-        //     }
-        // });
 
         Ok(Self {
             model_state,
@@ -105,18 +70,6 @@ impl Engine {
     }
 
     pub fn init_item(&self, kind: ItemKind) -> Result<InventoryItem> {
-        // Base damage:
-        // Sword => 2,
-        // FireScroll => 5,
-        // SoulCrystal => 0,
-        // RadiationCore => 1,
-        // GreedyPot => 1,
-        // ElectricRod => 2,
-        // Phantom => 1,
-        // KingSkull => 3,
-        // CharmingStaff => 0,
-        // Solitude => 2,
-
         // TODO: check if state works
         let vm = Vm::new(Arc::clone(&self.runtime), Arc::clone(&kind.script));
         if let Ok(init) = vm.lookup_function(["init"]) {
@@ -194,6 +147,7 @@ pub mod item {
         module.function_meta(Item::open_tiles)?;
         module.function_meta(Item::destroy)?;
 
+        module.ty::<Position>()?;
         module.ty::<Stats>()?;
         module.ty::<Filter>()?;
         module.ty::<Target>()?;
@@ -204,8 +158,11 @@ pub mod item {
 
     #[derive(Clone, rune::Any)]
     pub struct Item {
-        board_item: BoardItem,
-        item: InventoryItem,
+        board: BoardItem,
+        inventory: InventoryItem,
+
+        #[rune(get)]
+        position: Position,
         #[rune(get)]
         turns_on_board: usize,
         #[rune(get)]
@@ -228,11 +185,28 @@ pub mod item {
         Named(Rc<str>),
     }
 
+    #[derive(Debug, Clone, Copy, rune::Any)]
+    #[rune(constructor)]
+    pub struct Position {
+        #[rune(get)]
+        pub x: Coord,
+        #[rune(get)]
+        pub y: Coord,
+    }
+
+    impl From<vec2<Coord>> for Position {
+        fn from(vec2(x, y): vec2<Coord>) -> Self {
+            Self { x, y }
+        }
+    }
+
     impl Item {
         pub fn from_real(item: &InventoryItem, board_item: &BoardItem) -> Self {
             Self {
-                board_item: board_item.clone(),
-                item: item.clone(),
+                board: board_item.clone(),
+                inventory: item.clone(),
+
+                position: board_item.position.into(),
                 turns_on_board: item.turns_on_board,
                 stats: item.current_stats().into(),
             }
@@ -240,10 +214,10 @@ pub mod item {
 
         pub fn as_script(&self) -> ScriptItem<'_> {
             ScriptItem {
-                model: self.item.model_state.borrow(),
-                effects: ScriptEffects(self.item.side_effects.borrow_mut()),
-                board_item: &self.board_item,
-                item: &self.item,
+                model: self.inventory.model_state.borrow(),
+                effects: ScriptEffects(self.inventory.side_effects.borrow_mut()),
+                board_item: &self.board,
+                item: &self.inventory,
             }
         }
 
@@ -261,7 +235,7 @@ pub mod item {
         fn bonus_from_nearby(&self, range: Coord, filter: Filter, stats: Stats, permanent: bool) {
             self.as_script().bonus_from_nearby(
                 range,
-                filter.into_filter(&self.item.kind.config.name),
+                filter.into_filter(&self.inventory.kind.config.name),
                 stats.into(),
                 permanent,
             )
@@ -271,7 +245,7 @@ pub mod item {
         fn bonus_to_nearby(&self, range: Coord, filter: Filter, stats: Stats, permanent: bool) {
             self.as_script().bonus_to_nearby(
                 range,
-                filter.into_filter(&self.item.kind.config.name),
+                filter.into_filter(&self.inventory.kind.config.name),
                 stats.into(),
                 permanent,
             )
