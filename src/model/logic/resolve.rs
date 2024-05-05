@@ -172,7 +172,6 @@ impl Model {
                         effect,
                     })
             })
-            .sorted_by_key(|eff| -eff.effect.priority()) // Sort by priority
             .collect();
 
         self.effect_queue_stack.push(effects);

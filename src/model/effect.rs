@@ -73,22 +73,3 @@ impl Trigger {
         }
     }
 }
-
-impl Effect {
-    /// The effect's priority for sorting when multiple effects are happening at the same time.
-    pub fn priority(&self) -> i64 {
-        match self {
-            Self::SetUsed { .. } => -999999,
-            Self::Damage { .. } => 0,
-            Self::Bonus { .. } => 10,
-            Self::OpenTiles { .. } => 999,
-            Self::Portal { .. } => 999,
-            Self::Destroy { .. } => -999999,
-            Self::Duplicate { .. } => 20,
-            Self::GainMoves { .. } => 0,
-            Self::SwapItems { .. } => 0,
-            Self::TransformItem { .. } => 100,
-            Self::EmitLight { .. } => 0,
-        }
-    }
-}
