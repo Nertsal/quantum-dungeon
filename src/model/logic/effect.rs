@@ -172,6 +172,10 @@ impl Model {
                 drop(state);
                 self.update_vision();
             }
+            Effect::UseItem { item } => {
+                drop(state);
+                self.resolve_trigger(Trigger::Active, Some(item));
+            }
         }
 
         let board_item = effect.proc_item;

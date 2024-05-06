@@ -56,4 +56,8 @@ impl ScriptEffects<'_> {
             duration,
         });
     }
+
+    pub fn use_item(&mut self, item: Id) {
+        self.0.push(Effect::UseItem { item });
+    }
 }

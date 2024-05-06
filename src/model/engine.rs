@@ -162,6 +162,7 @@ pub mod item {
         module.function_meta(Item::emit_light_around)?;
         module.function_meta(Item::is_observed)?;
         module.function_meta(Item::random_kind)?;
+        module.function_meta(Item::use_item)?;
 
         module.ty::<Position>()?;
         module.ty::<Bounds>()?;
@@ -421,6 +422,13 @@ pub mod item {
                 })
                 .choose(&mut rng)
                 .map(|kind| kind.config.name.to_string())
+        }
+
+        /// Excluding kind of the item.
+        #[rune::function]
+        fn use_item(&self, target: Item) {
+            self.as_script()
+                .use_item(target.inventory.on_board.unwrap())
         }
     }
 

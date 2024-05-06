@@ -62,6 +62,9 @@ pub enum Effect {
         radius: Coord,
         duration: usize,
     },
+    UseItem {
+        item: Id,
+    },
 }
 
 impl Trigger {

@@ -181,4 +181,8 @@ impl ScriptItem<'_> {
     pub fn is_observed(&self) -> bool {
         self.model.visible_tiles.contains(&self.board_item.position)
     }
+
+    pub fn use_item(&mut self, target: Id) {
+        self.effects.use_item(target);
+    }
 }
