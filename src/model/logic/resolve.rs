@@ -60,19 +60,27 @@ impl Model {
                     self.resolution_phase();
                 }
             }
-            Phase::Passive { start_delay, .. } => {
+            Phase::DayBonus { start_delay } => {
                 if start_delay.is_above_min() {
                     // Start animation
                     start_delay.change(-delta_time);
                     if start_delay.is_min() {
-                        self.resolve_trigger(Trigger::Day, None);
+                        self.resolve_trigger(Trigger::DayBonus, None);
                     }
                 } else if self.wait_for_effects() {
+                    self.resolve_trigger(Trigger::DayAction, None);
+                    self.phase = Phase::DayAction {
+                        end_delay: Lifetime::new_max(r32(0.2)),
+                    };
+                }
+            }
+            Phase::DayAction { .. } => {
+                if self.wait_for_effects() {
                     // End animation
-                    if let Phase::Passive { end_delay, .. } = &mut self.phase {
+                    if let Phase::DayAction { end_delay } = &mut self.phase {
                         end_delay.change(-delta_time);
                         if end_delay.is_min() {
-                            self.day_phase();
+                            self.day_end_phase();
                         }
                     }
                 }
@@ -126,9 +134,8 @@ impl Model {
 
     pub fn resolution_phase(&mut self) {
         log::debug!("Day resolution phase");
-        self.phase = Phase::Passive {
+        self.phase = Phase::DayBonus {
             start_delay: Lifetime::new_max(r32(0.2)),
-            end_delay: Lifetime::new_max(r32(0.2)),
         };
 
         // What is this trick KEKW

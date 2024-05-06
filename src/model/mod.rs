@@ -74,11 +74,10 @@ pub enum Phase {
     Night { fade_time: Lifetime },
     /// Shift and spawn items and enemies.
     Dawn { light_time: Lifetime },
-    /// Resolve passive item effects.
-    Passive {
-        start_delay: Lifetime,
-        end_delay: Lifetime,
-    },
+    /// Resolve day bonus item effects.
+    DayBonus { start_delay: Lifetime },
+    /// Resolve day action item effects.
+    DayAction { end_delay: Lifetime },
     /// Player movement.
     Player,
     /// Player moving and activating an item.

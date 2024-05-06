@@ -12,7 +12,8 @@ pub struct QueuedEffect {
 #[derive(Debug, Clone, Copy)]
 pub enum Trigger {
     Night,
-    Day,
+    DayBonus,
+    DayAction,
     Active,
 }
 
@@ -68,7 +69,8 @@ impl Trigger {
     pub fn method_name(&self) -> &'static str {
         match self {
             Self::Night => "night",
-            Self::Day => "day",
+            Self::DayBonus => "day_bonus",
+            Self::DayAction => "day_action",
             Self::Active => "active",
         }
     }

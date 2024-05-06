@@ -245,7 +245,7 @@ impl GameRender {
 
                 "Day"
             }
-            Phase::Active { .. } | Phase::Passive { .. } => "Day",
+            Phase::Active { .. } | Phase::DayBonus { .. } | Phase::DayAction { .. } => "Day",
             Phase::Portal { .. } => "Select a magic item",
             Phase::Vision => "Select a direction to look at",
             Phase::PostVision { .. } => "Night",

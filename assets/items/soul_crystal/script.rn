@@ -1,4 +1,4 @@
-pub fn day(item) {
+pub fn day_bonus(item) {
     item.bonus(Stats { damage: 1 }, true);
 }
 

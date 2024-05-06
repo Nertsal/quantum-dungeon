@@ -96,7 +96,7 @@ impl Model {
         };
     }
 
-    pub fn day_phase(&mut self) {
+    pub fn day_end_phase(&mut self) {
         log::debug!("Day phase");
         self.phase = Phase::Player;
         self.state.borrow_mut().player.moves_left = 3;

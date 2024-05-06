@@ -1,4 +1,4 @@
-pub fn day(item) {
+pub fn day_bonus(item) {
     if item.rng_float() < 0.2 {
         if let Some(victim) = item.find_nearby(1, Filter::Category(Category::Tech)) {
             victim.destroy();
