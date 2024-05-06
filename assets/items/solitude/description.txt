@@ -2,4 +2,4 @@ On use :
 Deals 2 damage to the nearest enemy.
 
 On turn start :
-If it’s the only weapon on the board, gains +2 damage permanently.
+If there is no weapon nearby, gains +2 damage permanently, otherwise loses 1 damage.
