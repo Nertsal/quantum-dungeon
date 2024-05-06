@@ -1,6 +1,5 @@
 use super::*;
 
-#[derive(Debug)]
 pub struct Player {
     pub moves_left: usize,
     pub turns_left: usize,
@@ -31,10 +30,13 @@ impl Player {
             hearts: 3,
             extra_items: 0,
             refreshes: 0,
-            items: [ItemKind::Sword, ItemKind::Map]
-                .into_iter()
-                .map(ItemKind::instantiate)
-                .collect(),
+            items: Arena::new(),
         }
+    }
+}
+
+impl Default for Player {
+    fn default() -> Self {
+        Self::new()
     }
 }

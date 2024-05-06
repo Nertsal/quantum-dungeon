@@ -1,0 +1,9 @@
+ItemConfig(
+    name: "Soul crystal",
+    categories: [Spooky],
+    appears_in_shop: true,
+    base_stats: ItemStats(
+        damage: Some(0),
+    ),
+)
+

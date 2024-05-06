@@ -2,7 +2,7 @@ use super::*;
 
 pub type Lifetime = geng_utils::bounded::Bounded<Time>;
 
-#[derive(Debug, Clone)]
+#[derive(Debug)]
 pub struct Animation {
     pub time: Lifetime,
     pub kind: AnimationKind,
@@ -10,14 +10,8 @@ pub struct Animation {
     pub dependent_on: Vec<Id>,
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug)]
 pub enum AnimationKind {
-    MovePlayer {
-        entity_id: Id,
-        move_item: Option<Id>,
-        move_entity: Option<Id>,
-        target_pos: vec2<Coord>,
-    },
     MoveItem {
         /// Id of the item on the board.
         item_id: Id,
@@ -27,9 +21,8 @@ pub enum AnimationKind {
         entity_id: Id,
         target_pos: vec2<Coord>,
     },
-    UseActive {
-        fraction: Fraction,
-        item_id: Id,
+    ItemEffect {
+        item: Id,
     },
     EntityDeath {
         entity: Id,

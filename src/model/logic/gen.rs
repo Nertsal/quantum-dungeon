@@ -2,25 +2,20 @@ use super::*;
 
 impl Model {
     pub fn next_level(&mut self) {
-        if self.level > 0 {
-            self.score += self.config.score_per_level;
-            self.score += self.config.score_per_turn_left * self.player.turns_left as Score;
+        {
+            let mut state = self.state.borrow_mut();
+            if self.level > 0 {
+                self.score += self.config.score_per_level;
+                self.score += self.config.score_per_turn_left * state.player.turns_left as Score;
+            }
+
+            self.level += 1;
+            log::info!("Next level {}", self.level);
+
+            let turns = 4 + 2_usize.pow(self.level as u32 / 4);
+            let turns = turns.min(10);
+            state.player.turns_left = turns;
         }
-
-        self.level += 1;
-        log::info!("Next level {}", self.level);
-
-        let turns = 4 + 2_usize.pow(self.level as u32 / 4);
-        let turns = turns.min(10);
-        self.player.turns_left = turns;
-        // self.player.hearts = 3;
-
-        // self.items.clear();
-        // if self.entities.len() == 1 {
-        //     for (_, entity) in &mut self.entities {
-        //         entity.position = vec2::ZERO;
-        //     }
-        // }
 
         self.spawn_enemies();
         self.spawn_items(); // First spawn has to be done manually
@@ -30,7 +25,8 @@ impl Model {
     }
 
     pub(super) fn shift_everything(&mut self) {
-        let available: HashSet<_> = self.grid.tiles.sub(&self.visible_tiles);
+        let mut state = self.state.borrow_mut();
+        let available: HashSet<_> = state.grid.tiles.sub(&state.visible_tiles);
         if available.is_empty() {
             // Cannot shift
             return;
@@ -41,11 +37,11 @@ impl Model {
             Item(Id),
         }
 
-        let items = self
+        let items = state
             .items
             .iter()
             .map(|(i, item)| (Thing::Item(i), item.position));
-        let entities = self
+        let entities = state
             .entities
             .iter()
             .map(|(i, e)| (Thing::Entity(i), e.position));
@@ -53,37 +49,39 @@ impl Model {
 
         let mut rng = thread_rng();
         let moves: Vec<(Thing, vec2<Coord>)> = things
-            .filter(|(_, pos)| !self.visible_tiles.contains(pos))
+            .filter(|(_, pos)| !state.visible_tiles.contains(pos))
             .map(|(i, _)| (i, *available.iter().choose(&mut rng).unwrap()))
             .collect();
 
         for (thing, target) in moves {
             let from = match thing {
-                Thing::Entity(i) => self.entities[i].position,
-                Thing::Item(i) => self.items[i].position,
+                Thing::Entity(i) => state.entities[i].position,
+                Thing::Item(i) => state.items[i].position,
             };
 
             // Swap
-            for (_, item) in &mut self.items {
+            for (_, item) in &mut state.items {
                 if item.position == target {
                     item.position = from;
                 }
             }
-            for (_, entity) in &mut self.entities {
+            for (_, entity) in &mut state.entities {
                 if entity.position == target {
                     entity.position = from;
                 }
             }
 
             match thing {
-                Thing::Entity(i) => self.entities[i].position = target,
-                Thing::Item(i) => self.items[i].position = target,
+                Thing::Entity(i) => state.entities[i].position = target,
+                Thing::Item(i) => state.items[i].position = target,
             }
         }
     }
 
     fn spawn_enemies(&mut self) {
-        let mut available = self.calculate_empty_space().sub(&self.visible_tiles);
+        let mut available = self
+            .calculate_empty_space()
+            .sub(&self.state.borrow().visible_tiles);
         if available.is_empty() {
             return;
         }
@@ -102,7 +100,7 @@ impl Model {
             let kind = options.choose(&mut rng).unwrap();
             let position = *available.iter().choose(&mut rng).unwrap();
 
-            self.entities.insert(Entity {
+            self.state.borrow_mut().entities.insert(Entity {
                 position,
                 fraction: Fraction::Enemy,
                 health: Health::new_max(health),
@@ -118,38 +116,22 @@ impl Model {
     }
 
     pub(super) fn spawn_items(&mut self) {
-        let mut available = self.calculate_empty_space().sub(&self.visible_tiles);
+        let mut available = self
+            .calculate_empty_space()
+            .sub(&self.state.borrow().visible_tiles);
         if available.is_empty() {
             return;
         }
 
         let mut rng = thread_rng();
 
-        // For testing
-        // if self.items.is_empty() {
-        //     for kind in [ItemKind::CharmingStaff] {
-        //         let position = *available.iter().choose(&mut rng).unwrap();
-        //         let item_id = self.player.items.insert(kind.instantiate());
-        //         let item = &mut self.player.items[item_id];
-        //         let on_board = self.items.insert(BoardItem {
-        //             position,
-        //             item_id,
-        //             turns_alive: 0,
-        //             used: false,
-        //         });
-        //         item.on_board = Some(on_board);
+        // What is this trick KEKW
+        let mut state = self.state.borrow_mut();
+        let state = &mut *state;
 
-        //         available.remove(&position);
-        //         if available.is_empty() {
-        //             break;
-        //         }
-        //     }
-        //     return;
-        // }
-
-        for (item_id, item) in &mut self.player.items {
+        for (item_id, item) in &mut state.player.items {
             if let Some(id) = item.on_board {
-                if self.items.contains(id) {
+                if state.items.contains(id) {
                     // Already on the board
                     continue;
                 } else {
@@ -159,10 +141,9 @@ impl Model {
             }
 
             let position = *available.iter().choose(&mut rng).unwrap();
-            let on_board = self.items.insert(BoardItem {
+            let on_board = state.items.insert(BoardItem {
                 position,
                 item_id,
-                turns_alive: 0,
                 used: false,
             });
             item.on_board = Some(on_board);

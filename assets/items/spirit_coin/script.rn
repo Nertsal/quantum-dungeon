@@ -1,0 +1,12 @@
+pub fn day_bonus(item) {
+    if item.find_nearby(1, Filter::Named("Chest")).is_some() {
+        item.duplicate();
+    }
+}
+
+pub fn day_action(item) {
+    if item.rng_float() < 0.2 {
+        item.damage(Target::Random, |stats| 5);
+        item.destroy();
+    }
+}

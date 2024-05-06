@@ -7,6 +7,7 @@ pub struct Config {
     pub effect_padding_time: Time,
     pub score_per_level: Score,
     pub score_per_turn_left: Score,
+    pub starting_items: Vec<Box<str>>,
 }
 
 impl Config {

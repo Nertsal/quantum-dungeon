@@ -1,5 +1,7 @@
 mod action;
 mod animation;
+pub mod effect;
+mod engine;
 mod gen;
 mod item;
 mod resolve;
@@ -8,30 +10,51 @@ use super::*;
 
 impl Model {
     pub fn update(&mut self, delta_time: Time) {
-        self.update_animations(delta_time);
+        // TODO: unhardcode
+        if let Phase::Map { .. } = self.phase {
+        } else {
+            self.update_animations(delta_time);
+        }
         self.resolve_animations(delta_time);
+        self.update_effects();
+
         if let Phase::LevelFinished { .. } = self.phase {
-        } else if self.animations.is_empty() && self.ending_animations.is_empty() {
+        } else {
             self.check_deaths();
-            if let Phase::Player = self.phase {
-                if self.player.moves_left == 0 {
-                    self.vision_phase();
+            if self.animations.is_empty() && self.ending_animations.is_empty() {
+                if let Phase::Player = self.phase {
+                    if self.state.borrow().player.moves_left == 0 {
+                        self.vision_phase();
+                    }
                 }
             }
         }
     }
 
+    /// Returns `true` when all effects are processed and executed.
+    fn wait_for_effects(&self) -> bool {
+        self.effect_queue_stack.is_empty() && self.wait_for_animations()
+    }
+
+    /// Returns `true` when all animations are done.
+    fn wait_for_animations(&self) -> bool {
+        self.animations.is_empty() && self.ending_animations.is_empty()
+    }
+
     pub fn get_light_level(&self, position: vec2<Coord>) -> f32 {
+        let state = self.state.borrow();
         match self.phase {
             Phase::LevelStarting { .. } => 0.0,
-            Phase::Night {
-                fade_time,
-                light_time,
-            } => {
-                if self.visible_tiles.contains(&position) {
+            Phase::Night { fade_time } => {
+                if state.visible_tiles.contains(&position) {
                     1.0
-                } else if fade_time.is_above_min() {
+                } else {
                     fade_time.get_ratio().as_f32()
+                }
+            }
+            Phase::Dawn { light_time } => {
+                if state.visible_tiles.contains(&position) {
+                    1.0
                 } else {
                     1.0 - light_time.get_ratio().as_f32()
                 }
@@ -40,47 +63,54 @@ impl Model {
         }
     }
 
-    pub fn night_phase(&mut self, start_faded: bool) {
+    pub fn night_phase(&mut self) {
+        log::debug!("Night phase");
         self.phase = Phase::Night {
-            fade_time: if start_faded {
-                Lifetime::new_zero(r32(1.0))
-            } else {
-                Lifetime::new_max(r32(1.0))
-            },
-            light_time: Lifetime::new_max(r32(1.0)),
+            fade_time: Lifetime::new_max(r32(1.0)),
         };
 
-        self.player.extra_items = self.turn % 2;
-        self.grid.fractured.clear();
-        for (_, entity) in &self.entities {
+        let mut state_ref = self.state.borrow_mut();
+        let state = &mut *state_ref;
+        state.player.extra_items = self.turn % 2;
+        state.grid.fractured.clear();
+        for (_, entity) in &state.entities {
             if let EntityKind::Player = entity.kind {
-                self.grid.fractured.insert(entity.position);
+                state.grid.fractured.insert(entity.position);
             }
         }
 
         // Update light duration
-        for duration in self.grid.lights.values_mut() {
+        for duration in state.grid.lights.values_mut() {
             *duration = duration.saturating_sub(1);
         }
-        self.grid.lights.retain(|_, duration| *duration > 0);
+        state.grid.lights.retain(|_, duration| *duration > 0);
+        drop(state_ref);
 
-        self.update_vision();
+        self.resolve_trigger(Trigger::Night, None);
     }
 
-    pub fn day_phase(&mut self) {
+    pub fn dawn_phase(&mut self) {
+        log::debug!("Dawn phase");
+        self.phase = Phase::Dawn {
+            light_time: Lifetime::new_max(r32(1.0)),
+        };
+    }
+
+    pub fn day_end_phase(&mut self) {
         log::debug!("Day phase");
         self.phase = Phase::Player;
-        self.player.moves_left = 3;
+        self.state.borrow_mut().player.moves_left = 3;
     }
 
     fn player_phase(&mut self) {
+        log::debug!("Player can move again");
         self.phase = Phase::Player;
     }
 
     fn vision_phase(&mut self) {
         log::debug!("Vision phase");
         self.phase = Phase::Vision;
-        for (_, entity) in &mut self.entities {
+        for (_, entity) in &mut self.state.borrow_mut().entities {
             entity.look_dir = vec2::ZERO;
         }
         self.update_vision();
@@ -91,12 +121,19 @@ impl Model {
         self.update_vision();
 
         if items > 0 {
-            let options: Vec<_> = ItemKind::all()
-                .into_iter()
-                .filter(|item| *item != ItemKind::KingSkull)
+            let state = self.state.borrow();
+            let options: Vec<_> = state
+                .all_items
+                .iter()
+                .filter(|item| item.config.appears_in_shop)
                 .collect();
             let mut rng = thread_rng();
-            let options = (0..3).map(|_| *options.choose(&mut rng).unwrap()).collect();
+            let options = (0..3)
+                .map(|_| {
+                    let item = options.choose(&mut rng).unwrap();
+                    (*item).clone()
+                })
+                .collect();
             self.phase = Phase::Select {
                 options,
                 extra_items: items - 1,
@@ -107,27 +144,37 @@ impl Model {
     }
 
     fn next_turn(&mut self) {
+        log::debug!("Next turn");
         self.turn += 1;
-        self.player.turns_left = self.player.turns_left.saturating_sub(1);
-        if self.player.turns_left == 0 {
+        let mut state = self.state.borrow_mut();
+        state.player.turns_left = state.player.turns_left.saturating_sub(1);
+        if state.player.turns_left == 0 {
             // Damage for every enemy left on the board
-            let damage = self
+            let damage = state
                 .entities
                 .iter()
                 .filter(|(_, e)| e.fraction == Fraction::Enemy)
                 .count();
-            self.player.hearts = self.player.hearts.saturating_sub(damage);
-            if self.player.hearts == 0 {
+            state.player.hearts = state.player.hearts.saturating_sub(damage);
+            let hearts = state.player.hearts;
+            drop(state);
+            if hearts == 0 {
                 self.game_over();
             } else {
                 self.finish_level(false);
             }
         } else {
-            self.night_phase(false);
+            drop(state);
+            self.night_phase();
         }
     }
 
     fn finish_level(&mut self, win: bool) {
+        if win && !self.wait_for_effects() {
+            // Cant win until all effects are done
+            return;
+        }
+
         log::info!("Level finished, win: {}", win);
         self.phase = Phase::LevelFinished {
             win,
@@ -141,16 +188,27 @@ impl Model {
     }
 
     fn retry(&mut self) {
-        *self = Self::new(self.assets.clone(), self.config.clone());
+        log::debug!("Retry");
+        *self = Self::new_compiled(
+            self.assets.clone(),
+            self.config.clone(),
+            std::mem::replace(
+                &mut self.engine,
+                Engine::new(Rc::clone(&self.state), Rc::clone(&self.side_effects)).unwrap(),
+            ),
+            Rc::clone(&self.state),
+            Rc::clone(&self.side_effects),
+        );
     }
 
     fn calculate_empty_space(&self) -> HashSet<vec2<Coord>> {
-        let mut available: HashSet<_> = self.grid.tiles.clone();
+        let state = self.state.borrow();
+        let mut available: HashSet<_> = state.grid.tiles.clone();
 
-        for (_, entity) in &self.entities {
+        for (_, entity) in &state.entities {
             available.remove(&entity.position);
         }
-        for (_, item) in &self.items {
+        for (_, item) in &state.items {
             available.remove(&item.position);
         }
 
@@ -158,9 +216,9 @@ impl Model {
     }
 
     pub fn update_vision(&mut self) {
-        log::debug!("Updating vision");
-        let mut visible: HashSet<_> = self.grid.lights.keys().copied().collect();
-        for (_, entity) in &self.entities {
+        let mut state = self.state.borrow_mut();
+        let mut visible: HashSet<_> = state.grid.lights.keys().copied().collect();
+        for (_, entity) in &state.entities {
             if let EntityKind::Player = entity.kind {
                 if entity.look_dir == vec2::ZERO {
                     continue;
@@ -169,7 +227,7 @@ impl Model {
                 visible.insert(pos);
                 loop {
                     let target = pos + entity.look_dir;
-                    if !self.grid.check_pos(target) {
+                    if !state.grid.check_pos(target) {
                         break;
                     }
                     visible.insert(target);
@@ -178,18 +236,13 @@ impl Model {
             }
         }
 
-        for (_, board_item) in &self.items {
-            let item = &self.player.items[board_item.item_id];
-            if let ItemKind::CursedSkull = item.kind {
-                visible.insert(board_item.position);
-            }
-        }
-
-        self.visible_tiles = visible;
+        state.visible_tiles = visible;
     }
 
     fn check_deaths(&mut self) {
-        for (id, entity) in &self.entities {
+        let state = self.state.borrow();
+
+        for (id, entity) in &state.entities {
             if entity.health.is_min() {
                 self.animations.insert(Animation::new(
                     self.config.animation_time,
@@ -201,67 +254,57 @@ impl Model {
             }
         }
 
-        if !self
+        if !state
             .entities
             .iter()
             .any(|(_, e)| e.fraction == Fraction::Enemy)
         {
             // All enemies died -> next level
+            drop(state);
             self.finish_level(true);
         }
     }
 
     /// Move the entity to the target position and swap with the entity occupying the target (if any).
     fn move_entity_swap(&mut self, entity_id: Id, target_pos: vec2<Coord>) {
-        let Some(entity) = self.entities.get_mut(entity_id) else {
+        let mut state = self.state.borrow_mut();
+        let Some(_entity) = state.entities.get_mut(entity_id) else {
             log::error!("entity does not exist: {:?}", entity_id);
             return;
         };
 
-        let target_pos = if self.grid.check_pos(target_pos) {
+        let target_pos = if state.grid.check_pos(target_pos) {
             target_pos
         } else {
             log::error!("tried to move to an invalid position: {}", target_pos);
             return;
         };
+        drop(state);
 
-        let fraction = entity.fraction;
-
-        // Swap with entities
-        let mut move_entity = None;
-        if let Some((i, _)) = self
-            .entities
-            .iter_mut()
-            .find(|(_, e)| e.position == target_pos)
-        {
-            move_entity = Some(i);
-        }
-
-        // Activate and swap items
-        let ids: Vec<_> = self.items.iter().map(|(i, _)| i).collect();
-        let mut move_item = None;
-        for i in ids {
-            if self.items[i].position == target_pos {
+        // Activate items
+        let ids: Vec<_> = self.state.borrow().items.iter().map(|(i, _)| i).collect();
+        for item_id in ids {
+            if self.state.borrow().items[item_id].position == target_pos {
                 // Activate
-                self.resolve_item_active(fraction, i);
-                // Swap
-                move_item = Some(i);
+                self.resolve_trigger(Trigger::Active, Some(item_id));
             }
         }
 
-        self.animations.insert(Animation::new(
-            0.0,
-            AnimationKind::MovePlayer {
-                entity_id,
-                move_entity,
-                move_item,
-                target_pos,
-            },
-        ));
+        // NOTE: swapping items/entities is resolve on phase end
+
+        self.phase = Phase::Active {
+            entity_id,
+            position: target_pos,
+        };
     }
 }
 
 fn distance(a: vec2<Coord>, b: vec2<Coord>) -> Coord {
     let delta = b - a;
     delta.x.abs().max(delta.y.abs())
+}
+
+fn distance_manhattan(a: vec2<Coord>, b: vec2<Coord>) -> Coord {
+    let delta = b - a;
+    delta.x.abs() + delta.y.abs()
 }

@@ -1,0 +1,4 @@
+pub fn active(item) {
+    item.gain_moves(3);
+    item.destroy();
+}

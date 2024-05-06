@@ -37,7 +37,13 @@ fn main() {
 
         let config_path = opts.config.unwrap_or_else(|| "assets/config.ron".into());
         let config = config::Config::load(config_path).await.unwrap();
-        let state = main_menu::MainMenu::new(&geng, &Rc::new(assets), config);
+
+        let items: assets::ItemAssets =
+            geng::asset::Load::load(manager, &run_dir().join("assets").join("items"), &())
+                .await
+                .unwrap();
+
+        let state = main_menu::MainMenu::new(&geng, &Rc::new(assets), config, &Rc::new(items));
         geng.run_state(state).await;
     });
 }
