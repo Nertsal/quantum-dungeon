@@ -407,6 +407,7 @@ pub mod item {
             self.as_script().is_observed()
         }
 
+        /// Excluding kind of the item.
         #[rune::function]
         fn random_kind(&self, category: Category) -> Option<String> {
             let mut rng = thread_rng();
@@ -414,7 +415,10 @@ pub mod item {
                 .model
                 .all_items
                 .iter()
-                .filter(|item| item.config.categories.contains(&category))
+                .filter(|item| {
+                    item.config.name != self.inventory.kind.config.name
+                        && item.config.categories.contains(&category)
+                })
                 .choose(&mut rng)
                 .map(|kind| kind.config.name.to_string())
         }
