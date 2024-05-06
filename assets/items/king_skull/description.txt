@@ -1,2 +1,2 @@
 On use :
-Deals 3 damage to all enemies on the board.
+Deals {damage} damage to all enemies on the board.

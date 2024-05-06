@@ -1,5 +1,5 @@
 On use :
-Deals 0 damage to a random enemy.
+Deals {damage} damage to a random enemy.
 
 At night :
 Gains +2 damage permanently when observed.

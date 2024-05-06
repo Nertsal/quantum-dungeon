@@ -360,7 +360,7 @@ impl GameRender {
             );
 
             if let Some(item) = hint {
-                self.draw_item_hint(item, cursor_ui_pos, framebuffer);
+                self.draw_item_hint(item, None, cursor_ui_pos, framebuffer);
             }
         } else if let Some((_, item)) = model
             .state
@@ -371,7 +371,12 @@ impl GameRender {
         {
             // Item hint
             let item = &model.state.borrow().player.items[item.item_id];
-            self.draw_item_hint(&item.kind, cursor_ui_pos, framebuffer);
+            self.draw_item_hint(
+                &item.kind,
+                Some(&item.current_stats()),
+                cursor_ui_pos,
+                framebuffer,
+            );
         }
 
         // Inventory button
@@ -710,13 +715,19 @@ impl GameRender {
         }
 
         if let Some(item) = hint {
-            self.draw_item_hint(&item.kind, cursor_ui_pos, framebuffer);
+            self.draw_item_hint(
+                &item.kind,
+                Some(&item.current_stats()),
+                cursor_ui_pos,
+                framebuffer,
+            );
         }
     }
 
     fn draw_item_hint(
         &self,
         item: &ItemKind,
+        stats: Option<&ItemStats>,
         cursor_ui_pos: vec2<f32>,
         framebuffer: &mut ugli::Framebuffer,
     ) {
@@ -820,6 +831,9 @@ impl GameRender {
             .description
             .as_deref()
             .unwrap_or("<description missing>");
+        let stats = stats.unwrap_or(&item.config.base_stats);
+        let description =
+            description.replace("{damage}", &format!("{}", stats.damage.unwrap_or_default()));
 
         let mut lines = Vec::new();
         for source_line in description.lines() {
