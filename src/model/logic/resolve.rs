@@ -142,6 +142,9 @@ impl Model {
         let mut state = self.state.borrow_mut();
         let state = &mut *state;
 
+        // Reset vision
+        state.visible_tiles.clear();
+
         // Clear temp stats
         for (_, item) in &mut state.player.items {
             item.temp_stats = ItemStats::default();
