@@ -121,7 +121,8 @@ impl Model {
         self.update_vision();
 
         if items > 0 {
-            let options: Vec<_> = self
+            let state = self.state.borrow();
+            let options: Vec<_> = state
                 .all_items
                 .iter()
                 .filter(|item| item.config.appears_in_shop)
@@ -195,7 +196,6 @@ impl Model {
                 &mut self.engine,
                 Engine::new(Rc::clone(&self.state), Rc::clone(&self.side_effects)).unwrap(),
             ),
-            self.all_items.clone(),
             Rc::clone(&self.state),
             Rc::clone(&self.side_effects),
         );

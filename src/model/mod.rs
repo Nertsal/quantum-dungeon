@@ -23,7 +23,6 @@ pub type Score = u64;
 pub struct Model {
     pub assets: Rc<Assets>,
     pub config: Config,
-    pub all_items: Vec<ItemKind>,
     engine: Engine,
     pub state: Rc<RefCell<ModelState>>,
     pub level: usize,
@@ -59,6 +58,7 @@ pub struct ItemResolved {
 
 /// The stuff accessible from within the scripts.
 pub struct ModelState {
+    pub all_items: Vec<ItemKind>,
     pub grid: Grid,
     pub player: Player,
     pub items: Arena<BoardItem>,
@@ -117,6 +117,7 @@ pub enum Phase {
 impl Model {
     pub fn new(assets: Rc<Assets>, config: Config, all_items: &ItemAssets) -> Self {
         let state = ModelState {
+            all_items: vec![], // Initialized after engine
             grid: Grid::new(3),
             player: Player::new(),
             items: Arena::new(),
@@ -161,21 +162,21 @@ impl Model {
             }
         }
 
-        Self::new_compiled(assets, config, engine, all_items, state, side_effects)
+        state.borrow_mut().all_items = all_items;
+
+        Self::new_compiled(assets, config, engine, state, side_effects)
     }
 
     fn new_compiled(
         assets: Rc<Assets>,
         config: Config,
         engine: Engine,
-        all_items: Vec<ItemKind>,
         state: Rc<RefCell<ModelState>>,
         side_effects: Rc<RefCell<Vec<Effect>>>,
     ) -> Self {
         let mut model = Self {
             assets,
             config,
-            all_items,
             engine,
             state,
             level: 0,

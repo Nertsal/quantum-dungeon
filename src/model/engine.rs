@@ -161,6 +161,7 @@ pub mod item {
         module.function_meta(Item::turn_into)?;
         module.function_meta(Item::emit_light_around)?;
         module.function_meta(Item::is_observed)?;
+        module.function_meta(Item::random_kind)?;
 
         module.ty::<Position>()?;
         module.ty::<Bounds>()?;
@@ -404,6 +405,18 @@ pub mod item {
         #[rune::function]
         fn is_observed(&self) -> bool {
             self.as_script().is_observed()
+        }
+
+        #[rune::function]
+        fn random_kind(&self, category: Category) -> Option<String> {
+            let mut rng = thread_rng();
+            self.as_script()
+                .model
+                .all_items
+                .iter()
+                .filter(|item| item.config.categories.contains(&category))
+                .choose(&mut rng)
+                .map(|kind| kind.config.name.to_string())
         }
     }
 

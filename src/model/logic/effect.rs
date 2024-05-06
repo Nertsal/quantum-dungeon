@@ -143,8 +143,9 @@ impl Model {
                 item_id,
                 target_name,
             } => {
+                let state = &mut *state;
                 if let Some(item) = state.player.items.get_mut(item_id) {
-                    if let Some(target) = self
+                    if let Some(target) = state
                         .all_items
                         .iter()
                         .find(|kind| *kind.config.name == target_name)
