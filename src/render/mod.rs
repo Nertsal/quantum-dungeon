@@ -576,32 +576,32 @@ impl GameRender {
                 damage,
             } if end_t == 1.0 => {
                 let from = (from.as_f32() + vec2(0.3, 0.3)) * self.cell_size;
-                let target = (model.state.borrow().entities[*target].position.as_f32()
-                    + vec2(0.3, 0.3))
-                    * self.cell_size;
-                let t = crate::util::smoothstep(start_t);
-                let pos = from + (target - from) * t;
+                if let Some(target) = model.state.borrow().entities.get(*target) {
+                    let target = (target.position.as_f32() + vec2(0.3, 0.3)) * self.cell_size;
+                    let t = crate::util::smoothstep(start_t);
+                    let pos = from + (target - from) * t;
 
-                // let pos = (board_item.position.as_f32() + vec2(0.3, 0.3)) * self.cell_size;
-                let target = Aabb2::point(pos).extend_uniform(0.06);
-                self.geng.draw2d().draw2d(
-                    framebuffer,
-                    &self.world_camera,
-                    &draw2d::TexturedQuad::new(
-                        Aabb2::point(pos).extend_uniform(0.14),
-                        &self.assets.sprites.weapon_damage,
-                    ),
-                );
-                self.geng.draw2d().draw2d(
-                    framebuffer,
-                    &self.world_camera,
-                    &draw2d::Text::unit(
-                        self.assets.font.clone(),
-                        format!("{}", damage),
-                        Color::try_from("#424242").unwrap(),
-                    )
-                    .fit_into(target),
-                );
+                    // let pos = (board_item.position.as_f32() + vec2(0.3, 0.3)) * self.cell_size;
+                    let target = Aabb2::point(pos).extend_uniform(0.06);
+                    self.geng.draw2d().draw2d(
+                        framebuffer,
+                        &self.world_camera,
+                        &draw2d::TexturedQuad::new(
+                            Aabb2::point(pos).extend_uniform(0.14),
+                            &self.assets.sprites.weapon_damage,
+                        ),
+                    );
+                    self.geng.draw2d().draw2d(
+                        framebuffer,
+                        &self.world_camera,
+                        &draw2d::Text::unit(
+                            self.assets.font.clone(),
+                            format!("{}", damage),
+                            Color::try_from("#424242").unwrap(),
+                        )
+                        .fit_into(target),
+                    );
+                }
             }
             AnimationKind::Bonus {
                 from,
@@ -610,31 +610,31 @@ impl GameRender {
                 ..
             } if end_t == 1.0 => {
                 let from = from.as_f32() * self.cell_size;
-                let target = (model.state.borrow().items[*target].position.as_f32()
-                    + vec2(0.3, 0.3))
-                    * self.cell_size;
-                let t = crate::util::smoothstep(start_t);
-                let pos = from + (target - from) * t;
+                if let Some(target) = model.state.borrow().items.get(*target) {
+                    let target = (target.position.as_f32() + vec2(0.3, 0.3)) * self.cell_size;
+                    let t = crate::util::smoothstep(start_t);
+                    let pos = from + (target - from) * t;
 
-                let target = Aabb2::point(pos).extend_uniform(0.06);
-                self.geng.draw2d().draw2d(
-                    framebuffer,
-                    &self.world_camera,
-                    &draw2d::TexturedQuad::new(
-                        Aabb2::point(pos).extend_uniform(0.14),
-                        &self.assets.sprites.weapon_damage,
-                    ),
-                );
-                self.geng.draw2d().draw2d(
-                    framebuffer,
-                    &self.world_camera,
-                    &draw2d::Text::unit(
-                        self.assets.font.clone(),
-                        format!("{}", bonus.damage.unwrap_or_default()),
-                        Color::try_from("#424242").unwrap(),
-                    )
-                    .fit_into(target),
-                );
+                    let target = Aabb2::point(pos).extend_uniform(0.06);
+                    self.geng.draw2d().draw2d(
+                        framebuffer,
+                        &self.world_camera,
+                        &draw2d::TexturedQuad::new(
+                            Aabb2::point(pos).extend_uniform(0.14),
+                            &self.assets.sprites.weapon_damage,
+                        ),
+                    );
+                    self.geng.draw2d().draw2d(
+                        framebuffer,
+                        &self.world_camera,
+                        &draw2d::Text::unit(
+                            self.assets.font.clone(),
+                            format!("{}", bonus.damage.unwrap_or_default()),
+                            Color::try_from("#424242").unwrap(),
+                        )
+                        .fit_into(target),
+                    );
+                }
             }
             _ => (),
         }
