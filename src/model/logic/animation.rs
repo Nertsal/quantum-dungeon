@@ -88,7 +88,7 @@ impl Model {
                     }
                 }
             }
-            animation.time.set_ratio(R32::ONE);
+            animation.time = Lifetime::new_max(animation.ending_time);
             self.ending_animations.push(animation);
         }
     }
