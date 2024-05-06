@@ -15,6 +15,7 @@ impl Model {
             let turns = 4 + 2_usize.pow(self.level as u32 / 4);
             let turns = turns.min(10);
             state.player.turns_left = turns;
+            state.grid.fractured.clear();
         }
 
         self.spawn_enemies();
