@@ -246,7 +246,7 @@ impl Model {
                         return;
                     }
                 };
-                if dir.x != 0 && dir.y != 0 {
+                if (dir.x != 0) == (dir.y != 0) {
                     // log::error!("invalid input direction during phase Vision: {}", dir);
                     return;
                 }
