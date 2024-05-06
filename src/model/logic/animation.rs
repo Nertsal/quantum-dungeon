@@ -63,10 +63,10 @@ impl Model {
                     self.new_item_and_spawn(kind.clone());
                 }
                 AnimationKind::Damage { target, damage, .. } => {
-                    self.state.borrow_mut().entities[*target]
-                        .health
-                        .change(-damage);
-                    self.assets.sounds.damage.play();
+                    if let Some(target) = self.state.borrow_mut().entities.get_mut(*target) {
+                        target.health.change(-damage);
+                        self.assets.sounds.damage.play();
+                    }
                 }
                 AnimationKind::Bonus {
                     target,
@@ -78,12 +78,13 @@ impl Model {
                     let mut state = self.state.borrow_mut();
                     let state = &mut *state;
 
-                    let board_item = &state.items[*target];
-                    let item = &mut state.player.items[board_item.item_id];
-                    if *permanent {
-                        item.perm_stats = item.perm_stats.combine(bonus);
-                    } else {
-                        item.temp_stats = item.temp_stats.combine(bonus);
+                    if let Some(board_item) = state.items.get(*target) {
+                        let item = &mut state.player.items[board_item.item_id];
+                        if *permanent {
+                            item.perm_stats = item.perm_stats.combine(bonus);
+                        } else {
+                            item.temp_stats = item.temp_stats.combine(bonus);
+                        }
                     }
                 }
             }
