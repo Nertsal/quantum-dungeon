@@ -1,0 +1,9 @@
+ItemConfig(
+    name: "King's skull",
+    categories: [Treasure, Weapon],
+    appears_in_shop: true,
+    base_stats: ItemStats(
+        damage: Some(3),
+    ),
+)
+

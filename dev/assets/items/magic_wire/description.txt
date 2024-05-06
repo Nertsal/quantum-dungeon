@@ -1,0 +1,3 @@
+
+On turn start :
+10% chance to duplicate itself.
