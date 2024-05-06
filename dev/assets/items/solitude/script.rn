@@ -8,3 +8,7 @@ pub fn day_bonus(item) {
         }
     }
 }
+
+pub fn active(item) {
+    item.damage(Target::Nearest, |stats| stats.damage);
+}
