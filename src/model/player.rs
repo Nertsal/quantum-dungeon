@@ -27,7 +27,7 @@ impl Player {
         Self {
             moves_left: 0,
             turns_left: 0,
-            hearts: 3,
+            hearts: 0,
             extra_items: 0,
             refreshes: 0,
             items: Arena::new(),

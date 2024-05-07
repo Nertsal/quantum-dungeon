@@ -4,6 +4,7 @@ pub struct GameRender {
     geng: Geng,
     assets: Rc<Assets>,
     items: Rc<ItemAssets>,
+    pub portrait: bool,
     pub ui_camera: Camera2d,
     pub world_camera: Camera2d,
     pub cell_size: vec2<f32>,
@@ -29,6 +30,7 @@ impl GameRender {
             geng: geng.clone(),
             assets: assets.clone(),
             items: items.clone(),
+            portrait: false,
             ui_camera: Camera2d {
                 center: vec2::ZERO,
                 rotation: Angle::ZERO,
@@ -59,6 +61,33 @@ impl GameRender {
         cursor_cell_pos: vec2<Coord>,
         framebuffer: &mut ugli::Framebuffer,
     ) {
+        self.portrait = framebuffer.size().as_f32().aspect() < 1.0;
+
+        self.world_camera.fov = if self.portrait { 10.0 } else { 7.0 };
+        self.world_camera.center = if self.portrait {
+            vec2(0.0, 0.7)
+        } else {
+            vec2(0.0, 0.0)
+        };
+
+        let layout_button = |button: &mut Aabb2<f32>, landscape, portrait| {
+            let pos = if self.portrait { portrait } else { landscape };
+            *button = button.translate(pos - button.center());
+        };
+        layout_button(&mut self.skip_turn_button, vec2(7.0, -1.0), vec2(2.0, -3.8));
+        layout_button(
+            &mut self.skip_item_button,
+            vec2(0.75, -3.0),
+            vec2(0.75, -3.0),
+        );
+        layout_button(
+            &mut self.reroll_button,
+            vec2(-0.75, -3.0),
+            vec2(-0.75, -3.0),
+        );
+        layout_button(&mut self.inventory_button, vec2(7.0, 1.0), vec2(-2.0, -3.8));
+        layout_button(&mut self.retry_button, vec2(0.0, -3.0), vec2(0.0, -3.0));
+
         if let Phase::GameOver = model.phase {
             self.draw_game_over(model, cursor_ui_pos, framebuffer);
             return;
@@ -162,8 +191,13 @@ impl GameRender {
         self.draw_animations(model, framebuffer);
 
         // Hearts
+        let offset = if self.portrait {
+            vec2(-3.0, 2.3)
+        } else {
+            vec2(-6.7, 1.7)
+        };
         for i in 0..model.state.borrow().player.hearts {
-            let pos = self.ui_camera.center + vec2(-6.7, 1.7) + vec2(i, 0).as_f32() * 0.6;
+            let pos = offset + vec2(i, 0).as_f32() * 0.6;
             let size = vec2::splat(1.5);
             let target = Aabb2::point(pos).extend_symmetric(size / 2.0);
             self.draw_at_ui(target, &self.assets.sprites.heart, framebuffer);
@@ -171,7 +205,11 @@ impl GameRender {
 
         {
             // Timer
-            let pos = vec2(-6.3, 0.1);
+            let pos = if self.portrait {
+                vec2(-0.2, 2.0)
+            } else {
+                vec2(-6.3, 0.1)
+            };
             let size = vec2::splat(1.5);
             let icon_target = Aabb2::point(pos).extend_symmetric(size / 2.0);
             self.draw_at_ui(icon_target, &self.assets.sprites.turn_time, framebuffer);
@@ -193,24 +231,34 @@ impl GameRender {
             let height = 0.4;
 
             // Level
+            let (pos, align) = if self.portrait {
+                (vec2(0.0, 2.7), geng::TextAlign::CENTER)
+            } else {
+                (vec2(-6.8, 0.7), geng::TextAlign::LEFT)
+            };
             self.assets.font.draw(
                 framebuffer,
                 &self.ui_camera,
                 &format!("LEVEL {}", model.level),
-                vec2::splat(geng::TextAlign::LEFT),
-                mat3::translate(vec2(-6.8, 0.7))
+                vec2::splat(align),
+                mat3::translate(pos)
                     * mat3::scale_uniform(height)
                     * mat3::translate(vec2(0.0, -0.25)),
                 Color::try_from("#c03d43").unwrap(),
             );
 
             // Score
+            let pos = if self.portrait {
+                vec2(3.0, 2.7)
+            } else {
+                vec2(7.5, -3.0)
+            };
             self.assets.font.draw(
                 framebuffer,
                 &self.ui_camera,
                 &format!("SCORE {}", model.score),
                 vec2::splat(geng::TextAlign::RIGHT),
-                mat3::translate(vec2(7.5, -3.0))
+                mat3::translate(pos)
                     * mat3::scale_uniform(height)
                     * mat3::translate(vec2(0.0, -0.25)),
                 Color::try_from("#7a7a7a").unwrap(),
