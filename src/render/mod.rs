@@ -192,7 +192,7 @@ impl GameRender {
 
         // Hearts
         let offset = if self.portrait {
-            vec2(-3.0, 2.3)
+            vec2(-2.7, 2.3)
         } else {
             vec2(-6.7, 1.7)
         };
@@ -249,7 +249,7 @@ impl GameRender {
 
             // Score
             let pos = if self.portrait {
-                vec2(3.0, 2.7)
+                vec2(2.7, 2.7)
             } else {
                 vec2(7.5, -3.0)
             };
@@ -779,14 +779,23 @@ impl GameRender {
         cursor_ui_pos: vec2<f32>,
         framebuffer: &mut ugli::Framebuffer,
     ) {
-        let mut target =
-            Aabb2::point(cursor_ui_pos).extend_positive(self.cell_size * vec2(0.0, 4.5));
-        if target.max.y > self.ui_camera.fov / 2.0 {
-            target = target.translate(vec2(0.0, self.ui_camera.fov / 2.0 - target.max.y));
-        }
-
         let background = &self.assets.sprites.item_card;
         let size = background.size().as_f32();
+
+        let height = 4.5;
+        let mut target = Aabb2::point(cursor_ui_pos)
+            .extend_positive(self.cell_size * vec2(size.aspect() * height, height));
+
+        let max_y = self.ui_camera.fov / 2.0;
+        if target.max.y > max_y {
+            target = target.translate(vec2(0.0, max_y - target.max.y));
+        }
+
+        let max_x = framebuffer.size().as_f32().aspect() * max_y;
+        if target.max.x > max_x {
+            target = target.translate(vec2(max_x - target.max.x, 0.0));
+        }
+
         let target = geng_utils::layout::fit_aabb_height(size, target, 0.0);
 
         self.geng.draw2d().draw2d(
