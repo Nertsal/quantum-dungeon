@@ -112,10 +112,10 @@ impl ItemFilter {
 
 impl ItemStats {
     pub fn combine(&self, other: &Self) -> Self {
-        fn combine<T: Add<T, Output = T>>(value: Option<T>, other: Option<T>) -> Option<T> {
+        fn combine<T: Num + Ord>(value: Option<T>, other: Option<T>) -> Option<T> {
             match value {
                 Some(a) => match other {
-                    Some(b) => Some(a + b),
+                    Some(b) => Some((a + b).max(T::ZERO)),
                     None => Some(a),
                 },
                 None => other,
