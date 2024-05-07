@@ -1,5 +1,6 @@
 mod assets;
 mod config;
+mod controls;
 mod game;
 mod main_menu;
 mod model;

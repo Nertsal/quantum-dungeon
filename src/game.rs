@@ -1,6 +1,6 @@
-use geng::{Key, MouseButton, Touch};
+use geng::{Key, MouseButton};
 
-use crate::{prelude::*, render::GameRender};
+use crate::{controls::*, prelude::*, render::GameRender};
 
 pub struct Game {
     // geng: Geng,
@@ -8,23 +8,14 @@ pub struct Game {
     render: GameRender,
     model: Model,
     framebuffer_size: vec2<usize>,
-    time: f32,
 
     cursor_pos: vec2<f64>,
     cursor_ui_pos: vec2<f32>,
     cursor_world_pos: vec2<f32>,
     cursor_grid_pos: vec2<f32>,
-
-    active_touch: Option<ActiveTouch>,
+    touch_controller: TouchController,
     // TODO
     // controls: Controls,
-}
-
-#[derive(Debug, Clone)]
-struct ActiveTouch {
-    start: Touch,
-    start_time: f32,
-    current: Touch,
 }
 
 impl Game {
@@ -40,14 +31,12 @@ impl Game {
             render: GameRender::new(geng, assets, all_items),
             model: Model::new(assets.clone(), config, all_items),
             framebuffer_size: vec2(1, 1),
-            time: 0.0,
 
             cursor_pos: vec2::ZERO,
             cursor_ui_pos: vec2::ZERO,
             cursor_world_pos: vec2::ZERO,
             cursor_grid_pos: vec2::ZERO,
-
-            active_touch: None,
+            touch_controller: TouchController::new(),
         }
     }
 
@@ -95,17 +84,6 @@ impl Game {
             }
         }
     }
-
-    fn handle_touch_end(&mut self) {
-        let Some(touch) = self.active_touch.take() else {
-            return;
-        };
-
-        if self.time - touch.start_time < 0.5 && touch.start.position == touch.current.position {
-            // Short tap
-            self.handle_lmb();
-        }
-    }
 }
 
 impl geng::State for Game {
@@ -126,6 +104,16 @@ impl geng::State for Game {
     }
 
     fn handle_event(&mut self, event: geng::Event) {
+        if let Some(action) = self.touch_controller.handle_event(&event) {
+            match action {
+                TouchAction::ShortTap { position } => {
+                    self.cursor_pos = position;
+                    self.handle_lmb();
+                }
+                TouchAction::Move { position } => self.cursor_pos = position,
+            }
+        }
+
         if let geng::Event::KeyPress {
             key: geng::Key::Space,
         } = event
@@ -164,34 +152,11 @@ impl geng::State for Game {
         if geng_utils::key::is_event_press(&event, [MouseButton::Left]) {
             self.handle_lmb();
         }
-
-        match event {
-            geng::Event::TouchStart(touch) => {
-                self.active_touch = Some(ActiveTouch {
-                    start: touch,
-                    start_time: self.time,
-                    current: touch,
-                });
-            }
-            geng::Event::TouchMove(touch) => {
-                if let Some(active) = &mut self.active_touch {
-                    active.current = touch;
-                    self.cursor_pos = touch.position;
-                }
-            }
-            geng::Event::TouchEnd(touch) => {
-                if let Some(active) = &mut self.active_touch {
-                    active.current = touch;
-                    self.handle_touch_end();
-                }
-            }
-            _ => (),
-        }
     }
 
     fn update(&mut self, delta_time: f64) {
+        self.touch_controller.update(delta_time);
         let delta_time = Time::new(delta_time as _);
-        self.time += delta_time.as_f32();
 
         self.cursor_world_pos = self
             .render

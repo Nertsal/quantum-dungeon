@@ -1,6 +1,4 @@
-use crate::prelude::*;
-
-use geng::Touch;
+use crate::{controls::*, prelude::*};
 
 pub struct MainMenu {
     geng: Geng,
@@ -9,21 +7,13 @@ pub struct MainMenu {
     all_items: Rc<ItemAssets>,
     camera: Camera2d,
     framebuffer_size: vec2<usize>,
-    time: f32,
 
     cursor_pos: vec2<f64>,
     cursor_ui_pos: vec2<f32>,
-    active_touch: Option<ActiveTouch>,
+    touch_controller: TouchController,
 
     play_button: Aabb2<f32>,
     transition: Option<geng::state::Transition>,
-}
-
-#[derive(Debug, Clone)]
-struct ActiveTouch {
-    start: Touch,
-    start_time: f32,
-    current: Touch,
 }
 
 impl MainMenu {
@@ -45,11 +35,10 @@ impl MainMenu {
                 fov: 10.0,
             },
             framebuffer_size: vec2(1, 1),
-            time: 0.0,
 
             cursor_pos: vec2::ZERO,
             cursor_ui_pos: vec2::ZERO,
-            active_touch: None,
+            touch_controller: TouchController::new(),
 
             play_button: Aabb2::ZERO,
         }
@@ -89,17 +78,6 @@ impl MainMenu {
             self.play();
         }
     }
-
-    fn handle_touch_end(&mut self) {
-        let Some(touch) = self.active_touch.take() else {
-            return;
-        };
-
-        if self.time - touch.start_time < 0.5 && touch.start.position == touch.current.position {
-            // Short tap
-            self.handle_lmb();
-        }
-    }
 }
 
 impl geng::State for MainMenu {
@@ -108,6 +86,18 @@ impl geng::State for MainMenu {
     }
 
     fn handle_event(&mut self, event: geng::Event) {
+        if let Some(action) = self.touch_controller.handle_event(&event) {
+            match action {
+                TouchAction::ShortTap { position } => {
+                    self.cursor_pos = position;
+                    self.handle_lmb();
+                }
+                TouchAction::Move { position } => {
+                    self.cursor_pos = position;
+                }
+            }
+        }
+
         match event {
             geng::Event::CursorMove { position } => {
                 self.cursor_pos = position;
@@ -117,31 +107,12 @@ impl geng::State for MainMenu {
             } => {
                 self.handle_lmb();
             }
-            geng::Event::TouchStart(touch) => {
-                self.active_touch = Some(ActiveTouch {
-                    start: touch,
-                    start_time: self.time,
-                    current: touch,
-                });
-            }
-            geng::Event::TouchMove(touch) => {
-                if let Some(active) = &mut self.active_touch {
-                    active.current = touch;
-                    self.cursor_pos = touch.position;
-                }
-            }
-            geng::Event::TouchEnd(touch) => {
-                if let Some(active) = &mut self.active_touch {
-                    active.current = touch;
-                    self.handle_touch_end();
-                }
-            }
             _ => {}
         }
     }
 
     fn update(&mut self, delta_time: f64) {
-        self.time += delta_time as f32;
+        self.touch_controller.update(delta_time);
         self.cursor_ui_pos = self
             .camera
             .screen_to_world(self.framebuffer_size.as_f32(), self.cursor_pos.as_f32());
