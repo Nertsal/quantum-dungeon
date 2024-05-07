@@ -155,16 +155,6 @@ impl Model {
 
         // Reset vision
         state.visible_tiles.clear();
-
-        // Clear temp stats
-        for (_, item) in &mut state.player.items {
-            item.temp_stats = ItemStats::default();
-        }
-        // Update turn counter
-        for (_, item) in &mut state.items {
-            item.used = false;
-            state.player.items[item.item_id].turns_on_board += 1;
-        }
     }
 
     pub(super) fn resolve_trigger(&mut self, trigger: Trigger, id: Id) {

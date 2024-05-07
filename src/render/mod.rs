@@ -891,7 +891,10 @@ impl GameRender {
         let item = &model.state.borrow().player.items[board_item.item_id];
 
         let alpha = model.get_light_level(board_item.position);
-        let alpha = crate::util::smoothstep(alpha);
+        let mut alpha = crate::util::smoothstep(alpha);
+        if board_item.used {
+            alpha *= 0.5;
+        }
         let mut color = Color::WHITE;
         color.a = alpha;
 
@@ -920,29 +923,27 @@ impl GameRender {
         let offset = vec2(0.0, crate::util::smoothstep(resolution_t) * 0.2);
         self.draw_at_grid(position + offset, Angle::ZERO, texture, color, framebuffer);
 
-        if !board_item.used {
-            // Damage value
-            if let Some(damage) = item.current_stats().damage {
-                let pos = (position + vec2(0.3, 0.3)) * self.cell_size;
-                let target = Aabb2::point(pos).extend_uniform(0.06);
-                self.geng.draw2d().draw2d(
-                    framebuffer,
-                    &self.world_camera,
-                    &draw2d::TexturedQuad::colored(
-                        Aabb2::point(pos).extend_uniform(0.14),
-                        &self.assets.sprites.weapon_damage,
-                        color,
-                    ),
-                );
-                let mut color = Color::try_from("#424242").unwrap();
-                color.a = alpha;
-                self.geng.draw2d().draw2d(
-                    framebuffer,
-                    &self.world_camera,
-                    &draw2d::Text::unit(self.assets.font.clone(), format!("{}", damage), color)
-                        .fit_into(target),
-                );
-            }
+        // Damage value
+        if let Some(damage) = item.current_stats().damage {
+            let pos = (position + vec2(0.3, 0.3)) * self.cell_size;
+            let target = Aabb2::point(pos).extend_uniform(0.06);
+            self.geng.draw2d().draw2d(
+                framebuffer,
+                &self.world_camera,
+                &draw2d::TexturedQuad::colored(
+                    Aabb2::point(pos).extend_uniform(0.14),
+                    &self.assets.sprites.weapon_damage,
+                    color,
+                ),
+            );
+            let mut color = Color::try_from("#424242").unwrap();
+            color.a = alpha;
+            self.geng.draw2d().draw2d(
+                framebuffer,
+                &self.world_camera,
+                &draw2d::Text::unit(self.assets.font.clone(), format!("{}", damage), color)
+                    .fit_into(target),
+            );
         }
     }
 
