@@ -178,7 +178,7 @@ impl Model {
         log::info!("Level finished, win: {}", win);
         self.phase = Phase::LevelFinished {
             win,
-            timer: Lifetime::new_max(r32(2.0)),
+            timer: Lifetime::new_max(r32(0.0)),
         };
     }
 
@@ -252,16 +252,6 @@ impl Model {
                     },
                 ));
             }
-        }
-
-        if !state
-            .entities
-            .iter()
-            .any(|(_, e)| e.fraction == Fraction::Enemy)
-        {
-            // All enemies died -> next level
-            drop(state);
-            self.finish_level(true);
         }
     }
 

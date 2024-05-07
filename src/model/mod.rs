@@ -195,6 +195,9 @@ impl Model {
             side_effects,
         };
         model.next_level();
+        model.phase = Phase::LevelStarting {
+            timer: Lifetime::new_max(r32(0.5)),
+        };
         model
     }
 }

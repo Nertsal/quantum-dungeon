@@ -30,6 +30,7 @@ impl Model {
             Phase::LevelFinished { timer, .. } => {
                 timer.change(-delta_time);
                 if timer.is_min() {
+                    self.shift_everything();
                     self.next_level();
                 }
             }
@@ -47,7 +48,17 @@ impl Model {
                 if wait_for_effects {
                     if fade_time.is_above_min() {
                         fade_time.change(-delta_time);
+                    } else if !self
+                        .state
+                        .borrow()
+                        .entities
+                        .iter()
+                        .any(|(_, e)| e.fraction == Fraction::Enemy)
+                    {
+                        // Win -> next level
+                        self.finish_level(true);
                     } else {
+                        // Next turn
                         self.shift_everything();
                         self.spawn_items();
                         self.dawn_phase();

@@ -19,10 +19,8 @@ impl Model {
         }
 
         self.spawn_enemies();
-        self.spawn_items(); // First spawn has to be done manually
-        self.phase = Phase::LevelStarting {
-            timer: Lifetime::new_max(r32(0.5)),
-        };
+        self.spawn_items();
+        self.dawn_phase();
     }
 
     pub(super) fn shift_everything(&mut self) {
@@ -83,9 +81,6 @@ impl Model {
         let mut available = self
             .calculate_empty_space()
             .sub(&self.state.borrow().visible_tiles);
-        if available.is_empty() {
-            return;
-        }
 
         let options = [EntityKind::Dummy];
         let mut rng = thread_rng();
@@ -98,8 +93,28 @@ impl Model {
         let health = health as i64;
 
         for _ in 0..enemies {
+            if available.is_empty() {
+                // Replace an existing item
+                let mut state = self.state.borrow_mut();
+                if let Some((i, _)) = state
+                    .items
+                    .iter()
+                    .filter(|(_, item)| !state.visible_tiles.contains(&item.position))
+                    .choose(&mut rng)
+                {
+                    let item = state.items.remove(i).unwrap();
+                    if let Some(item) = state.player.items.get_mut(item.item_id) {
+                        item.on_board = None;
+                        item.turns_on_board = 0;
+                    }
+                    available.insert(item.position);
+                }
+            }
+
             let kind = options.choose(&mut rng).unwrap();
-            let position = *available.iter().choose(&mut rng).unwrap();
+            let Some(&position) = available.iter().choose(&mut rng) else {
+                break;
+            };
 
             self.state.borrow_mut().entities.insert(Entity {
                 position,
@@ -110,9 +125,6 @@ impl Model {
             });
 
             available.remove(&position);
-            if available.is_empty() {
-                break;
-            }
         }
     }
 
