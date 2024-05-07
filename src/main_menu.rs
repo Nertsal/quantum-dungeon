@@ -126,6 +126,7 @@ impl geng::State for MainMenu {
             None,
             None,
         );
+        let portrait = self.framebuffer_size.as_f32().aspect() < 1.0;
 
         {
             // Title
@@ -167,7 +168,12 @@ impl geng::State for MainMenu {
 
         {
             // Player
-            let target = Aabb2::point(vec2(-5.0, -1.0)).extend_uniform(2.0);
+            let pos = if portrait {
+                vec2(-1.5, -0.5)
+            } else {
+                vec2(-5.0, -1.0)
+            };
+            let target = Aabb2::point(pos).extend_uniform(2.0);
             self.draw_at(
                 target,
                 &self.assets.sprites.player,
@@ -176,7 +182,7 @@ impl geng::State for MainMenu {
                 framebuffer,
             );
 
-            let target = Aabb2::point(vec2(-4.0, -0.8)).extend_uniform(1.8);
+            let target = Aabb2::point(pos + vec2(1.0, 0.2)).extend_uniform(1.8);
             self.draw_at(
                 target,
                 &self.assets.sprites.player_vision,
@@ -188,9 +194,14 @@ impl geng::State for MainMenu {
 
         {
             // Tiles
+            let offset = if portrait {
+                vec2(0.0, -2.5)
+            } else {
+                vec2(0.0, -0.5)
+            };
             let size = 1.7;
             for i in 0..3 {
-                let pos = vec2(i as f32 - 1.0, 0.0) * size + vec2(0.0, -0.5);
+                let pos = vec2(i as f32 - 1.0, 0.0) * size + offset;
                 let target = Aabb2::point(pos).extend_uniform(size / 2.0);
                 let texture = if target.contains(self.cursor_ui_pos) {
                     &self.assets.sprites.cell_light
@@ -201,7 +212,12 @@ impl geng::State for MainMenu {
             }
 
             // Play
-            self.play_button = Aabb2::point(vec2(4.0, -0.5)).extend_uniform(size / 2.0);
+            let pos = if portrait {
+                vec2(1.5, -0.5)
+            } else {
+                vec2(4.0, -0.5)
+            };
+            self.play_button = Aabb2::point(pos).extend_uniform(size / 2.0);
             let color = if self.play_button.contains(self.cursor_ui_pos) {
                 Color::WHITE.map_rgb(|x| x * 1.2)
             } else {
