@@ -629,7 +629,7 @@ impl GameRender {
                         &self.world_camera,
                         &draw2d::Text::unit(
                             self.assets.font.clone(),
-                            format!("{}", bonus.damage.unwrap_or_default()),
+                            format!("{:+}", bonus.damage.unwrap_or_default()),
                             Color::try_from("#424242").unwrap(),
                         )
                         .fit_into(target),
