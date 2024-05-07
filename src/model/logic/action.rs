@@ -234,7 +234,9 @@ impl Model {
     }
 
     fn player_vision(&mut self, player_input: PlayerInput) {
-        for (_, entity) in &mut self.state.borrow_mut().entities {
+        let mut state_ref = self.state.borrow_mut();
+        let state = &mut *state_ref;
+        for (_, entity) in &mut state.entities {
             if let EntityKind::Player = entity.kind {
                 let dir = match player_input {
                     PlayerInput::Dir(dir) => dir,
@@ -246,13 +248,16 @@ impl Model {
                         return;
                     }
                 };
-                if (dir.x != 0) == (dir.y != 0) {
+                if (dir.x != 0) == (dir.y != 0)
+                    || !state.grid.check_pos(entity.position + dir) && dir.x.abs() + dir.y.abs() > 1
+                {
                     // log::error!("invalid input direction during phase Vision: {}", dir);
                     return;
                 }
                 entity.look_dir = dir.map(|x| x.clamp_abs(1));
             }
         }
+        drop(state_ref);
 
         self.update_vision();
         if let PlayerInput::Vision { commit: true, .. } = player_input {
