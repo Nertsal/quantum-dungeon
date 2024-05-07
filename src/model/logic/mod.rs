@@ -204,16 +204,10 @@ impl Model {
 
     fn retry(&mut self) {
         log::debug!("Retry");
-        self.state.borrow_mut().reset();
-        *self = Self::new_compiled(
+        *self = Self::new(
             self.assets.clone(),
             self.config.clone(),
-            std::mem::replace(
-                &mut self.engine,
-                Engine::new(Rc::clone(&self.state), Rc::clone(&self.side_effects)).unwrap(),
-            ),
-            Rc::clone(&self.state),
-            Rc::clone(&self.side_effects),
+            self.item_assets.clone(),
         );
     }
 

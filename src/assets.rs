@@ -64,16 +64,18 @@ impl Assets {
     }
 }
 
+#[derive(Clone)]
 pub struct ItemAssets {
     /// Map from item name to its asset.
     pub assets: HashMap<Rc<str>, ItemAsset>,
 }
 
+#[derive(Clone)]
 pub struct ItemAsset {
     pub config: ItemConfig,
     pub description: Option<String>,
     pub script: Option<String>,
-    pub texture: Option<ugli::Texture>,
+    pub texture: Option<Rc<ugli::Texture>>,
 }
 
 #[derive(geng::asset::Load, Debug, Clone, Serialize, Deserialize)]
@@ -94,8 +96,7 @@ impl ItemAssets {
     }
 
     pub fn get_texture(&self, item: &str) -> Option<&ugli::Texture> {
-        self.get(item).texture.as_ref()
-        // .unwrap_or_else(|| panic!("no texture found for item {}", item))
+        self.get(item).texture.as_deref()
     }
 }
 

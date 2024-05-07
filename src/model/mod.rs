@@ -22,6 +22,7 @@ pub type Score = u64;
 
 pub struct Model {
     pub assets: Rc<Assets>,
+    pub item_assets: Rc<ItemAssets>,
     pub config: Config,
     engine: Engine,
     pub state: Rc<RefCell<ModelState>>,
@@ -115,7 +116,7 @@ pub enum Phase {
 }
 
 impl Model {
-    pub fn new(assets: Rc<Assets>, config: Config, all_items: &ItemAssets) -> Self {
+    pub fn new(assets: Rc<Assets>, config: Config, item_assets: Rc<ItemAssets>) -> Self {
         let state = ModelState {
             all_items: vec![], // Initialized after engine
             grid: Grid::new(3),
@@ -141,7 +142,7 @@ impl Model {
         let engine = Engine::new(Rc::clone(&state), Rc::clone(&side_effects))
             .expect("Script engine initialization failed");
         let all_items = engine
-            .compile_items(all_items)
+            .compile_items(&item_assets)
             .expect("Item compilation failed");
 
         {
@@ -164,12 +165,13 @@ impl Model {
 
         state.borrow_mut().all_items = all_items;
 
-        Self::new_compiled(assets, config, engine, state, side_effects)
+        Self::new_compiled(assets, config, item_assets, engine, state, side_effects)
     }
 
     fn new_compiled(
         assets: Rc<Assets>,
         config: Config,
+        item_assets: Rc<ItemAssets>,
         engine: Engine,
         state: Rc<RefCell<ModelState>>,
         side_effects: Rc<RefCell<Vec<Effect>>>,
@@ -177,6 +179,7 @@ impl Model {
         let mut model = Self {
             assets,
             config,
+            item_assets,
             engine,
             state,
             level: 0,
@@ -201,23 +204,5 @@ impl Model {
             timer: Lifetime::new_max(r32(0.5)),
         };
         model
-    }
-}
-
-impl ModelState {
-    fn reset(&mut self) {
-        self.grid = Grid::new(3);
-        self.player = Player::new();
-        self.items = Arena::new();
-        self.entities = [Entity {
-            position: vec2(0, 0),
-            fraction: Fraction::Player,
-            health: Health::new_max(100),
-            look_dir: vec2(0, 0),
-            kind: EntityKind::Player,
-        }]
-        .into_iter()
-        .collect();
-        self.visible_tiles = HashSet::new();
     }
 }

@@ -29,7 +29,7 @@ impl Game {
             // geng: geng.clone(),
             assets: assets.clone(),
             render: GameRender::new(geng, assets, all_items),
-            model: Model::new(assets.clone(), config, all_items),
+            model: Model::new(assets.clone(), config, all_items.clone()),
             framebuffer_size: vec2(1, 1),
 
             cursor_pos: vec2::ZERO,
