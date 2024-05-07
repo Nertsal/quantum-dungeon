@@ -204,6 +204,7 @@ impl Model {
 
     fn retry(&mut self) {
         log::debug!("Retry");
+        self.state.borrow_mut().reset();
         *self = Self::new_compiled(
             self.assets.clone(),
             self.config.clone(),

@@ -203,3 +203,21 @@ impl Model {
         model
     }
 }
+
+impl ModelState {
+    fn reset(&mut self) {
+        self.grid = Grid::new(3);
+        self.player = Player::new();
+        self.items = Arena::new();
+        self.entities = [Entity {
+            position: vec2(0, 0),
+            fraction: Fraction::Player,
+            health: Health::new_max(100),
+            look_dir: vec2(0, 0),
+            kind: EntityKind::Player,
+        }]
+        .into_iter()
+        .collect();
+        self.visible_tiles = HashSet::new();
+    }
+}
