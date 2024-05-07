@@ -191,6 +191,7 @@ impl geng::State for Game {
 
     fn update(&mut self, delta_time: f64) {
         let delta_time = Time::new(delta_time as _);
+        self.time += delta_time.as_f32();
 
         self.cursor_world_pos = self
             .render
