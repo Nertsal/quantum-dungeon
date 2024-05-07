@@ -76,10 +76,10 @@ impl Model {
                     // Start animation
                     start_delay.change(-delta_time);
                     if start_delay.is_min() {
-                        self.resolve_trigger(Trigger::DayBonus, None);
+                        self.resolve_all(Trigger::DayBonus);
                     }
                 } else if self.wait_for_effects() {
-                    self.resolve_trigger(Trigger::DayAction, None);
+                    self.resolve_all(Trigger::DayAction);
                     self.phase = Phase::DayAction {
                         end_delay: Lifetime::new_max(r32(0.2)),
                     };
@@ -167,12 +167,21 @@ impl Model {
         }
     }
 
-    pub(super) fn resolve_trigger(&mut self, trigger: Trigger, specific: Option<Id>) {
-        let mut ids: Vec<_> = if let Some(id) = specific {
-            vec![id]
-        } else {
-            self.state.borrow().items.iter().map(|(i, _)| i).collect()
-        };
+    pub(super) fn resolve_trigger(&mut self, trigger: Trigger, id: Id) {
+        let effects = self
+            .resolve_item(id, trigger)
+            .into_iter()
+            .map(move |effect| QueuedEffect {
+                trigger,
+                proc_item: id,
+                effect,
+            })
+            .collect();
+        self.effect_queue_stack.push(effects);
+    }
+
+    pub(super) fn resolve_all(&mut self, trigger: Trigger) {
+        let mut ids: Vec<_> = self.state.borrow().items.iter().map(|(i, _)| i).collect();
 
         // Sort by item position
         ids.sort_by_key(|&id| {
@@ -182,20 +191,8 @@ impl Model {
             (pos.x, -pos.y)
         });
 
-        let effects = ids
-            .into_iter()
-            .flat_map(|id| {
-                self.resolve_item(id, trigger)
-                    .into_iter()
-                    .map(move |effect| QueuedEffect {
-                        trigger,
-                        proc_item: id,
-                        effect,
-                    })
-            })
-            .collect();
-
-        self.effect_queue_stack.push(effects);
+        self.resolution_queue
+            .extend(ids.into_iter().map(|id| (id, trigger)));
     }
 
     /// Resolve the item's response to the trigger.

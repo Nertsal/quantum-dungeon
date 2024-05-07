@@ -33,7 +33,9 @@ impl Model {
 
     /// Returns `true` when all effects are processed and executed.
     fn wait_for_effects(&self) -> bool {
-        self.effect_queue_stack.is_empty() && self.wait_for_animations()
+        self.resolution_queue.is_empty()
+            && self.effect_queue_stack.is_empty()
+            && self.wait_for_animations()
     }
 
     /// Returns `true` when all animations are done.
@@ -86,7 +88,7 @@ impl Model {
         state.grid.lights.retain(|_, duration| *duration > 0);
         drop(state_ref);
 
-        self.resolve_trigger(Trigger::Night, None);
+        self.resolve_all(Trigger::Night);
     }
 
     pub fn dawn_phase(&mut self) {
@@ -276,7 +278,7 @@ impl Model {
         for item_id in ids {
             if self.state.borrow().items[item_id].position == target_pos {
                 // Activate
-                self.resolve_trigger(Trigger::Active, Some(item_id));
+                self.resolve_trigger(Trigger::Active, item_id);
             }
         }
 

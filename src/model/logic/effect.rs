@@ -12,7 +12,13 @@ impl Model {
 
         // if self.wait_for_animations() {
         if self.animations.is_empty() {
-            self.resolve_next_effect();
+            if self.effect_queue_stack.is_empty() {
+                if let Some((item, trigger)) = self.resolution_queue.pop_front() {
+                    self.resolve_trigger(trigger, item);
+                }
+            } else {
+                self.resolve_next_effect();
+            }
         }
     }
 
@@ -174,7 +180,7 @@ impl Model {
             }
             Effect::UseItem { item } => {
                 drop(state);
-                self.resolve_trigger(Trigger::Active, Some(item));
+                self.resolve_trigger(Trigger::Active, item);
             }
         }
 

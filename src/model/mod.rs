@@ -36,6 +36,7 @@ pub struct Model {
     pub resolving_items: Collection<ItemResolving>,
     pub resolved_items: Collection<ItemResolved>,
 
+    pub resolution_queue: VecDeque<(Id, Trigger)>,
     /// The stack of effect queues.
     pub effect_queue_stack: Vec<VecDeque<QueuedEffect>>,
     /// Effects produced by scripts. Should be consumed after the script is executed and moved to the queue.
@@ -191,6 +192,7 @@ impl Model {
             resolving_items: Collection::new(),
             resolved_items: Collection::new(),
 
+            resolution_queue: VecDeque::new(),
             effect_queue_stack: Vec::new(),
             side_effects,
         };
