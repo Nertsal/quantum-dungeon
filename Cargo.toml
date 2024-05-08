@@ -9,7 +9,7 @@ edition = "2021"
 clap = { version = "4", features = ["derive"] }
 generational-arena = { version = "0.2.9", features = ["serde"] }
 rune = "0.13.1"
-geng = "0.17.0"
+geng = "0.17.2"
 geng-utils = "0.3.0"
 serde = { version = "1.0.188", features = ["derive"] }
 
