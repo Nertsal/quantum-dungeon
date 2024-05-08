@@ -41,6 +41,7 @@ impl Game {
     }
 
     fn handle_lmb(&mut self) {
+        self.render.hide_item_hint = true;
         if self.render.inventory_button.contains(self.cursor_ui_pos) {
             self.render.show_inventory = !self.render.show_inventory;
             self.assets.sounds.step.play();
@@ -110,7 +111,10 @@ impl geng::State for Game {
                     self.cursor_pos = position;
                     self.handle_lmb();
                 }
-                TouchAction::Move { position } => self.cursor_pos = position,
+                TouchAction::Move { position } => {
+                    self.render.hide_item_hint = false;
+                    self.cursor_pos = position;
+                }
             }
         }
 
@@ -122,6 +126,7 @@ impl geng::State for Game {
         }
 
         if let geng::Event::CursorMove { position } = event {
+            self.render.hide_item_hint = false;
             self.cursor_pos = position;
         }
 

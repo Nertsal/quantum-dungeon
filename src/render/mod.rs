@@ -4,6 +4,7 @@ pub struct GameRender {
     geng: Geng,
     assets: Rc<Assets>,
     items: Rc<ItemAssets>,
+    pub hide_item_hint: bool,
     pub portrait: bool,
     pub ui_camera: Camera2d,
     pub world_camera: Camera2d,
@@ -30,6 +31,7 @@ impl GameRender {
             geng: geng.clone(),
             assets: assets.clone(),
             items: items.clone(),
+            hide_item_hint: false,
             portrait: false,
             ui_camera: Camera2d {
                 center: vec2::ZERO,
@@ -779,6 +781,10 @@ impl GameRender {
         cursor_ui_pos: vec2<f32>,
         framebuffer: &mut ugli::Framebuffer,
     ) {
+        if self.hide_item_hint {
+            return;
+        }
+
         let background = &self.assets.sprites.item_card;
         let size = background.size().as_f32();
 
