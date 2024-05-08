@@ -1,0 +1,32 @@
+name: Test
+on:
+  push:
+
+jobs:
+  test-native:
+    name: Test
+    runs-on: ${{ matrix.platform.runs-on }}
+    strategy:
+      matrix:
+        platform:
+          - runs-on: ubuntu-latest
+            channel: linux
+          - runs-on: macos-latest
+            channel: mac
+          - runs-on: windows-latest
+            channel: windows
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+      - name: Install libraries
+        if: matrix.platform.channel == 'linux'
+        run: sudo apt-get update && sudo apt-get install -y libasound2-dev libudev-dev
+      - name: Install Rust toolchain
+        uses: actions-rs/toolchain@v1
+        with:
+          toolchain: stable
+          profile: minimal
+      - name: Test
+        uses: actions-rs/cargo@v1
+        with:
+          command: test
