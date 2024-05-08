@@ -31,6 +31,8 @@ fn main() {
     Geng::run_with(&geng_options, |geng| async move {
         let manager = geng.asset_manager();
 
+        let mut timer = Timer::new();
+
         let mut assets = assets::Assets::load(manager).await.unwrap();
         assets.music.set_looped(true);
         let mut music = assets.music.play();
@@ -39,10 +41,20 @@ fn main() {
         let config_path = opts.config.unwrap_or_else(|| "assets/config.ron".into());
         let config = config::Config::load(config_path).await.unwrap();
 
+        log::debug!(
+            "took {:.3}s to load main assets",
+            timer.tick().as_secs_f64()
+        );
+
         let items: assets::ItemAssets =
             geng::asset::Load::load(manager, &run_dir().join("assets").join("items"), &())
                 .await
                 .unwrap();
+
+        log::debug!(
+            "took {:.3}s to load item assets",
+            timer.tick().as_secs_f64()
+        );
 
         let state = main_menu::MainMenu::new(&geng, &Rc::new(assets), config, &Rc::new(items));
         geng.run_state(state).await;

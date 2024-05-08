@@ -112,12 +112,20 @@ impl geng::asset::Load for ItemAssets {
         let path = path.to_owned();
         async move {
             let list: Vec<String> = file::load_detect(path.join("_list.ron")).await?;
-            let mut items = HashMap::new();
-            for name in list {
-                let path = path.join(name);
-                let item: ItemAsset = geng::asset::Load::load(&manager, &path, &()).await?;
-                items.insert(Rc::clone(&item.config.name), item);
-            }
+            let item_loaders = list.into_iter().map(|name| {
+                let manager = &manager;
+                let path = &path;
+                async move {
+                    let path = path.join(name);
+                    let item: ItemAsset = geng::asset::Load::load(manager, &path, &()).await?;
+                    anyhow::Ok((Rc::clone(&item.config.name), item))
+                }
+            });
+            let items = future::join_all(item_loaders)
+                .await
+                .into_iter()
+                .flatten()
+                .collect();
             Ok(Self { assets: items })
         }
         .boxed_local()
