@@ -40,7 +40,9 @@ impl Model {
                     entity_id,
                     target_pos,
                 } => {
-                    self.state.borrow_mut().entities[*entity_id].position = *target_pos;
+                    if let Some(entity) = self.state.borrow_mut().entities.get_mut(*entity_id) {
+                        entity.position = *target_pos;
+                    }
                 }
                 AnimationKind::MoveItem {
                     item_id,
