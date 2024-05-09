@@ -951,7 +951,10 @@ impl GameRender {
         model: &Model,
         framebuffer: &mut ugli::Framebuffer,
     ) {
-        let item = &model.state.borrow().player.items[board_item.item_id];
+        let state = model.state.borrow();
+        let Some(item) = &state.player.items.get(board_item.item_id) else {
+            return;
+        };
 
         let alpha = model.get_light_level(board_item.position);
         let mut alpha = crate::util::smoothstep(alpha);

@@ -58,8 +58,9 @@ impl Model {
                     self.assets.sounds.enemy_death.play();
                 }
                 AnimationKind::ItemDeath { item, .. } => {
-                    if let Some(item) = self.state.borrow_mut().items.remove(*item) {
-                        self.state.borrow_mut().player.items.remove(item.item_id);
+                    let mut state = self.state.borrow_mut();
+                    if let Some(item) = state.items.remove(*item) {
+                        state.player.items.remove(item.item_id);
                     }
                 }
                 AnimationKind::Dupe { kind } => {
