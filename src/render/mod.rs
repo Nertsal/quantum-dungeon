@@ -721,7 +721,7 @@ impl GameRender {
 
         let size = vec2(1.5, 1.5);
         let mut hint = None;
-        let row_max = 5;
+        let row_max = if self.portrait { 3 } else { 5 };
         let offset = items.len().min(row_max).saturating_sub(1) as f32 / 2.0;
         for (i, (_, item)) in items.iter().enumerate() {
             let x = i % row_max;
