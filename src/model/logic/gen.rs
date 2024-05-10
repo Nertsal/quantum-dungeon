@@ -1,7 +1,7 @@
 use super::*;
 
 impl Model {
-    pub fn next_level(&mut self) {
+    pub fn next_level(&mut self, first_level: bool) {
         {
             let mut state = self.state.borrow_mut();
             if self.level > 0 {
@@ -20,7 +20,14 @@ impl Model {
 
         self.spawn_enemies();
         self.spawn_items();
-        self.dawn_phase();
+
+        if first_level {
+            self.phase = Phase::LevelStarting {
+                timer: Lifetime::new_max(r32(0.5)),
+            };
+        } else {
+            self.dawn_phase();
+        }
     }
 
     pub(super) fn shift_everything(&mut self) {

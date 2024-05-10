@@ -199,10 +199,7 @@ impl Model {
             effect_queue_stack: Vec::new(),
             side_effects,
         };
-        model.next_level();
-        model.phase = Phase::LevelStarting {
-            timer: Lifetime::new_max(r32(0.5)),
-        };
+        model.next_level(true);
         model
     }
 }

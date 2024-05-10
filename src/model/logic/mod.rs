@@ -101,10 +101,14 @@ impl Model {
         for (_, item) in &mut state.player.items {
             item.temp_stats = ItemStats::default();
         }
-        // Update turn counter
+        // Reset used
         for (_, item) in &mut state.items {
             item.used = false;
-            state.player.items[item.item_id].turns_on_board += 1;
+        }
+        // Update turn counter
+        for (_, item) in &mut state.player.items {
+            item.turns_on_board += 1;
+            log::info!("item {:?}: {}", item.kind.config.name, item.turns_on_board);
         }
     }
 

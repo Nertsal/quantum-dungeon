@@ -24,6 +24,7 @@ impl Model {
             Phase::LevelStarting { timer } => {
                 timer.change(-delta_time);
                 if timer.is_min() {
+                    log::info!("level start dawn");
                     self.dawn_phase();
                 }
             }
@@ -31,7 +32,7 @@ impl Model {
                 timer.change(-delta_time);
                 if timer.is_min() {
                     self.shift_everything();
-                    self.next_level();
+                    self.next_level(false);
                 }
             }
             Phase::PostVision { timer } => {
