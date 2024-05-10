@@ -1,2 +1,2 @@
 On use :
-Add a new tile somewhere on your choice, destroys itself after.
+Add 2 tiles somewhere on your choice, destroys itself after.
