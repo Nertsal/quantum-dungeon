@@ -71,15 +71,6 @@ impl Model {
             fade_time: Lifetime::new_max(r32(1.0)),
         };
 
-        let mut state = self.state.borrow_mut();
-
-        // Update light duration
-        for duration in state.grid.lights.values_mut() {
-            *duration = duration.saturating_sub(1);
-        }
-        state.grid.lights.retain(|_, duration| *duration > 0);
-        drop(state);
-
         self.resolve_all(Trigger::Night);
     }
 
@@ -99,6 +90,12 @@ impl Model {
                 state.grid.fractured.insert(entity.position);
             }
         }
+
+        // Update light duration
+        for duration in state.grid.lights.values_mut() {
+            *duration = duration.saturating_sub(1);
+        }
+        state.grid.lights.retain(|_, duration| *duration > 0);
 
         // Clear temp stats
         for (_, item) in &mut state.player.items {
