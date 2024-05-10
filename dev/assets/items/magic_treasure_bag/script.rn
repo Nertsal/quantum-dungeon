@@ -1,5 +1,5 @@
 pub fn day_bonus(item) {
-    if item.turns_on_board >= 3 {
+    if item.turns_on_board >= 4 {
         if let Some(treasure) = item.random_kind(Category::Treasure) {
             item.turn_into(treasure);
         } else {
