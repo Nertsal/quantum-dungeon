@@ -122,6 +122,15 @@ impl Model {
                     .iter()
                     .any(|(_, item)| item.kind.config.categories.contains(&Category::Magic))
                 {
+                    drop(state);
+                    if let Phase::Active {
+                        entity_id,
+                        position,
+                    } = self.phase
+                    {
+                        self.resolve_active_phase(entity_id, position);
+                    }
+
                     let mut next_phase = Phase::Vision;
                     std::mem::swap(&mut self.phase, &mut next_phase);
                     self.phase = Phase::Portal {

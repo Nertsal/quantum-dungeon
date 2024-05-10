@@ -103,45 +103,45 @@ impl Model {
             } if wait_for_effects => {
                 let entity_id = *entity_id;
                 let target_pos = *position;
-
-                self.animations.insert(Animation::new(
-                    self.config.animation_time,
-                    AnimationKind::MoveEntity {
-                        entity_id,
-                        target_pos,
-                    },
-                ));
-
-                let state = self.state.borrow();
-                let from_pos = target_pos;
-                let target_pos = state.entities[entity_id].position;
-                if let Some((entity_id, _)) =
-                    state.entities.iter().find(|(_, e)| e.position == from_pos)
-                {
-                    self.animations.insert(Animation::new(
-                        self.config.animation_time,
-                        AnimationKind::MoveEntity {
-                            entity_id,
-                            target_pos,
-                        },
-                    ));
-                }
-                if let Some((item_id, _)) = state.items.iter().find(|(_, i)| i.position == from_pos)
-                {
-                    self.animations.insert(Animation::new(
-                        self.config.animation_time,
-                        AnimationKind::MoveItem {
-                            item_id,
-                            target_pos,
-                        },
-                    ));
-                }
-                drop(state);
-
-                self.player_phase();
+                self.resolve_active_phase(entity_id, target_pos)
             }
             _ => (),
         }
+    }
+
+    pub fn resolve_active_phase(&mut self, entity_id: Id, target_pos: vec2<Coord>) {
+        self.animations.insert(Animation::new(
+            self.config.animation_time,
+            AnimationKind::MoveEntity {
+                entity_id,
+                target_pos,
+            },
+        ));
+
+        let state = self.state.borrow();
+        let from_pos = target_pos;
+        let target_pos = state.entities[entity_id].position;
+        if let Some((entity_id, _)) = state.entities.iter().find(|(_, e)| e.position == from_pos) {
+            self.animations.insert(Animation::new(
+                self.config.animation_time,
+                AnimationKind::MoveEntity {
+                    entity_id,
+                    target_pos,
+                },
+            ));
+        }
+        if let Some((item_id, _)) = state.items.iter().find(|(_, i)| i.position == from_pos) {
+            self.animations.insert(Animation::new(
+                self.config.animation_time,
+                AnimationKind::MoveItem {
+                    item_id,
+                    target_pos,
+                },
+            ));
+        }
+        drop(state);
+
+        self.player_phase();
     }
 
     pub fn resolution_phase(&mut self) {

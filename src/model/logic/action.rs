@@ -105,14 +105,14 @@ impl Model {
             let mut state = self.state.borrow_mut();
             let state_ref = &mut *state;
 
-            if let Some((_, target)) = state_ref
+            if let Some((target_id, target)) = state_ref
                 .items
                 .iter_mut()
                 .find(|(_, item)| item.position == target_pos)
             {
                 let item = &state_ref.player.items[target.item_id];
                 if ItemFilter::Category(Category::Magic).check(&item.kind) {
-                    let Some((_, player)) = state_ref
+                    let Some((player_id, player)) = state_ref
                         .entities
                         .iter_mut()
                         .find(|(_, e)| matches!(e.kind, EntityKind::Player))
@@ -121,8 +121,20 @@ impl Model {
                         return;
                     };
                     // Swap
-                    target.position = player.position;
-                    player.position = target_pos;
+                    self.animations.insert(Animation::new(
+                        self.config.animation_time,
+                        AnimationKind::MoveEntity {
+                            entity_id: player_id,
+                            target_pos,
+                        },
+                    ));
+                    self.animations.insert(Animation::new(
+                        self.config.animation_time,
+                        AnimationKind::MoveItem {
+                            item_id: target_id,
+                            target_pos: player.position,
+                        },
+                    ));
                     state.grid.fractured.insert(target_pos);
                     drop(state);
 
