@@ -230,9 +230,8 @@ impl GameRender {
         }
 
         {
-            let height = 0.4;
-
             // Level
+            let height = 0.4;
             let (pos, align) = if self.portrait {
                 (vec2(0.0, 2.7), geng::TextAlign::CENTER)
             } else {
@@ -250,8 +249,9 @@ impl GameRender {
             );
 
             // Score
+            let height = 0.35;
             let pos = if self.portrait {
-                vec2(2.7, 2.7)
+                vec2(2.9, 2.5)
             } else {
                 vec2(7.5, -3.0)
             };
@@ -259,7 +259,7 @@ impl GameRender {
                 framebuffer,
                 &self.ui_camera,
                 &format!("SCORE {}", model.score),
-                vec2::splat(geng::TextAlign::RIGHT),
+                vec2(geng::TextAlign::RIGHT, geng::TextAlign::CENTER),
                 mat3::translate(pos)
                     * mat3::scale_uniform(height)
                     * mat3::translate(vec2(0.0, -0.25)),
