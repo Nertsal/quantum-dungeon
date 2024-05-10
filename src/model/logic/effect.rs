@@ -160,7 +160,11 @@ impl Model {
                             .engine
                             .init_item(target.clone())
                             .expect("Item initialization failed");
+                        let on_board = item.on_board;
+                        let turns = item.turns_on_board;
                         *item = new_item;
+                        item.on_board = on_board;
+                        item.turns_on_board = turns;
                     } else {
                         log::error!(
                             "Tried transforming an item into an unknown kind: {:?}",
