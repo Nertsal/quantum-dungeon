@@ -71,22 +71,14 @@ impl Model {
             fade_time: Lifetime::new_max(r32(1.0)),
         };
 
-        let mut state_ref = self.state.borrow_mut();
-        let state = &mut *state_ref;
-        state.player.extra_items = self.turn % 2;
-        state.grid.fractured.clear();
-        for (_, entity) in &state.entities {
-            if let EntityKind::Player = entity.kind {
-                state.grid.fractured.insert(entity.position);
-            }
-        }
+        let mut state = self.state.borrow_mut();
 
         // Update light duration
         for duration in state.grid.lights.values_mut() {
             *duration = duration.saturating_sub(1);
         }
         state.grid.lights.retain(|_, duration| *duration > 0);
-        drop(state_ref);
+        drop(state);
 
         self.resolve_all(Trigger::Night);
     }
@@ -99,6 +91,14 @@ impl Model {
 
         let mut state = self.state.borrow_mut();
         let state = &mut *state;
+
+        state.player.extra_items = self.turn % 2;
+        state.grid.fractured.clear();
+        for (_, entity) in &state.entities {
+            if let EntityKind::Player = entity.kind {
+                state.grid.fractured.insert(entity.position);
+            }
+        }
 
         // Clear temp stats
         for (_, item) in &mut state.player.items {
