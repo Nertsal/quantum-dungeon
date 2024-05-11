@@ -65,6 +65,9 @@ pub enum Effect {
     UseItem {
         item: Id,
     },
+    NewItem {
+        kind: ItemKind,
+    },
 }
 
 impl Trigger {

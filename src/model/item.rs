@@ -13,7 +13,7 @@ pub struct InventoryItem {
     pub model_state: Rc<RefCell<ModelState>>,
     pub side_effects: Rc<RefCell<Vec<Effect>>>,
     /// The id of the board item, if it is present on the board.
-    pub on_board: Option<Id>,
+    pub on_board: Option<Id>, // TODO: newtype BoardId
     pub kind: ItemKind,
     /// The number of turns this item has been present on the board so far.
     pub turns_on_board: usize,
@@ -33,7 +33,7 @@ pub struct ScriptEffects<'a>(pub RefMut<'a, Vec<Effect>>);
 /// A representation on the item used temporarily for scripts.
 pub struct ScriptItem<'a> {
     pub model: Ref<'a, ModelState>,
-    pub effects: ScriptEffects<'a>,
+    pub effects: Rc<RefCell<Vec<Effect>>>,
     pub board_item: &'a BoardItem,
     pub item: &'a InventoryItem,
 }

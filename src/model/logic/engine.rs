@@ -1,9 +1,9 @@
 use super::*;
 
 impl ScriptEffects<'_> {
-    pub fn set_used(&mut self, item_id: Id) {
-        self.0.push(Effect::SetUsed { item_id });
-    }
+    // pub fn set_used(&mut self, item_id: Id) {
+    //     self.0.push(Effect::SetUsed { item_id });
+    // }
 
     pub fn damage(&mut self, target: Id, damage: Rc<ScriptFunction>) {
         self.0.push(Effect::Damage { target, damage });
@@ -59,5 +59,9 @@ impl ScriptEffects<'_> {
 
     pub fn use_item(&mut self, item: Id) {
         self.0.push(Effect::UseItem { item });
+    }
+
+    pub fn new_item(&mut self, kind: ItemKind) {
+        self.0.push(Effect::NewItem { kind });
     }
 }

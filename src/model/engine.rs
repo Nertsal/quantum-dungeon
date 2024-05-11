@@ -150,6 +150,8 @@ pub mod item {
         module.function_meta(Item::bonus_to_all)?;
         module.function_meta(Item::open_tiles)?;
         module.function_meta(Item::destroy)?;
+        module.function_meta(Item::get_new_item)?;
+        module.function_meta(Item::find_multiple)?;
         module.function_meta(Item::find_nearby)?;
         module.function_meta(Item::find_random)?;
         module.function_meta(Item::duplicate)?;
@@ -258,7 +260,7 @@ pub mod item {
         pub fn as_script(&self) -> ScriptItem<'_> {
             ScriptItem {
                 model: self.inventory.model_state.borrow(),
-                effects: ScriptEffects(self.inventory.side_effects.borrow_mut()),
+                effects: self.inventory.side_effects.clone(),
                 board_item: &self.board,
                 item: &self.inventory,
             }
@@ -331,6 +333,22 @@ pub mod item {
         #[rune::function]
         fn destroy(&self) {
             self.as_script().destroy()
+        }
+
+        #[rune::function]
+        fn get_new_item(&self, filter: Option<Filter>) {
+            self.as_script().get_new_item(
+                filter.map(|filter| filter.into_filter(&self.inventory.kind.config.name)),
+            )
+        }
+
+        #[rune::function]
+        fn find_multiple(&self, filter: Filter, count: usize) -> Vec<Item> {
+            self.as_script()
+                .find_multiple(filter.into_filter(&self.inventory.kind.config.name), count)
+                .into_iter()
+                .flat_map(|id| self.get_item_board(id))
+                .collect()
         }
 
         #[rune::function]
@@ -410,7 +428,7 @@ pub mod item {
 
         /// Excluding kind of the item.
         #[rune::function]
-        fn random_kind(&self, category: Category) -> Option<String> {
+        fn random_kind(&self, category: Option<Category>) -> Option<String> {
             let mut rng = thread_rng();
             self.as_script()
                 .model
@@ -418,7 +436,8 @@ pub mod item {
                 .iter()
                 .filter(|item| {
                     item.config.name != self.inventory.kind.config.name
-                        && item.config.categories.contains(&category)
+                        && category
+                            .map_or(true, |category| item.config.categories.contains(&category))
                 })
                 .choose(&mut rng)
                 .map(|kind| kind.config.name.to_string())

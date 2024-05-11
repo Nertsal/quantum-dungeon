@@ -1,0 +1,10 @@
+pub fn day_bonus(item) {
+    let chests = item.find_multiple(Filter::This, 2);
+    if chests.len() == 2 {
+        item.get_new_item(None);
+        item.destroy();
+        for chest in chests {
+            chest.destroy();
+        }
+    }
+}

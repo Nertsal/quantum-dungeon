@@ -59,8 +59,10 @@ impl Model {
                 }
                 AnimationKind::ItemDeath { item, .. } => {
                     let mut state = self.state.borrow_mut();
-                    if let Some(item) = state.items.remove(*item) {
-                        state.player.items.remove(item.item_id);
+                    if let Some(item) = state.player.items.remove(*item) {
+                        if let Some(id) = item.on_board {
+                            state.items.remove(id);
+                        }
                     }
                 }
                 AnimationKind::Dupe { kind } => {

@@ -33,12 +33,11 @@ impl Model {
     pub fn resolve_effect(&mut self, effect: QueuedEffect) {
         log::debug!("Resolving effect {:?}", effect);
         let mut state = self.state.borrow_mut();
-        let Some(proc_item) = state.items.get(effect.proc_item) else {
-            log::error!("invalid item {:?}", effect.proc_item);
-            return;
-        };
-        let stats = state.player.items[proc_item.item_id].current_stats();
-        let stats = crate::model::engine::item::Stats::from(stats);
+        let proc_item = state.items.get(effect.proc_item);
+        let stats = proc_item.map(|item| {
+            let stats = state.player.items[item.item_id].current_stats();
+            crate::model::engine::item::Stats::from(stats)
+        });
 
         let mut animations = Vec::new();
 
@@ -64,7 +63,13 @@ impl Model {
                 }
             }
             Effect::Damage { target, damage } => {
-                let damage: Hp = damage.call((stats,)).expect("failed to call rune function"); // TODO: handle error
+                let Some(proc_item) = proc_item else {
+                    log::error!("proc item not found for the damage effect");
+                    return;
+                };
+                let damage: Hp = damage
+                    .call((stats.unwrap(),))
+                    .expect("failed to call rune function"); // TODO: handle error
                 play_animation(AnimationKind::Damage {
                     from: proc_item.position,
                     target,
@@ -93,7 +98,6 @@ impl Model {
                 };
             }
             Effect::Destroy { item_id } => {
-                // TODO: error log
                 if let Some(item) = state.player.items.get(item_id) {
                     if let Some(board) = item.on_board.and_then(|id| state.items.get(id)) {
                         play_animation(AnimationKind::ItemDeath {
@@ -103,6 +107,8 @@ impl Model {
                     } else {
                         state.player.items.remove(item_id);
                     }
+                } else {
+                    log::error!("Item {:?} queued for destruction does not exist", item_id);
                 }
             }
             Effect::Duplicate { item_id } => {
@@ -194,6 +200,13 @@ impl Model {
             Effect::UseItem { item } => {
                 drop(state);
                 self.resolve_trigger(Trigger::Active, item);
+            }
+            Effect::NewItem { kind } => {
+                log::info!("new item {:?}", kind);
+                drop(state);
+                if let Ok(item) = self.engine.init_item(kind) {
+                    self.state.borrow_mut().player.items.insert(item);
+                }
             }
         }
 
