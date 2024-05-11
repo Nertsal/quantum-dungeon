@@ -69,7 +69,7 @@ impl GameRender {
         self.world_camera.center = if self.portrait {
             vec2(0.0, 0.7)
         } else {
-            vec2(0.0, 0.0)
+            vec2(0.0, 0.3)
         };
 
         let layout_button = |button: &mut Aabb2<f32>, landscape, portrait| {
