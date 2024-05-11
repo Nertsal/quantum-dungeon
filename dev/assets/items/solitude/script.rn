@@ -1,0 +1,14 @@
+pub fn day_bonus(item) {
+    if item.find_nearby(1, Filter::Category(Category::Weapon)).is_none() {
+        item.bonus(Stats { damage: 2 }, true);
+    } else {
+        let damage = -1.min(item.stats.damage);
+        if damage != 0 {
+            item.bonus(Stats { damage }, true);
+        }
+    }
+}
+
+pub fn active(item) {
+    item.damage(Target::Nearest, |stats| stats.damage);
+}

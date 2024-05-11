@@ -1,0 +1,11 @@
+pub fn day_action(item) {
+    if let Some(weapon) = item.find_nearby(1, Filter::Category(Category::Weapon)) {
+        item.use_item(weapon);
+    }
+}
+
+pub fn night(item) {
+    if item.is_observed() {
+        item.destroy();
+    }
+}

@@ -1,0 +1,6 @@
+pub fn active(item) {
+    if let Some(target) = item.find_nearby(1, Filter::Category(Category::Spooky)) {
+        target.duplicate();
+        item.destroy();
+    }
+}
