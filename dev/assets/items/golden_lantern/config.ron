@@ -1,6 +1,0 @@
-ItemConfig(
-    name: "Golden lantern",
-    categories: [Treasure],
-    appears_in_shop: true,
-)
-

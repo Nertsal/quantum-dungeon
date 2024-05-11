@@ -1,2 +1,0 @@
-On use :
-Deals {damage} damage (+2 for each nearby sword) to the nearest enemy.

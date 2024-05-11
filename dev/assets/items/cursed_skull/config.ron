@@ -1,6 +1,0 @@
-ItemConfig(
-    name: "Cursed skull",
-    categories: [Spooky],
-    appears_in_shop: true,
-)
-

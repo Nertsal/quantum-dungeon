@@ -1,2 +1,0 @@
-On turn start :
-If there’s 3 chests on the board, destroy them and gain +1 new item when the turn ends.

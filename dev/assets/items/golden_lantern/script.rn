@@ -1,4 +1,0 @@
-pub fn active(item) {
-    item.emit_light_around(item.position, 1, 3);
-    item.destroy();
-}

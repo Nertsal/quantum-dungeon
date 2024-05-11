@@ -1,6 +1,0 @@
-ItemConfig(
-    name: "Spirit coin",
-    categories: [Spooky, Treasure],
-    appears_in_shop: true,
-)
-

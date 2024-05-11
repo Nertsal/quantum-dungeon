@@ -1,9 +1,0 @@
-ItemConfig(
-    name: "Phantom",
-    categories: [Spooky, Weapon],
-    appears_in_shop: true,
-    base_stats: ItemStats(
-        damage: Some(1),
-    ),
-)
-

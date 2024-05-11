@@ -1,9 +1,0 @@
-ItemConfig(
-    name: "Greedy pot",
-    categories: [Treasure],
-    appears_in_shop: true,
-    base_stats: ItemStats(
-        damage: Some(1),
-    ),
-)
-

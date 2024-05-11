@@ -1,8 +1,0 @@
-pub fn day_bonus(item) {
-    item.bonus(Stats { damage: 1 }, true);
-}
-
-pub fn active(item) {
-    item.damage(Target::Random, |stats| stats.damage);
-    item.destroy();
-}

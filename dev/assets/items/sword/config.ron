@@ -1,8 +1,0 @@
-ItemConfig(
-    name: "Sword",
-    categories: [Weapon],
-    appears_in_shop: true,
-    base_stats: ItemStats(
-        damage: Some(2),
-    ),
-)
