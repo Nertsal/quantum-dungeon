@@ -1,39 +1,57 @@
-use crate::prelude::*;
+use crate::{controls::*, prelude::*};
 
 pub struct MainMenu {
     geng: Geng,
     assets: Rc<Assets>,
     config: Config,
+    all_items: Rc<ItemAssets>,
     camera: Camera2d,
     framebuffer_size: vec2<usize>,
+
     cursor_pos: vec2<f64>,
     cursor_ui_pos: vec2<f32>,
+    touch_controller: TouchController,
+
     play_button: Aabb2<f32>,
     transition: Option<geng::state::Transition>,
 }
 
 impl MainMenu {
-    pub fn new(geng: &Geng, assets: &Rc<Assets>, config: Config) -> Self {
+    pub fn new(
+        geng: &Geng,
+        assets: &Rc<Assets>,
+        config: Config,
+        all_items: &Rc<ItemAssets>,
+    ) -> Self {
         Self {
             geng: geng.clone(),
             assets: assets.clone(),
             transition: None,
             config,
+            all_items: all_items.clone(),
             camera: Camera2d {
                 center: vec2::ZERO,
                 rotation: Angle::ZERO,
                 fov: 10.0,
             },
             framebuffer_size: vec2(1, 1),
+
             cursor_pos: vec2::ZERO,
             cursor_ui_pos: vec2::ZERO,
+            touch_controller: TouchController::new(),
+
             play_button: Aabb2::ZERO,
         }
     }
 
     fn play(&mut self) {
         self.transition = Some(geng::state::Transition::Push(Box::new(
-            crate::game::Game::new(&self.geng, &self.assets, self.config.clone()),
+            crate::game::Game::new(
+                &self.geng,
+                &self.assets,
+                self.config.clone(),
+                &self.all_items,
+            ),
         )));
     }
 
@@ -54,6 +72,12 @@ impl MainMenu {
             &draw2d::TexturedQuad::colored(target, texture, color),
         );
     }
+
+    fn handle_lmb(&mut self) {
+        if self.play_button.contains(self.cursor_ui_pos) {
+            self.play();
+        }
+    }
 }
 
 impl geng::State for MainMenu {
@@ -62,6 +86,18 @@ impl geng::State for MainMenu {
     }
 
     fn handle_event(&mut self, event: geng::Event) {
+        if let Some(action) = self.touch_controller.handle_event(&event) {
+            match action {
+                TouchAction::ShortTap { position } => {
+                    self.cursor_pos = position;
+                    self.handle_lmb();
+                }
+                TouchAction::Move { position } => {
+                    self.cursor_pos = position;
+                }
+            }
+        }
+
         match event {
             geng::Event::CursorMove { position } => {
                 self.cursor_pos = position;
@@ -69,15 +105,14 @@ impl geng::State for MainMenu {
             geng::Event::MousePress {
                 button: geng::MouseButton::Left,
             } => {
-                if self.play_button.contains(self.cursor_ui_pos) {
-                    self.play();
-                }
+                self.handle_lmb();
             }
             _ => {}
         }
     }
 
-    fn update(&mut self, _delta_time: f64) {
+    fn update(&mut self, delta_time: f64) {
+        self.touch_controller.update(delta_time);
         self.cursor_ui_pos = self
             .camera
             .screen_to_world(self.framebuffer_size.as_f32(), self.cursor_pos.as_f32());
@@ -91,6 +126,7 @@ impl geng::State for MainMenu {
             None,
             None,
         );
+        let portrait = self.framebuffer_size.as_f32().aspect() < 1.0;
 
         {
             // Title
@@ -132,7 +168,12 @@ impl geng::State for MainMenu {
 
         {
             // Player
-            let target = Aabb2::point(vec2(-5.0, -1.0)).extend_uniform(2.0);
+            let pos = if portrait {
+                vec2(-1.5, -0.5)
+            } else {
+                vec2(-5.0, -1.0)
+            };
+            let target = Aabb2::point(pos).extend_uniform(2.0);
             self.draw_at(
                 target,
                 &self.assets.sprites.player,
@@ -141,7 +182,7 @@ impl geng::State for MainMenu {
                 framebuffer,
             );
 
-            let target = Aabb2::point(vec2(-4.0, -0.8)).extend_uniform(1.8);
+            let target = Aabb2::point(pos + vec2(1.0, 0.2)).extend_uniform(1.8);
             self.draw_at(
                 target,
                 &self.assets.sprites.player_vision,
@@ -153,9 +194,14 @@ impl geng::State for MainMenu {
 
         {
             // Tiles
+            let offset = if portrait {
+                vec2(0.0, -2.5)
+            } else {
+                vec2(0.0, -0.5)
+            };
             let size = 1.7;
             for i in 0..3 {
-                let pos = vec2(i as f32 - 1.0, 0.0) * size + vec2(0.0, -0.5);
+                let pos = vec2(i as f32 - 1.0, 0.0) * size + offset;
                 let target = Aabb2::point(pos).extend_uniform(size / 2.0);
                 let texture = if target.contains(self.cursor_ui_pos) {
                     &self.assets.sprites.cell_light
@@ -166,7 +212,12 @@ impl geng::State for MainMenu {
             }
 
             // Play
-            self.play_button = Aabb2::point(vec2(4.0, -0.5)).extend_uniform(size / 2.0);
+            let pos = if portrait {
+                vec2(1.5, -0.5)
+            } else {
+                vec2(4.0, -0.5)
+            };
+            self.play_button = Aabb2::point(pos).extend_uniform(size / 2.0);
             let color = if self.play_button.contains(self.cursor_ui_pos) {
                 Color::WHITE.map_rgb(|x| x * 1.2)
             } else {

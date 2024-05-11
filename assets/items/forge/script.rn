@@ -1,0 +1,3 @@
+pub fn day_bonus(item) {
+    item.bonus_to_nearby(1, Filter::Category(Category::Weapon), Stats { damage: 2 }, false);
+}

@@ -1,0 +1,14 @@
+pub fn active(item) {
+    item.damage(Target::Random, |stats| stats.damage);
+}
+
+pub fn night(item) {
+    let damage = if item.is_observed() {
+        2
+    } else {
+        -(2.min(item.stats.damage))
+    };
+    if damage != 0 {
+        item.bonus(Stats { damage }, true);
+    }
+}

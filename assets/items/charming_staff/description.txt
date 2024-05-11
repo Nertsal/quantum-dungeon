@@ -1,0 +1,6 @@
+On use :
+Deals {damage} damage to a random enemy.
+
+At night :
+Gains +2 damage permanently when observed.
+Gains -2 damage permanently when not observed.

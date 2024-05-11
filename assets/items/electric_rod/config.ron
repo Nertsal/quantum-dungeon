@@ -1,0 +1,9 @@
+ItemConfig(
+    name: "Electric rod",
+    categories: [Tech, Weapon],
+    appears_in_shop: true,
+    base_stats: ItemStats(
+        damage: Some(0),
+    ),
+)
+

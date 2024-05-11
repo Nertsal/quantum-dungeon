@@ -2,28 +2,33 @@ use super::*;
 
 impl Model {
     pub fn player_action(&mut self, player_input: PlayerInput) {
-        log::debug!(
-            "Player action: {:?}, current phase: {:?}",
-            player_input,
-            self.phase
-        );
+        if let PlayerInput::Vision { .. } = player_input {
+        } else {
+            log::debug!(
+                "Player action: {:?}, current phase: {:?}",
+                player_input,
+                self.phase
+            );
+        }
         match &self.phase {
-            Phase::Player if self.animations.is_empty() => self.player_move(player_input),
+            Phase::Player if self.wait_for_effects() => self.player_move(player_input),
             Phase::Vision => self.player_vision(player_input),
             Phase::Map { .. } => self.map_action(player_input),
-            Phase::Portal => self.portal_action(player_input),
+            Phase::Portal { .. } => self.portal_action(player_input),
             Phase::Select {
                 options,
                 extra_items,
             } => match player_input {
-                PlayerInput::SelectItem(i) => self.select_item(options[i]),
+                PlayerInput::SelectItem(i) => self.select_item(options[i].clone()),
                 PlayerInput::Skip => {
                     self.select_phase(0);
                     self.assets.sounds.step.play();
                 }
                 PlayerInput::Reroll => {
-                    if self.player.refreshes > 0 {
-                        self.player.refreshes -= 1;
+                    let mut state = self.state.borrow_mut();
+                    if state.player.refreshes > 0 {
+                        state.player.refreshes -= 1;
+                        drop(state);
                         self.select_phase(extra_items + 1);
                         self.assets.sounds.step.play();
                     }
@@ -48,7 +53,8 @@ impl Model {
             log::error!("invalid input during phase Map, expected a tile");
             return;
         };
-        if !self.grid.check_pos_near(pos) {
+        let mut state = self.state.borrow_mut();
+        if !state.grid.check_pos_near(pos) {
             log::error!(
                 "position {} is not valid, select an empty one on the edge",
                 pos
@@ -56,11 +62,20 @@ impl Model {
             return;
         }
 
-        if let Phase::Map { tiles_left } = &mut self.phase {
-            self.grid.expand(pos);
+        if let Phase::Map {
+            tiles_left,
+            next_phase,
+        } = &mut self.phase
+        {
+            state.grid.expand(pos);
             *tiles_left = tiles_left.saturating_sub(1);
             if *tiles_left == 0 {
-                self.player_phase();
+                log::debug!("Moving from Map phase to {:?}", next_phase);
+                let mut phase = Phase::Vision;
+                std::mem::swap(&mut self.phase, &mut phase);
+                if let Phase::Map { next_phase, .. } = phase {
+                    self.phase = *next_phase;
+                }
             }
             self.assets.sounds.step.play();
         } else {
@@ -74,24 +89,30 @@ impl Model {
             log::error!("invalid input during phase Portal, expected a tile");
             return;
         };
-        if !self.grid.check_pos(target_pos) {
+        let state = self.state.borrow();
+        if !state.grid.check_pos(target_pos) {
             log::error!("position {} is not valid, select a valid tile", target_pos);
             return;
         }
-        if self.grid.fractured.contains(&target_pos) {
+        if state.grid.fractured.contains(&target_pos) {
             log::error!("cannot move to a fractured position");
             return;
         }
+        drop(state);
 
-        if let Phase::Portal = self.phase {
-            if let Some((_, target)) = self
+        if let Phase::Portal { .. } = self.phase {
+            // What is this trick KEKW
+            let mut state = self.state.borrow_mut();
+            let state_ref = &mut *state;
+
+            if let Some((target_id, target)) = state_ref
                 .items
                 .iter_mut()
                 .find(|(_, item)| item.position == target_pos)
             {
-                let item = &self.player.items[target.item_id];
-                if ItemRef::Category(ItemCategory::Magic).check(item.kind) {
-                    let Some((_, player)) = self
+                let item = &state_ref.player.items[target.item_id];
+                if ItemFilter::Category(Category::Magic).check(&item.kind) {
+                    let Some((player_id, player)) = state_ref
                         .entities
                         .iter_mut()
                         .find(|(_, e)| matches!(e.kind, EntityKind::Player))
@@ -100,10 +121,29 @@ impl Model {
                         return;
                     };
                     // Swap
-                    target.position = player.position;
-                    player.position = target_pos;
-                    self.grid.fractured.insert(target_pos);
-                    self.player_phase();
+                    self.animations.insert(Animation::new(
+                        self.config.animation_time,
+                        AnimationKind::MoveEntity {
+                            entity_id: player_id,
+                            target_pos,
+                        },
+                    ));
+                    self.animations.insert(Animation::new(
+                        self.config.animation_time,
+                        AnimationKind::MoveItem {
+                            item_id: target_id,
+                            target_pos: player.position,
+                        },
+                    ));
+                    state.grid.fractured.insert(target_pos);
+                    drop(state);
+
+                    let mut phase = Phase::Vision;
+                    std::mem::swap(&mut self.phase, &mut phase);
+                    if let Phase::Portal { next_phase } = phase {
+                        self.phase = *next_phase;
+                    }
+
                     self.assets.sounds.step.play();
                 } else {
                     log::error!(
@@ -119,15 +159,18 @@ impl Model {
     }
 
     fn player_move(&mut self, player_input: PlayerInput) {
-        if self.player.moves_left == 0 {
+        let state = self.state.borrow();
+        if state.player.moves_left == 0 {
             // Should be unreachable
             log::error!("tried to move, but no moves are left");
+            drop(state);
             self.vision_phase();
             return;
         }
 
         if let PlayerInput::Skip = player_input {
             log::debug!("Skipping turn");
+            drop(state);
             self.vision_phase();
             self.assets.sounds.step.play();
             return;
@@ -135,13 +178,16 @@ impl Model {
 
         let mut moves = Vec::new();
         let mut move_dir = vec2::ZERO;
-        for (i, entity) in &mut self.entities {
+        drop(state);
+        let mut state_ref = self.state.borrow_mut();
+        let state = &mut *state_ref;
+        for (i, entity) in &mut state.entities {
             if let EntityKind::Player = entity.kind {
                 // TODO: if there are multiple players, resolve conflicting movement
                 move_dir = match player_input {
                     PlayerInput::Dir(dir) => dir,
                     PlayerInput::Tile(pos) => {
-                        if !self.grid.check_pos(pos) {
+                        if !state.grid.check_pos(pos) {
                             log::error!("invalid input during phase Player, expected a valid tile");
                             return;
                         } else {
@@ -163,25 +209,33 @@ impl Model {
         }
 
         let mut moved = false;
+        drop(state_ref);
         for i in moves {
-            let entity = self.entities.get_mut(i).unwrap();
+            let mut state = self.state.borrow_mut();
+            let entity = state.entities.get_mut(i).unwrap();
             let target = entity.position + move_dir;
             // Fracture tiles as we walk
-            if self.grid.check_pos(target) && self.grid.fractured.insert(target) {
+            if state.grid.check_pos(target) && state.grid.fractured.insert(target) {
+                drop(state);
                 self.move_entity_swap(i, target);
                 moved = true;
             }
         }
 
         if moved {
-            self.player.moves_left = self.player.moves_left.saturating_sub(1);
+            let mut state = self.state.borrow_mut();
+            state.player.moves_left = state.player.moves_left.saturating_sub(1);
             self.assets.sounds.step.play();
         }
     }
 
     fn select_item(&mut self, item: ItemKind) {
         log::debug!("Select item {:?}", item);
-        self.player.items.insert(item.instantiate());
+        let item = self
+            .engine
+            .init_item(item)
+            .expect("Item initialization failed"); // TODO: handle error
+        self.state.borrow_mut().player.items.insert(item);
         let items = if let Phase::Select { extra_items, .. } = self.phase {
             extra_items
         } else {
@@ -192,7 +246,9 @@ impl Model {
     }
 
     fn player_vision(&mut self, player_input: PlayerInput) {
-        for (_, entity) in &mut self.entities {
+        let mut state_ref = self.state.borrow_mut();
+        let state = &mut *state_ref;
+        for (_, entity) in &mut state.entities {
             if let EntityKind::Player = entity.kind {
                 let dir = match player_input {
                     PlayerInput::Dir(dir) => dir,
@@ -204,13 +260,16 @@ impl Model {
                         return;
                     }
                 };
-                if dir.x != 0 && dir.y != 0 {
-                    log::error!("invalid input direction during phase Vision: {}", dir);
+                if (dir.x != 0) == (dir.y != 0)
+                    || !state.grid.check_pos(entity.position + dir) && dir.x.abs() + dir.y.abs() > 1
+                {
+                    // log::error!("invalid input direction during phase Vision: {}", dir);
                     return;
                 }
                 entity.look_dir = dir.map(|x| x.clamp_abs(1));
             }
         }
+        drop(state_ref);
 
         self.update_vision();
         if let PlayerInput::Vision { commit: true, .. } = player_input {

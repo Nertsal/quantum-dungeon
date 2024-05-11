@@ -1,33 +1,88 @@
 use geng::{Key, MouseButton};
 
-use crate::{prelude::*, render::GameRender};
+use crate::{controls::*, prelude::*, render::GameRender};
 
 pub struct Game {
-    geng: Geng,
+    // geng: Geng,
     assets: Rc<Assets>,
     render: GameRender,
     model: Model,
     framebuffer_size: vec2<usize>,
+
     cursor_pos: vec2<f64>,
     cursor_ui_pos: vec2<f32>,
     cursor_world_pos: vec2<f32>,
     cursor_grid_pos: vec2<f32>,
+    touch_controller: TouchController,
     // TODO
     // controls: Controls,
 }
 
 impl Game {
-    pub fn new(geng: &Geng, assets: &Rc<Assets>, config: Config) -> Self {
+    pub fn new(
+        geng: &Geng,
+        assets: &Rc<Assets>,
+        config: Config,
+        all_items: &Rc<ItemAssets>,
+    ) -> Self {
         Self {
-            geng: geng.clone(),
+            // geng: geng.clone(),
             assets: assets.clone(),
-            render: GameRender::new(geng, assets),
-            model: Model::new(assets.clone(), config),
+            render: GameRender::new(geng, assets, all_items),
+            model: Model::new(assets.clone(), config, all_items.clone()),
             framebuffer_size: vec2(1, 1),
+
             cursor_pos: vec2::ZERO,
             cursor_ui_pos: vec2::ZERO,
             cursor_world_pos: vec2::ZERO,
             cursor_grid_pos: vec2::ZERO,
+            touch_controller: TouchController::new(),
+        }
+    }
+
+    fn handle_lmb(&mut self) {
+        self.render.hide_item_hint = true;
+        if self.render.inventory_button.contains(self.cursor_ui_pos) {
+            self.render.show_inventory = !self.render.show_inventory;
+            self.assets.sounds.step.play();
+            return;
+        }
+        match self.model.phase {
+            Phase::GameOver => {
+                if self.render.retry_button.contains(self.cursor_ui_pos) {
+                    self.model.player_action(PlayerInput::Retry);
+                }
+            }
+            Phase::Player if self.render.skip_turn_button.contains(self.cursor_ui_pos) => {
+                self.model.player_action(PlayerInput::Skip);
+            }
+            Phase::Select { .. } => {
+                if let Some(i) = self
+                    .render
+                    .buttons
+                    .iter()
+                    .position(|(_, button)| button.contains(self.cursor_ui_pos))
+                {
+                    self.model.player_action(PlayerInput::SelectItem(i));
+                } else if self.render.reroll_button.contains(self.cursor_ui_pos) {
+                    self.model.player_action(PlayerInput::Reroll);
+                } else if self.render.skip_item_button.contains(self.cursor_ui_pos) {
+                    self.model.player_action(PlayerInput::Skip);
+                }
+            }
+            Phase::Vision => {
+                let target = self.cursor_grid_pos.map(|x| x.floor() as Coord);
+                // if self.model.grid.check_pos(target) {
+                self.model.player_action(PlayerInput::Vision {
+                    pos: target,
+                    commit: true,
+                });
+                // }
+            }
+            _ => {
+                let target = self.cursor_grid_pos.map(|x| x.floor() as Coord);
+                self.model.player_action(PlayerInput::Tile(target));
+            }
         }
     }
 }
@@ -50,6 +105,19 @@ impl geng::State for Game {
     }
 
     fn handle_event(&mut self, event: geng::Event) {
+        if let Some(action) = self.touch_controller.handle_event(&event) {
+            match action {
+                TouchAction::ShortTap { position } => {
+                    self.cursor_pos = position;
+                    self.handle_lmb();
+                }
+                TouchAction::Move { position } => {
+                    self.render.hide_item_hint = false;
+                    self.cursor_pos = position;
+                }
+            }
+        }
+
         if let geng::Event::KeyPress {
             key: geng::Key::Space,
         } = event
@@ -58,6 +126,7 @@ impl geng::State for Game {
         }
 
         if let geng::Event::CursorMove { position } = event {
+            self.render.hide_item_hint = false;
             self.cursor_pos = position;
         }
 
@@ -86,54 +155,12 @@ impl geng::State for Game {
         }
 
         if geng_utils::key::is_event_press(&event, [MouseButton::Left]) {
-            if self.render.inventory_button.contains(self.cursor_ui_pos) {
-                self.render.show_inventory = !self.render.show_inventory;
-                self.assets.sounds.step.play();
-                return;
-            }
-            match self.model.phase {
-                Phase::GameOver => {
-                    if self.render.retry_button.contains(self.cursor_ui_pos) {
-                        self.model.player_action(PlayerInput::Retry);
-                    }
-                }
-                Phase::Player if self.render.skip_turn_button.contains(self.cursor_ui_pos) => {
-                    self.model.player_action(PlayerInput::Skip);
-                }
-                Phase::Select { .. } => {
-                    if let Some(i) = self
-                        .render
-                        .buttons
-                        .iter()
-                        .position(|(_, button)| button.contains(self.cursor_ui_pos))
-                    {
-                        self.model.player_action(PlayerInput::SelectItem(i));
-                    } else if self.render.reroll_button.contains(self.cursor_ui_pos) {
-                        self.model.player_action(PlayerInput::Reroll);
-                    } else if self.render.skip_item_button.contains(self.cursor_ui_pos) {
-                        self.model.player_action(PlayerInput::Skip);
-                    }
-                }
-                Phase::Vision => {
-                    let target = self.cursor_grid_pos.map(|x| x.floor() as Coord);
-                    // if self.model.grid.check_pos(target) {
-                    self.model.player_action(PlayerInput::Vision {
-                        pos: target,
-                        commit: true,
-                    });
-                    // }
-                }
-                _ => {
-                    let target = self.cursor_grid_pos.map(|x| x.floor() as Coord);
-                    // if self.model.grid.check_pos(target) {
-                    self.model.player_action(PlayerInput::Tile(target));
-                    // }
-                }
-            }
+            self.handle_lmb();
         }
     }
 
     fn update(&mut self, delta_time: f64) {
+        self.touch_controller.update(delta_time);
         let delta_time = Time::new(delta_time as _);
 
         self.cursor_world_pos = self

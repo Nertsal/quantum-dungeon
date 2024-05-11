@@ -3,6 +3,9 @@ use crate::prelude::*;
 pub struct GameRender {
     geng: Geng,
     assets: Rc<Assets>,
+    items: Rc<ItemAssets>,
+    pub hide_item_hint: bool,
+    pub portrait: bool,
     pub ui_camera: Camera2d,
     pub world_camera: Camera2d,
     pub cell_size: vec2<f32>,
@@ -23,10 +26,13 @@ enum TileLight {
 }
 
 impl GameRender {
-    pub fn new(geng: &Geng, assets: &Rc<Assets>) -> Self {
+    pub fn new(geng: &Geng, assets: &Rc<Assets>, items: &Rc<ItemAssets>) -> Self {
         Self {
             geng: geng.clone(),
             assets: assets.clone(),
+            items: items.clone(),
+            hide_item_hint: false,
+            portrait: false,
             ui_camera: Camera2d {
                 center: vec2::ZERO,
                 rotation: Angle::ZERO,
@@ -57,59 +63,97 @@ impl GameRender {
         cursor_cell_pos: vec2<Coord>,
         framebuffer: &mut ugli::Framebuffer,
     ) {
+        self.portrait = framebuffer.size().as_f32().aspect() < 1.0;
+
+        self.world_camera.fov = if self.portrait { 10.0 } else { 7.0 };
+        self.world_camera.center = if self.portrait {
+            vec2(0.0, 0.7)
+        } else {
+            vec2(0.0, 0.3)
+        };
+
+        let layout_button = |button: &mut Aabb2<f32>, landscape, portrait| {
+            let pos = if self.portrait { portrait } else { landscape };
+            *button = button.translate(pos - button.center());
+        };
+        layout_button(&mut self.skip_turn_button, vec2(7.0, -1.0), vec2(2.0, -3.8));
+        layout_button(
+            &mut self.skip_item_button,
+            vec2(0.75, -3.0),
+            vec2(0.75, -3.0),
+        );
+        layout_button(
+            &mut self.reroll_button,
+            vec2(-0.75, -3.0),
+            vec2(-0.75, -3.0),
+        );
+        layout_button(&mut self.inventory_button, vec2(7.0, 1.0), vec2(-2.0, -3.8));
+        layout_button(&mut self.retry_button, vec2(0.0, -3.0), vec2(0.0, -3.0));
+
         if let Phase::GameOver = model.phase {
             self.draw_game_over(model, cursor_ui_pos, framebuffer);
             return;
         }
 
         // Tiles
-        for &pos in &model.grid.tiles {
+        let state = model.state.borrow();
+        for &pos in &state.grid.tiles {
             let light = match model.phase {
                 Phase::Vision | Phase::PostVision { .. } | Phase::Select { .. } => {
-                    if model.visible_tiles.contains(&pos) {
+                    if state.visible_tiles.contains(&pos) {
                         TileLight::Light
                     } else {
                         TileLight::Normal
                     }
                 }
-                Phase::LevelStarting { .. } | Phase::Night { .. } => {
-                    // Crossfade
-                    let t = model.get_light_level(pos);
-                    let t = crate::util::smoothstep(t);
-                    let mut color = Color::WHITE;
-                    color.a = 1.0 - t;
-                    self.draw_at_grid(
-                        pos.as_f32(),
-                        Angle::ZERO,
-                        &self.assets.sprites.cell_dark,
-                        color,
-                        framebuffer,
-                    );
-                    color.a = t;
-                    self.draw_at_grid(
-                        pos.as_f32(),
-                        Angle::ZERO,
-                        &self.assets.sprites.cell,
-                        color,
-                        framebuffer,
-                    );
+                Phase::LevelStarting { .. } | Phase::Night { .. } | Phase::Dawn { .. } => {
+                    if state.visible_tiles.contains(&pos) {
+                        self.draw_at_grid(
+                            pos.as_f32(),
+                            Angle::ZERO,
+                            &self.assets.sprites.cell_light,
+                            Color::WHITE,
+                            framebuffer,
+                        );
+                    } else {
+                        // Crossfade
+                        let t = model.get_light_level(pos);
+                        let t = crate::util::smoothstep(t);
+                        let mut color = Color::WHITE;
+                        color.a = 1.0 - t;
+                        self.draw_at_grid(
+                            pos.as_f32(),
+                            Angle::ZERO,
+                            &self.assets.sprites.cell_dark,
+                            color,
+                            framebuffer,
+                        );
+                        color.a = t;
+                        self.draw_at_grid(
+                            pos.as_f32(),
+                            Angle::ZERO,
+                            &self.assets.sprites.cell,
+                            color,
+                            framebuffer,
+                        );
+                    }
                     continue;
                 }
                 _ => {
-                    if model.grid.fractured.contains(&pos) {
+                    if state.grid.fractured.contains(&pos) {
                         TileLight::Dark
-                    } else if let Phase::Portal = model.phase {
+                    } else if let Phase::Portal { .. } = model.phase {
                         // Highlight magic items
-                        if model.items.iter().any(|(_, item)| {
+                        if state.items.iter().any(|(_, item)| {
                             item.position == pos
-                                && ItemRef::Category(ItemCategory::Magic)
-                                    .check(model.player.items[item.item_id].kind)
+                                && ItemFilter::Category(Category::Magic)
+                                    .check(&model.state.borrow().player.items[item.item_id].kind)
                         }) {
                             TileLight::Light
                         } else {
                             TileLight::Normal
                         }
-                    } else if model.grid.lights.contains_key(&pos) {
+                    } else if state.grid.lights.contains_key(&pos) {
                         TileLight::Light
                     } else {
                         TileLight::Normal
@@ -120,56 +164,28 @@ impl GameRender {
         }
 
         // Entities
-        for (id, entity) in &model.entities {
+        for (id, entity) in &model.state.borrow().entities {
             self.draw_entity(id, entity, model, framebuffer);
         }
 
         // Items
-        for (i, item) in &model.items {
-            let resolving = if let Phase::Passive {
-                item_queue,
-                start_delay,
-                end_delay,
-            } = &model.phase
-            {
-                item_queue
-                    .last()
-                    .and_then(|&item_id| (item_id == i).then_some((*start_delay, *end_delay)))
-            } else {
-                None
-            };
-
-            let resolving = resolving
-                .or_else(|| {
-                    model.animations.iter().find_map(|(_, anim)| {
-                        if let AnimationKind::UseActive { item_id, .. } = anim.kind {
-                            if item_id == i {
-                                return Some((anim.time, Lifetime::new_max(R32::ONE)));
-                            }
-                        }
-                        None
-                    })
-                })
-                .or_else(|| {
-                    model.ending_animations.iter().find_map(|anim| {
-                        if let AnimationKind::UseActive { item_id, .. } = anim.kind {
-                            if item_id == i {
-                                return Some((Lifetime::new_max(R32::ONE), anim.time));
-                            }
-                        }
-                        None
-                    })
-                });
-
-            let resolution_t = if let Some((start_delay, end_delay)) = resolving {
-                if start_delay.is_above_min() {
-                    1.0 - start_delay.get_ratio().as_f32()
-                } else {
-                    end_delay.get_ratio().as_f32()
+        for (i, item) in &model.state.borrow().items {
+            let up = model.animations.iter().rev().find_map(|(_, anim)| {
+                if let AnimationKind::ItemEffect { item } = anim.kind {
+                    if item == i {
+                        return Some(Time::ONE - anim.time.get_ratio());
+                    }
                 }
-            } else {
-                0.0
-            };
+                None
+            });
+            let up = up.or_else(|| model.resolving_items.get(&i).map(|_| Time::ONE));
+
+            let down = model
+                .resolved_items
+                .get(&i)
+                .map(|item| item.time.get_ratio());
+
+            let resolution_t = up.or(down).map(R32::as_f32).unwrap_or(0.0);
 
             self.draw_item(i, item, resolution_t, model, framebuffer);
         }
@@ -177,8 +193,13 @@ impl GameRender {
         self.draw_animations(model, framebuffer);
 
         // Hearts
-        for i in 0..model.player.hearts {
-            let pos = self.ui_camera.center + vec2(-6.7, 1.7) + vec2(i, 0).as_f32() * 0.6;
+        let offset = if self.portrait {
+            vec2(-2.7, 2.3)
+        } else {
+            vec2(-6.7, 1.7)
+        };
+        for i in 0..model.state.borrow().player.hearts {
+            let pos = offset + vec2(i, 0).as_f32() * 0.6;
             let size = vec2::splat(1.5);
             let target = Aabb2::point(pos).extend_symmetric(size / 2.0);
             self.draw_at_ui(target, &self.assets.sprites.heart, framebuffer);
@@ -186,7 +207,11 @@ impl GameRender {
 
         {
             // Timer
-            let pos = vec2(-6.3, 0.1);
+            let pos = if self.portrait {
+                vec2(-0.2, 2.0)
+            } else {
+                vec2(-6.3, 0.1)
+            };
             let size = vec2::splat(1.5);
             let icon_target = Aabb2::point(pos).extend_symmetric(size / 2.0);
             self.draw_at_ui(icon_target, &self.assets.sprites.turn_time, framebuffer);
@@ -195,7 +220,7 @@ impl GameRender {
                 &self.ui_camera,
                 &draw2d::Text::unit(
                     self.assets.font.clone(),
-                    format!("{}", model.player.turns_left),
+                    format!("{}", model.state.borrow().player.turns_left),
                     Color::try_from("#c9464b").unwrap(),
                 )
                 .scale_uniform(0.15)
@@ -205,27 +230,37 @@ impl GameRender {
         }
 
         {
-            let height = 0.4;
-
             // Level
+            let height = 0.4;
+            let (pos, align) = if self.portrait {
+                (vec2(0.0, 2.7), geng::TextAlign::CENTER)
+            } else {
+                (vec2(-6.8, 0.7), geng::TextAlign::LEFT)
+            };
             self.assets.font.draw(
                 framebuffer,
                 &self.ui_camera,
                 &format!("LEVEL {}", model.level),
-                vec2::splat(geng::TextAlign::LEFT),
-                mat3::translate(vec2(-6.8, 0.7))
+                vec2::splat(align),
+                mat3::translate(pos)
                     * mat3::scale_uniform(height)
                     * mat3::translate(vec2(0.0, -0.25)),
                 Color::try_from("#c03d43").unwrap(),
             );
 
             // Score
+            let height = 0.35;
+            let pos = if self.portrait {
+                vec2(2.9, 2.5)
+            } else {
+                vec2(7.5, -3.0)
+            };
             self.assets.font.draw(
                 framebuffer,
                 &self.ui_camera,
                 &format!("SCORE {}", model.score),
-                vec2::splat(geng::TextAlign::RIGHT),
-                mat3::translate(vec2(7.5, -3.0))
+                vec2(geng::TextAlign::RIGHT, geng::TextAlign::CENTER),
+                mat3::translate(pos)
                     * mat3::scale_uniform(height)
                     * mat3::translate(vec2(0.0, -0.25)),
                 Color::try_from("#7a7a7a").unwrap(),
@@ -248,7 +283,7 @@ impl GameRender {
         self.buttons.clear();
         let text = match &model.phase {
             Phase::GameOver => "Game over",
-            Phase::Night { .. } | Phase::LevelStarting { .. } => "Night",
+            Phase::Night { .. } | Phase::Dawn { .. } | Phase::LevelStarting { .. } => "Night",
             Phase::Player => {
                 // Skip button
                 self.draw_button(
@@ -260,8 +295,8 @@ impl GameRender {
 
                 "Day"
             }
-            Phase::Passive { .. } => "Day",
-            Phase::Portal => "Select a magic item",
+            Phase::Active { .. } | Phase::DayBonus { .. } | Phase::DayAction { .. } => "Day",
+            Phase::Portal { .. } => "Select a magic item",
             Phase::Vision => "Select a direction to look at",
             Phase::PostVision { .. } => "Night",
             Phase::LevelFinished { win, .. } => {
@@ -273,7 +308,7 @@ impl GameRender {
             }
             Phase::Map { .. } => {
                 // Tile plus
-                for pos in model.grid.outside_tiles() {
+                for pos in state.grid.outside_tiles() {
                     self.draw_at_grid(
                         pos.as_f32(),
                         Angle::ZERO,
@@ -335,27 +370,31 @@ impl GameRender {
             self.buttons = options
                 .iter()
                 .enumerate()
-                .map(|(i, &item)| {
+                .map(|(i, item)| {
                     let pos = vec2(i as f32 * size - offset, 0.0);
                     let target = Aabb2::point(pos).extend_symmetric(vec2::splat(size) / 2.0 * 0.9);
-                    (item, target)
+                    (item.clone(), target)
                 })
                 .collect();
 
             let mut hint = None;
-            for &(item, target) in &self.buttons {
-                let texture = self.assets.sprites.item_texture(item);
+            for (item, target) in &self.buttons {
+                // TODO: default texture
+                let texture = self
+                    .items
+                    .get_texture(&item.config.name)
+                    .unwrap_or(&self.assets.sprites.item_shadow);
                 let background = if target.contains(cursor_ui_pos) {
                     hint = Some(item);
                     &self.assets.sprites.cell
                 } else {
                     &self.assets.sprites.cell_dark
                 };
-                self.draw_at_ui(target, background, framebuffer);
-                self.draw_at_ui(target, texture, framebuffer);
+                self.draw_at_ui(*target, background, framebuffer);
+                self.draw_at_ui(*target, texture, framebuffer);
             }
 
-            if model.player.refreshes > 0 {
+            if model.state.borrow().player.refreshes > 0 {
                 self.draw_button(
                     self.reroll_button,
                     &self.assets.sprites.reroll_button,
@@ -371,16 +410,23 @@ impl GameRender {
             );
 
             if let Some(item) = hint {
-                self.draw_item_hint(item, cursor_ui_pos, framebuffer);
+                self.draw_item_hint(item, None, cursor_ui_pos, framebuffer);
             }
         } else if let Some((_, item)) = model
+            .state
+            .borrow()
             .items
             .iter()
             .find(|(_, item)| item.position == cursor_cell_pos)
         {
             // Item hint
-            let item = &model.player.items[item.item_id];
-            self.draw_item_hint(item.kind, cursor_ui_pos, framebuffer);
+            let item = &model.state.borrow().player.items[item.item_id];
+            self.draw_item_hint(
+                &item.kind,
+                Some(&item.current_stats()),
+                cursor_ui_pos,
+                framebuffer,
+            );
         }
 
         // Inventory button
@@ -580,31 +626,32 @@ impl GameRender {
                 damage,
             } if end_t == 1.0 => {
                 let from = (from.as_f32() + vec2(0.3, 0.3)) * self.cell_size;
-                let target =
-                    (model.entities[*target].position.as_f32() + vec2(0.3, 0.3)) * self.cell_size;
-                let t = crate::util::smoothstep(start_t);
-                let pos = from + (target - from) * t;
+                if let Some(target) = model.state.borrow().entities.get(*target) {
+                    let target = (target.position.as_f32() + vec2(0.3, 0.3)) * self.cell_size;
+                    let t = crate::util::smoothstep(start_t);
+                    let pos = from + (target - from) * t;
 
-                // let pos = (board_item.position.as_f32() + vec2(0.3, 0.3)) * self.cell_size;
-                let target = Aabb2::point(pos).extend_uniform(0.06);
-                self.geng.draw2d().draw2d(
-                    framebuffer,
-                    &self.world_camera,
-                    &draw2d::TexturedQuad::new(
-                        Aabb2::point(pos).extend_uniform(0.14),
-                        &self.assets.sprites.weapon_damage,
-                    ),
-                );
-                self.geng.draw2d().draw2d(
-                    framebuffer,
-                    &self.world_camera,
-                    &draw2d::Text::unit(
-                        self.assets.font.clone(),
-                        format!("{}", damage),
-                        Color::try_from("#424242").unwrap(),
-                    )
-                    .fit_into(target),
-                );
+                    // let pos = (board_item.position.as_f32() + vec2(0.3, 0.3)) * self.cell_size;
+                    let target = Aabb2::point(pos).extend_uniform(0.06);
+                    self.geng.draw2d().draw2d(
+                        framebuffer,
+                        &self.world_camera,
+                        &draw2d::TexturedQuad::new(
+                            Aabb2::point(pos).extend_uniform(0.14),
+                            &self.assets.sprites.weapon_damage,
+                        ),
+                    );
+                    self.geng.draw2d().draw2d(
+                        framebuffer,
+                        &self.world_camera,
+                        &draw2d::Text::unit(
+                            self.assets.font.clone(),
+                            format!("{}", damage),
+                            Color::try_from("#424242").unwrap(),
+                        )
+                        .fit_into(target),
+                    );
+                }
             }
             AnimationKind::Bonus {
                 from,
@@ -613,30 +660,31 @@ impl GameRender {
                 ..
             } if end_t == 1.0 => {
                 let from = from.as_f32() * self.cell_size;
-                let target =
-                    (model.items[*target].position.as_f32() + vec2(0.3, 0.3)) * self.cell_size;
-                let t = crate::util::smoothstep(start_t);
-                let pos = from + (target - from) * t;
+                if let Some(target) = model.state.borrow().items.get(*target) {
+                    let target = (target.position.as_f32() + vec2(0.3, 0.3)) * self.cell_size;
+                    let t = crate::util::smoothstep(start_t);
+                    let pos = from + (target - from) * t;
 
-                let target = Aabb2::point(pos).extend_uniform(0.06);
-                self.geng.draw2d().draw2d(
-                    framebuffer,
-                    &self.world_camera,
-                    &draw2d::TexturedQuad::new(
-                        Aabb2::point(pos).extend_uniform(0.14),
-                        &self.assets.sprites.weapon_damage,
-                    ),
-                );
-                self.geng.draw2d().draw2d(
-                    framebuffer,
-                    &self.world_camera,
-                    &draw2d::Text::unit(
-                        self.assets.font.clone(),
-                        format!("{}", bonus.damage.unwrap_or_default()),
-                        Color::try_from("#424242").unwrap(),
-                    )
-                    .fit_into(target),
-                );
+                    let target = Aabb2::point(pos).extend_uniform(0.06);
+                    self.geng.draw2d().draw2d(
+                        framebuffer,
+                        &self.world_camera,
+                        &draw2d::TexturedQuad::new(
+                            Aabb2::point(pos).extend_uniform(0.14),
+                            &self.assets.sprites.weapon_damage,
+                        ),
+                    );
+                    self.geng.draw2d().draw2d(
+                        framebuffer,
+                        &self.world_camera,
+                        &draw2d::Text::unit(
+                            self.assets.font.clone(),
+                            format!("{:+}", bonus.damage.unwrap_or_default()),
+                            Color::try_from("#424242").unwrap(),
+                        )
+                        .fit_into(target),
+                    );
+                }
             }
             _ => (),
         }
@@ -660,7 +708,8 @@ impl GameRender {
         );
 
         let mut items = Vec::new();
-        for (i, item) in &model.player.items {
+        let state = model.state.borrow();
+        for (i, item) in &state.player.items {
             // if let Some((_, count)) = items.iter_mut().find(|(kind, _)| *kind == item) {
             //     *count += 1;
             // } else {
@@ -672,7 +721,7 @@ impl GameRender {
 
         let size = vec2(1.5, 1.5);
         let mut hint = None;
-        let row_max = 5;
+        let row_max = if self.portrait { 3 } else { 5 };
         let offset = items.len().min(row_max).saturating_sub(1) as f32 / 2.0;
         for (i, (_, item)) in items.iter().enumerate() {
             let x = i % row_max;
@@ -685,7 +734,10 @@ impl GameRender {
             }
 
             self.draw_at_ui(target, &self.assets.sprites.cell, framebuffer);
-            let texture = self.assets.sprites.item_texture(item.kind);
+            let texture = self
+                .items
+                .get_texture(&item.kind.config.name)
+                .unwrap_or(&self.assets.sprites.item_shadow);
             self.draw_at_ui(target, texture, framebuffer);
 
             // if count > 1 {
@@ -713,24 +765,43 @@ impl GameRender {
         }
 
         if let Some(item) = hint {
-            self.draw_item_hint(item.kind, cursor_ui_pos, framebuffer);
+            self.draw_item_hint(
+                &item.kind,
+                Some(&item.current_stats()),
+                cursor_ui_pos,
+                framebuffer,
+            );
         }
     }
 
     fn draw_item_hint(
         &self,
-        item: ItemKind,
+        item: &ItemKind,
+        stats: Option<&ItemStats>,
         cursor_ui_pos: vec2<f32>,
         framebuffer: &mut ugli::Framebuffer,
     ) {
-        let mut target =
-            Aabb2::point(cursor_ui_pos).extend_positive(self.cell_size * vec2(0.0, 4.5));
-        if target.max.y > self.ui_camera.fov / 2.0 {
-            target = target.translate(vec2(0.0, self.ui_camera.fov / 2.0 - target.max.y));
+        if self.hide_item_hint {
+            return;
         }
 
         let background = &self.assets.sprites.item_card;
         let size = background.size().as_f32();
+
+        let height = 4.5;
+        let mut target = Aabb2::point(cursor_ui_pos)
+            .extend_positive(self.cell_size * vec2(size.aspect() * height, height));
+
+        let max_y = self.ui_camera.fov / 2.0;
+        if target.max.y > max_y {
+            target = target.translate(vec2(0.0, max_y - target.max.y));
+        }
+
+        let max_x = framebuffer.size().as_f32().aspect() * max_y;
+        if target.max.x > max_x {
+            target = target.translate(vec2(max_x - target.max.x, 0.0));
+        }
+
         let target = geng_utils::layout::fit_aabb_height(size, target, 0.0);
 
         self.geng.draw2d().draw2d(
@@ -747,7 +818,7 @@ impl GameRender {
             &self.ui_camera,
             &draw2d::Text::unit(
                 self.assets.font.clone(),
-                format!("{}", item),
+                format!("{}", item.config.name),
                 Color::try_from("#333").unwrap(),
             )
             .align_bounding_box(vec2(0.5, 1.0))
@@ -755,7 +826,10 @@ impl GameRender {
         );
 
         // Icon
-        let icon = self.assets.sprites.item_texture(item);
+        let icon = self
+            .items
+            .get_texture(&item.config.name)
+            .unwrap_or(&self.assets.sprites.item_shadow);
         let mut icon_target = target.extend_uniform(-target.height() * 0.1);
         icon_target = icon_target.extend_up(-target.height() * 0.09);
         icon_target = icon_target.extend_down(-target.height() * 0.4);
@@ -773,9 +847,10 @@ impl GameRender {
             let positions = [vec2(0.0, 0.0), vec2(1.0, 0.0)];
             let size = icon_target.height() / 5.0; // / 12.0;
             let icon_target = icon_target.extend_uniform(-size / 2.0);
-            for (i, category) in item
-                .categories()
-                .into_iter()
+            for (i, &category) in item
+                .config
+                .categories
+                .iter()
                 .enumerate()
                 .take(positions.len())
             {
@@ -813,7 +888,15 @@ impl GameRender {
         desc_target = desc_target.extend_uniform(-desc_target.height() * 0.05);
 
         let color = Color::try_from("#ffe7cd").unwrap();
-        let description = self.assets.items.get_description(item);
+        let description = self
+            .items
+            .get(&item.config.name)
+            .description
+            .as_deref()
+            .unwrap_or("<description missing>");
+        let stats = stats.unwrap_or(&item.config.base_stats);
+        let description =
+            description.replace("{damage}", &format!("{}", stats.damage.unwrap_or_default()));
 
         let mut lines = Vec::new();
         for source_line in description.lines() {
@@ -868,10 +951,16 @@ impl GameRender {
         model: &Model,
         framebuffer: &mut ugli::Framebuffer,
     ) {
-        let item = &model.player.items[board_item.item_id];
+        let state = model.state.borrow();
+        let Some(item) = &state.player.items.get(board_item.item_id) else {
+            return;
+        };
 
         let alpha = model.get_light_level(board_item.position);
-        let alpha = crate::util::smoothstep(alpha);
+        let mut alpha = crate::util::smoothstep(alpha);
+        if board_item.used {
+            alpha *= 0.5;
+        }
         let mut color = Color::WHITE;
         color.a = alpha;
 
@@ -891,35 +980,36 @@ impl GameRender {
             position = position + (target.as_f32() - position) * t;
         }
 
-        let texture = self.assets.sprites.item_texture(item.kind);
+        let texture = self
+            .items
+            .get_texture(&item.kind.config.name)
+            .unwrap_or(&self.assets.sprites.item_shadow);
         // TODO: place the shadow
         // self.draw_at(item.position, &self.assets.sprites.item_shadow, framebuffer);
         let offset = vec2(0.0, crate::util::smoothstep(resolution_t) * 0.2);
         self.draw_at_grid(position + offset, Angle::ZERO, texture, color, framebuffer);
 
-        if !board_item.used {
-            // Damage value
-            if let Some(damage) = item.current_stats().damage {
-                let pos = (position + vec2(0.3, 0.3)) * self.cell_size;
-                let target = Aabb2::point(pos).extend_uniform(0.06);
-                self.geng.draw2d().draw2d(
-                    framebuffer,
-                    &self.world_camera,
-                    &draw2d::TexturedQuad::colored(
-                        Aabb2::point(pos).extend_uniform(0.14),
-                        &self.assets.sprites.weapon_damage,
-                        color,
-                    ),
-                );
-                let mut color = Color::try_from("#424242").unwrap();
-                color.a = alpha;
-                self.geng.draw2d().draw2d(
-                    framebuffer,
-                    &self.world_camera,
-                    &draw2d::Text::unit(self.assets.font.clone(), format!("{}", damage), color)
-                        .fit_into(target),
-                );
-            }
+        // Damage value
+        if let Some(damage) = item.current_stats().damage {
+            let pos = (position + vec2(0.3, 0.3)) * self.cell_size;
+            let target = Aabb2::point(pos).extend_uniform(0.06);
+            self.geng.draw2d().draw2d(
+                framebuffer,
+                &self.world_camera,
+                &draw2d::TexturedQuad::colored(
+                    Aabb2::point(pos).extend_uniform(0.14),
+                    &self.assets.sprites.weapon_damage,
+                    color,
+                ),
+            );
+            let mut color = Color::try_from("#424242").unwrap();
+            color.a = alpha;
+            self.geng.draw2d().draw2d(
+                framebuffer,
+                &self.world_camera,
+                &draw2d::Text::unit(self.assets.font.clone(), format!("{}", damage), color)
+                    .fit_into(target),
+            );
         }
     }
 
@@ -1065,7 +1155,7 @@ impl GameRender {
 
         if let EntityKind::Player = entity.kind {
             // Draw the remaining moves as circles
-            let moves = model.player.moves_left.min(6);
+            let moves = model.state.borrow().player.moves_left.min(6);
             let offset = (moves as f32 - 1.0) / 2.0;
             for i in 0..moves {
                 let pos = (position + vec2(0.0, -0.27)) * self.cell_size

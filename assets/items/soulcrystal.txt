@@ -1,5 +1,0 @@
-On use :
-Deals 0 damage to the nearest enemy, destroys itself after.
-
-On turn start :
-Gain +1 damage permanently.

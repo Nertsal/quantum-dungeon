@@ -1,0 +1,12 @@
+pub fn day_bonus(item) {
+    if item.rng_float() < 0.1 {
+        if let Some(victim) = item.find_nearby(1, Filter::Category(Category::Treasure)) {
+            item.bonus_from(victim, Stats { damage: 2 }, true);
+            victim.destroy();
+        }
+    }
+}
+
+pub fn day_action(item) {
+    item.damage(Target::Random, |stats| stats.damage);
+}

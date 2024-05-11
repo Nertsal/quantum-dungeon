@@ -1,4 +1,0 @@
-On turn start :
-Deals 1 damage to a random enemy.
-Has 10% chance to destroy nearby treasure and
-gain +2 damage permanently.

@@ -5,7 +5,6 @@ pub struct Assets {
     pub sprites: Sprites,
     pub sounds: Sounds,
     pub music: geng::Sound,
-    pub items: ItemAssets,
     #[load(path = "font/Bodo Amat.ttf")]
     pub font: Rc<geng::Font>,
 }
@@ -45,34 +44,6 @@ pub struct Sprites {
 
     pub play_button: ugli::Texture,
     pub skip_button: ugli::Texture,
-
-    pub camera: ugli::Texture,
-    pub charming_staff: ugli::Texture,
-    pub chest: ugli::Texture,
-    pub cursed_skull: ugli::Texture,
-    pub electric_rod: ugli::Texture,
-    pub fire_scroll: ugli::Texture,
-    pub forge: ugli::Texture,
-    pub ghost: ugli::Texture,
-    pub grand_map: ugli::Texture,
-    pub greedy_pot: ugli::Texture,
-    pub kings_skull: ugli::Texture,
-    pub lantern: ugli::Texture,
-    pub magic_treasure_bag: ugli::Texture,
-    pub magic_wire: ugli::Texture,
-    pub melter: ugli::Texture,
-    pub phantom: ugli::Texture,
-    pub radiation_core: ugli::Texture,
-    pub solitude: ugli::Texture,
-    pub soul_crystal: ugli::Texture,
-    pub spirit_coin: ugli::Texture,
-    pub sword: ugli::Texture,
-    pub ultra_speed_boots: ugli::Texture,
-    pub warp_portal: ugli::Texture,
-}
-
-pub struct ItemAssets {
-    pub descriptions: HashMap<String, String>,
 }
 
 impl Assets {
@@ -82,53 +53,50 @@ impl Assets {
             .context("failed to load assets")
     }
 
-    pub fn get_category_color(&self, category: ItemCategory) -> Color {
+    pub fn get_category_color(&self, category: Category) -> Color {
         match category {
-            ItemCategory::Weapon => Color::try_from("#ffe7cd").unwrap(),
-            ItemCategory::Tech => Color::try_from("#6467b6").unwrap(),
-            ItemCategory::Treasure => Color::try_from("#cd8c66").unwrap(),
-            ItemCategory::Spooky => Color::try_from("#469fe1").unwrap(),
-            ItemCategory::Magic => Color::try_from("#d083c3").unwrap(),
+            Category::Weapon => Color::try_from("#ffe7cd").unwrap(),
+            Category::Tech => Color::try_from("#6467b6").unwrap(),
+            Category::Treasure => Color::try_from("#cd8c66").unwrap(),
+            Category::Spooky => Color::try_from("#469fe1").unwrap(),
+            Category::Magic => Color::try_from("#d083c3").unwrap(),
         }
     }
 }
 
-impl Sprites {
-    pub fn item_texture(&self, item: ItemKind) -> &ugli::Texture {
-        match item {
-            ItemKind::Sword => &self.sword,
-            ItemKind::Forge => &self.forge,
-            ItemKind::Boots => &self.ultra_speed_boots,
-            ItemKind::Map => &self.grand_map,
-            ItemKind::Camera => &self.camera,
-            ItemKind::Ghost => &self.ghost,
-            ItemKind::FireScroll => &self.fire_scroll,
-            ItemKind::SoulCrystal => &self.soul_crystal,
-            ItemKind::RadiationCore => &self.radiation_core,
-            ItemKind::GreedyPot => &self.greedy_pot,
-            ItemKind::SpiritCoin => &self.spirit_coin,
-            ItemKind::Chest => &self.chest,
-            ItemKind::MagicTreasureBag => &self.magic_treasure_bag,
-            ItemKind::ElectricRod => &self.electric_rod,
-            ItemKind::MagicWire => &self.magic_wire,
-            ItemKind::Melter => &self.melter,
-            ItemKind::Phantom => &self.phantom,
-            ItemKind::CursedSkull => &self.cursed_skull,
-            ItemKind::KingSkull => &self.kings_skull,
-            ItemKind::GoldenLantern => &self.lantern,
-            ItemKind::CharmingStaff => &self.charming_staff,
-            ItemKind::WarpPortal => &self.warp_portal,
-            ItemKind::Solitude => &self.solitude,
-        }
-    }
+#[derive(Clone)]
+pub struct ItemAssets {
+    /// Map from item name to its asset.
+    pub assets: HashMap<Rc<str>, ItemAsset>,
+}
+
+#[derive(Clone)]
+pub struct ItemAsset {
+    pub config: ItemConfig,
+    pub description: Option<String>,
+    pub script: Option<String>,
+    pub texture: Option<Rc<ugli::Texture>>,
+}
+
+#[derive(geng::asset::Load, Debug, Clone, Serialize, Deserialize)]
+#[load(serde = "ron")]
+pub struct ItemConfig {
+    pub name: Rc<str>,
+    pub categories: Rc<[Category]>,
+    pub appears_in_shop: bool,
+    #[serde(default)]
+    pub base_stats: ItemStats,
 }
 
 impl ItemAssets {
-    pub fn get_description(&self, item: ItemKind) -> &str {
-        self.descriptions
-            .get(&format!("{:?}", item).to_lowercase())
-            .map(|x| x.as_str())
-            .unwrap_or("<Description missing>")
+    pub fn get(&self, item: &str) -> &ItemAsset {
+        self.assets
+            .get(item)
+            .unwrap_or_else(|| panic!("no assets found for item {}", item))
+    }
+
+    pub fn get_texture(&self, item: &str) -> Option<&ugli::Texture> {
+        self.get(item).texture.as_deref()
     }
 }
 
@@ -140,17 +108,61 @@ impl geng::asset::Load for ItemAssets {
         path: &std::path::Path,
         &(): &Self::Options,
     ) -> geng::asset::Future<Self> {
-        let _manager = manager.clone();
+        let manager = manager.clone();
         let path = path.to_owned();
         async move {
             let list: Vec<String> = file::load_detect(path.join("_list.ron")).await?;
-            let mut descriptions = HashMap::new();
-            for name in list {
-                let name = name.to_lowercase().replace(' ', "_");
-                let desc = file::load_string(path.join(format!("{}.txt", name))).await?;
-                descriptions.insert(name, desc);
-            }
-            Ok(Self { descriptions })
+            let item_loaders = list.into_iter().map(|name| {
+                let manager = &manager;
+                let path = &path;
+                async move {
+                    let path = path.join(name);
+                    let item: ItemAsset = geng::asset::Load::load(manager, &path, &()).await?;
+                    anyhow::Ok((Rc::clone(&item.config.name), item))
+                }
+            });
+            let items = future::join_all(item_loaders)
+                .await
+                .into_iter()
+                .flatten()
+                .collect();
+            Ok(Self { assets: items })
+        }
+        .boxed_local()
+    }
+
+    const DEFAULT_EXT: Option<&'static str> = None;
+}
+
+impl geng::asset::Load for ItemAsset {
+    type Options = ();
+
+    fn load(
+        manager: &geng::asset::Manager,
+        path: &std::path::Path,
+        (): &Self::Options,
+    ) -> geng::asset::Future<Self> {
+        let manager = manager.clone();
+        let path = path.to_owned();
+        async move {
+            Ok(Self {
+                config: geng::asset::Load::load(&manager, &path.join("config.ron"), &())
+                    .await
+                    .context("'config.ron' expected")?,
+                description: geng::asset::Load::load(&manager, &path.join("description.txt"), &())
+                    .await
+                    .ok(),
+                script: geng::asset::Load::load(&manager, &path.join("script.rn"), &())
+                    .await
+                    .ok(),
+                texture: geng::asset::Load::load(
+                    &manager,
+                    &path.join("texture.png"),
+                    &geng::asset::TextureOptions::default(),
+                )
+                .await
+                .ok(),
+            })
         }
         .boxed_local()
     }

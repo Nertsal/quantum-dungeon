@@ -1,0 +1,5 @@
+On use :
+Deals {damage} damage to the nearest enemy.
+
+On turn start :
+If there is no weapon nearby, gains +2 damage permanently, otherwise loses 1 damage.

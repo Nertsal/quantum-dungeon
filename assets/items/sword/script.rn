@@ -1,0 +1,4 @@
+pub fn active(item) {
+    item.bonus_from_nearby(1, Filter::This, Stats { damage: 2 }, false);
+    item.damage(Target::Nearest, |stats| stats.damage);
+}
