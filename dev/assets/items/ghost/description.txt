@@ -1,5 +1,0 @@
-On turn start :
-Use a random nearby weapon.
-
-At night :
-Destroys itself when observed.

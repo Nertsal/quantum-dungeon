@@ -1,2 +1,0 @@
-On use :
-Deals {damage} damage plus 2 extra for every connected tech item to the nearest enemy.

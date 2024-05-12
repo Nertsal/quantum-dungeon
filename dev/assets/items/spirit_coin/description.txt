@@ -1,5 +1,0 @@
-On turn start :
-Duplicates itself when it’s near a chest. Has 20% chance to destroy itself.
-
-On destroy :
-Deals 5 damage to a random enemy.

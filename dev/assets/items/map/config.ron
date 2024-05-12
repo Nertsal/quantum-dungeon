@@ -1,6 +1,0 @@
-ItemConfig(
-    name: "Grand map",
-    categories: [Treasure],
-    appears_in_shop: MapNotFull,
-)
-

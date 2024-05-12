@@ -1,2 +1,0 @@
-On use :
-Deals {damage} damage to a random enemy, destroys itself after.

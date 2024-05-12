@@ -1,6 +1,0 @@
-ItemConfig(
-    name: "Ghost",
-    categories: [Spooky],
-    appears_in_shop: Always,
-)
-

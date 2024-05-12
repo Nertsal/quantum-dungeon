@@ -1,4 +1,0 @@
-pub fn active(item) {
-    item.open_tiles(2);
-    item.destroy();
-}

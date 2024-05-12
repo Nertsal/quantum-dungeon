@@ -1,3 +1,0 @@
-pub fn active(item) {
-    item.portal();
-}

@@ -1,6 +1,0 @@
-ItemConfig(
-    name: "Warp portal",
-    categories: [Magic],
-    appears_in_shop: Always,
-)
-

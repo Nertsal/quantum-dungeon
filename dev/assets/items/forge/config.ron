@@ -1,6 +1,0 @@
-ItemConfig(
-    name: "Forge",
-    categories: [Magic],
-    appears_in_shop: Always,
-)
-
