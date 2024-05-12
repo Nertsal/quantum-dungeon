@@ -788,7 +788,7 @@ impl GameRender {
         let background = &self.assets.sprites.item_card;
         let size = background.size().as_f32();
 
-        let height = 4.5;
+        let height = 5.5;
         let mut target = Aabb2::point(cursor_ui_pos)
             .extend_positive(self.cell_size * vec2(size.aspect() * height, height));
 
@@ -919,7 +919,7 @@ impl GameRender {
             }
         }
 
-        let font_size = 0.15;
+        let font_size = target.height() * 0.03;
         for (i, line) in lines.into_iter().enumerate() {
             let position = desc_target.top_left() - vec2(0.0, i as f32) * font_size * 1.2;
             self.assets.font.draw(
