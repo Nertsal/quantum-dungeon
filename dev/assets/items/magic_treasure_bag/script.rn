@@ -1,9 +1,0 @@
-pub fn day_bonus(item) {
-    if item.turns_on_board >= 4 {
-        if let Some(treasure) = item.random_kind(Some(Category::Treasure)) {
-            item.turn_into(treasure);
-        } else {
-            item.destroy();
-        }
-    }
-}

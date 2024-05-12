@@ -1,5 +1,0 @@
-On use :
-Destroys itself.
-
-On destroy:
-Light up adjacent tiles for 3 turns.

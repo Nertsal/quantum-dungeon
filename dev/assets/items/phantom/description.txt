@@ -1,2 +1,0 @@
-On use :
-Deals {damage} damage to the nearest enemy and gains +1 damage permanently.
