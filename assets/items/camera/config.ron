@@ -1,6 +1,6 @@
 ItemConfig(
     name: "Camera",
     categories: [Tech],
-    appears_in_shop: true,
+    appears_in_shop: Always,
 )
 

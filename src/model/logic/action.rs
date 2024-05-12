@@ -49,6 +49,16 @@ impl Model {
 
     /// Uncover a tile.
     fn map_action(&mut self, player_input: PlayerInput) {
+        if let PlayerInput::Skip = player_input {
+            let mut phase = Phase::Vision;
+            std::mem::swap(&mut self.phase, &mut phase);
+            if let Phase::Map { next_phase, .. } = phase {
+                log::debug!("Moving from Map phase to {:?}", next_phase);
+                self.phase = *next_phase;
+            }
+            return;
+        }
+
         let PlayerInput::Tile(pos) = player_input else {
             log::error!("invalid input during phase Map, expected a tile");
             return;
@@ -85,6 +95,16 @@ impl Model {
 
     /// Swap position with a magic item.
     fn portal_action(&mut self, player_input: PlayerInput) {
+        if let PlayerInput::Skip = player_input {
+            let mut phase = Phase::Vision;
+            std::mem::swap(&mut self.phase, &mut phase);
+            if let Phase::Portal { next_phase, .. } = phase {
+                log::debug!("Moving from Portal phase to {:?}", next_phase);
+                self.phase = *next_phase;
+            }
+            return;
+        }
+
         let PlayerInput::Tile(target_pos) = player_input else {
             log::error!("invalid input during phase Portal, expected a tile");
             return;

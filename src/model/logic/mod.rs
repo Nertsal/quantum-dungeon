@@ -10,8 +10,17 @@ use super::*;
 
 impl Model {
     pub fn update(&mut self, delta_time: Time) {
-        // TODO: unhardcode
         if let Phase::Map { .. } = self.phase {
+            if self.state.borrow().grid.is_max() {
+                let mut phase = Phase::Vision;
+                std::mem::swap(&mut self.phase, &mut phase);
+                if let Phase::Map { next_phase, .. } = phase {
+                    log::debug!("Moving from Map phase to {:?}", next_phase);
+                    self.phase = *next_phase;
+                } else {
+                    unreachable!();
+                }
+            }
         } else {
             self.update_animations(delta_time);
         }
@@ -138,10 +147,13 @@ impl Model {
 
         if items > 0 {
             let state = self.state.borrow();
+
+            let map_full = state.grid.is_max();
+
             let options: Vec<_> = state
                 .all_items
                 .iter()
-                .filter(|item| item.config.appears_in_shop)
+                .filter(|item| item.config.appears_in_shop.check(map_full))
                 .collect();
             let mut rng = thread_rng();
             let options = (0..3)
