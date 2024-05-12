@@ -1,0 +1,4 @@
+pub fn active(item) {
+    item.damage(Target::Random, |stats| stats.damage);
+    item.destroy();
+}
