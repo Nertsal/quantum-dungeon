@@ -53,7 +53,9 @@ impl Game {
                     self.model.player_action(PlayerInput::Retry);
                 }
             }
-            Phase::Player if self.render.skip_turn_button.contains(self.cursor_ui_pos) => {
+            Phase::Player | Phase::Map { .. } | Phase::Portal { .. }
+                if self.render.skip_turn_button.contains(self.cursor_ui_pos) =>
+            {
                 self.model.player_action(PlayerInput::Skip);
             }
             Phase::Select { .. } => {

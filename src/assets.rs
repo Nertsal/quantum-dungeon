@@ -83,9 +83,26 @@ pub struct ItemAsset {
 pub struct ItemConfig {
     pub name: Rc<str>,
     pub categories: Rc<[Category]>,
-    pub appears_in_shop: bool,
+    pub appears_in_shop: ShopAppearance,
     #[serde(default)]
     pub base_stats: ItemStats,
+}
+
+#[derive(Debug, Clone, Copy, Serialize, Deserialize)]
+pub enum ShopAppearance {
+    Always,
+    MapNotFull,
+    Never,
+}
+
+impl ShopAppearance {
+    pub fn check(self, map_full: bool) -> bool {
+        match self {
+            ShopAppearance::Always => true,
+            ShopAppearance::MapNotFull => !map_full,
+            ShopAppearance::Never => false,
+        }
+    }
 }
 
 impl ItemAssets {

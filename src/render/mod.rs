@@ -281,22 +281,19 @@ impl GameRender {
         );
 
         self.buttons.clear();
+        let mut skip = true;
         let text = match &model.phase {
             Phase::GameOver => "Game over",
             Phase::Night { .. } | Phase::Dawn { .. } | Phase::LevelStarting { .. } => "Night",
             Phase::Player => {
-                // Skip button
-                self.draw_button(
-                    self.skip_turn_button,
-                    &self.assets.sprites.skip_button,
-                    cursor_ui_pos,
-                    framebuffer,
-                );
-
+                skip = true;
                 "Day"
             }
             Phase::Active { .. } | Phase::DayBonus { .. } | Phase::DayAction { .. } => "Day",
-            Phase::Portal { .. } => "Select a magic item",
+            Phase::Portal { .. } => {
+                skip = true;
+                "Select a magic item"
+            }
             Phase::Vision => "Select a direction to look at",
             Phase::PostVision { .. } => "Night",
             Phase::LevelFinished { win, .. } => {
@@ -307,6 +304,8 @@ impl GameRender {
                 }
             }
             Phase::Map { .. } => {
+                skip = true;
+
                 // Tile plus
                 for pos in state.grid.outside_tiles() {
                     self.draw_at_grid(
@@ -335,6 +334,16 @@ impl GameRender {
                 "Select an item"
             }
         };
+
+        if skip {
+            // Skip button
+            self.draw_button(
+                self.skip_turn_button,
+                &self.assets.sprites.skip_button,
+                cursor_ui_pos,
+                framebuffer,
+            );
+        }
 
         {
             // Text

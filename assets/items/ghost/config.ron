@@ -1,6 +1,6 @@
 ItemConfig(
     name: "Ghost",
     categories: [Spooky],
-    appears_in_shop: true,
+    appears_in_shop: Always,
 )
 
