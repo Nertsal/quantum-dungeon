@@ -122,12 +122,13 @@ impl Model {
                 state.player.moves_left += moves;
             }
             Effect::Portal => {
-                if state
-                    .player
-                    .items
-                    .iter()
-                    .any(|(_, item)| item.kind.config.categories.contains(&Category::Magic))
-                {
+                if state.player.items.iter().any(|(_, item)| {
+                    item.kind.config.categories.contains(&Category::Magic)
+                        && item
+                            .on_board
+                            .and_then(|item| state.items.get(item))
+                            .map_or(false, |item| !state.grid.fractured.contains(&item.position))
+                }) {
                     drop(state);
                     if let Phase::Active {
                         entity_id,
