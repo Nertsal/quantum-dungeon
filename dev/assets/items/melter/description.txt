@@ -1,0 +1,2 @@
+On turn start :
+20% chance to destroy a nearby tech item and give all weapon +1 damage permanently.

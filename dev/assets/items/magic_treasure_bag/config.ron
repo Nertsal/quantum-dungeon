@@ -1,0 +1,6 @@
+ItemConfig(
+    name: "Magic treasure bag",
+    categories: [Treasure, Magic],
+    appears_in_shop: Always,
+)
+

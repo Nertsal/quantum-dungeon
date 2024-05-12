@@ -1,0 +1,6 @@
+ItemConfig(
+    name: "Camera",
+    categories: [Tech],
+    appears_in_shop: Always,
+)
+

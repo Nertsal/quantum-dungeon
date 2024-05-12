@@ -1,0 +1,6 @@
+ItemConfig(
+    name: "Chest",
+    categories: [Treasure],
+    appears_in_shop: Always,
+)
+

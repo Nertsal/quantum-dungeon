@@ -1,0 +1,9 @@
+ItemConfig(
+    name: "Phantom",
+    categories: [Spooky, Weapon],
+    appears_in_shop: Always,
+    base_stats: ItemStats(
+        damage: Some(1),
+    ),
+)
+

@@ -1,0 +1,6 @@
+ItemConfig(
+    name: "Ultra speed shoes",
+    categories: [Tech],
+    appears_in_shop: Always,
+)
+

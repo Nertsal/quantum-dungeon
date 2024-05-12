@@ -1,0 +1,2 @@
+On use :
+Deals {damage} damage to all enemies on the board.

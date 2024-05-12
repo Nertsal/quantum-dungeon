@@ -1,0 +1,5 @@
+pub fn day_bonus(item) {
+    if item.rng_float() < 0.1 {
+        item.duplicate();
+    }
+}

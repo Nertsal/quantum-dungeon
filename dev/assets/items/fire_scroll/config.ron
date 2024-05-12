@@ -1,0 +1,9 @@
+ItemConfig(
+    name: "Fire scroll",
+    categories: [Magic, Weapon],
+    appears_in_shop: Always,
+    base_stats: ItemStats(
+        damage: Some(5),
+    ),
+)
+
